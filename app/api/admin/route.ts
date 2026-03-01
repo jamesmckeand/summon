@@ -132,7 +132,7 @@ export async function PATCH(request: Request) {
   if (submission?.submitter_email) {
     const { subject, html } = buildEmail(status, { ...submission, review_note });
     await resend.emails.send({
-      from: "Summon <onboarding@resend.dev>",
+      from: "Summon <hello@wesummon.com>",
       to: submission.submitter_email,
       subject,
       html,
