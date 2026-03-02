@@ -358,9 +358,15 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="px-8 py-8 border-t border-border/40 flex items-center justify-between text-sm text-muted-foreground">
+      <footer className="px-8 py-8 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
         <span className="font-semibold gradient-brand-text">Summon</span>
-        <p>© 2026 Summon. All rights reserved.</p>
+        <div className="flex items-center gap-5">
+          <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
+          <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+          <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+          <a href="mailto:hello@wesummon.com" className="hover:text-foreground transition-colors">Contact</a>
+        </div>
+        <p>© 2026 Summon.</p>
       </footer>
 
     </div>

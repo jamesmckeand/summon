@@ -124,6 +124,32 @@ export default function ArtistClient({ id }: { id: string }) {
     );
   }
 
+  if (loadingData) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Nav />
+        <div className="pt-24 pb-20 px-6 max-w-2xl mx-auto space-y-5 animate-pulse">
+          <div className="glass rounded-2xl h-48 sm:h-64 bg-muted/40" />
+          <div className="glass rounded-2xl p-5 space-y-3">
+            <div className="h-3 bg-muted/60 rounded w-20" />
+            <div className="h-6 bg-muted/60 rounded w-40" />
+            <div className="h-4 bg-muted/60 rounded w-24" />
+            <div className="h-2 bg-muted/60 rounded-full w-full mt-2" />
+          </div>
+          <div className="glass rounded-2xl p-5 space-y-3">
+            <div className="h-3 bg-muted/60 rounded w-24" />
+            <div className="h-10 bg-muted/60 rounded-xl w-full" />
+          </div>
+          <div className="glass rounded-2xl p-5 space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-12 bg-muted/40 rounded-xl" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const initials = artist.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
   const topCity = cityVotes[0];
   const selectedCityData = cityVotes.find((cv) => cv.city === selectedCity);

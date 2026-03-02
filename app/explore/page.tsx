@@ -310,7 +310,26 @@ export default function ExplorePage() {
         </motion.p>
 
         {/* Artist list */}
-        <div className="flex flex-col gap-3">
+        {countsLoading && (
+          <div className="flex flex-col gap-3">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="glass rounded-xl p-4 flex items-center gap-4 animate-pulse">
+                <div className="w-6 h-4 bg-muted/60 rounded hidden sm:block shrink-0" />
+                <div className="w-12 h-12 rounded-xl bg-muted/60 shrink-0" />
+                <div className="flex-1 space-y-2 min-w-0">
+                  <div className="h-4 bg-muted/60 rounded w-32" />
+                  <div className="h-3 bg-muted/60 rounded w-20" />
+                </div>
+                <div className="hidden sm:block space-y-1 text-right shrink-0">
+                  <div className="h-4 bg-muted/60 rounded w-12 ml-auto" />
+                  <div className="h-3 bg-muted/60 rounded w-8 ml-auto" />
+                </div>
+                <div className="w-16 h-9 bg-muted/60 rounded-lg shrink-0" />
+              </div>
+            ))}
+          </div>
+        )}
+        <div className={`flex flex-col gap-3 ${countsLoading ? "hidden" : ""}`}>
           {filteredArtists.map((artist, i) => {
             const voted = mounted && hasVoted(artist.id, selectedCity);
             const confirmed = confirmedShows[artist.id] ?? false;
@@ -386,7 +405,7 @@ export default function ExplorePage() {
           })}
         </div>
 
-        {filteredArtists.length === 0 && (
+        {!countsLoading && filteredArtists.length === 0 && (
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0} className="text-center py-16 text-muted-foreground">
             <Music2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
             <p>No artists found. Try a different search or genre.</p>
