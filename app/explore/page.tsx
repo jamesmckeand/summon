@@ -97,21 +97,12 @@ export default function ExplorePage() {
       .catch(() => {});
   }, []);
 
-  // Fetch artist images
+  // Fetch all artist images in one batch request
   useEffect(() => {
-    ARTISTS.forEach(async (artist) => {
-      if (images[artist.name] !== undefined) return;
-      try {
-        const res = await fetch(`/api/artist-image?name=${encodeURIComponent(artist.name)}`);
-        const data = await res.json();
-        if (data.image) {
-          setImages((prev) => ({ ...prev, [artist.name]: data.image }));
-        }
-      } catch {
-        // fallback to initials
-      }
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetch("/api/artist-images")
+      .then((r) => r.json())
+      .then((data) => { if (data.images) setImages(data.images); })
+      .catch(() => {});
   }, []);
 
   // Close dropdowns when clicking outside

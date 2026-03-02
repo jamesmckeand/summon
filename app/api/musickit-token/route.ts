@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { SignJWT, importPKCS8 } from "jose";
+import { createClient } from "@/lib/supabase/server";
 
 // Cache token in memory — valid for 6 months, we refresh after 5.5
 let cache: { token: string; exp: number } | null = null;
 
 export async function GET() {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (cache && Date.now() < cache.exp) {
     return NextResponse.json({ token: cache.token });
   }

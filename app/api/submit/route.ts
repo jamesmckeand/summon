@@ -36,6 +36,17 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Sign in to submit" }, { status: 401 });
 
+  // Rate limit: max 5 submissions per user per 24 hours
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { count } = await supabase
+    .from("submissions")
+    .select("*", { count: "exact", head: true })
+    .eq("submitted_by", user.id)
+    .gte("created_at", since);
+  if ((count ?? 0) >= 5) {
+    return NextResponse.json({ error: "Max 5 submissions per day" }, { status: 429 });
+  }
+
   const body = await request.json();
   const { type } = body;
 
