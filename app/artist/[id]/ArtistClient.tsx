@@ -166,7 +166,9 @@ export default function ArtistClient({ id }: { id: string }) {
   const voted = mounted && hasVoted(artist.id, selectedCity || activeCity);
   const voteCity = selectedCity || activeCity;
   const confirmedShow = shows[0] ?? null;
-  const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/artist/${id}` : `/artist/${id}`;
+  const shareUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/artist/${id}${voteCity ? `?city=${encodeURIComponent(voteCity)}` : ""}`
+    : `/artist/${id}`;
   const votesNeeded = nextThreshold ? nextThreshold.votes - selectedVoteCount : 0;
   const shareText = confirmedShow
     ? `${artist.name} is coming to ${confirmedShow.venue} in ${voteCity}! Get your tickets 🎉`

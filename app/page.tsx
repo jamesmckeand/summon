@@ -299,21 +299,23 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            custom={0.15}
-            className="glass rounded-2xl p-8 relative overflow-hidden"
-          >
-            <div className="absolute bottom-0 right-0 w-48 h-48 bg-pink-600/5 rounded-full blur-[60px] pointer-events-none" />
-            <PlusCircle className="w-6 h-6 text-primary mb-4" />
-            <h3 className="text-xl font-bold tracking-tight mb-2">Suggest an artist.</h3>
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              Don&apos;t see your favourite act? Submit them for review. Approved artists go live on Summon and become voteable immediately.
-            </p>
-          </motion.div>
+          <Link href="/submit">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeUp}
+              custom={0.15}
+              className="glass rounded-2xl p-8 relative overflow-hidden hover:border-primary/20 transition-all cursor-pointer"
+            >
+              <div className="absolute bottom-0 right-0 w-48 h-48 bg-pink-600/5 rounded-full blur-[60px] pointer-events-none" />
+              <PlusCircle className="w-6 h-6 text-primary mb-4" />
+              <h3 className="text-xl font-bold tracking-tight mb-2">Suggest an artist.</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                Don&apos;t see your favourite act? Submit them for review. Approved artists go live on Summon and become voteable immediately.
+              </p>
+            </motion.div>
+          </Link>
         </div>
       </section>
 

@@ -11,6 +11,7 @@ import { ARTISTS } from "@/lib/data/artists";
 import { CITIES } from "@/lib/data/cities";
 import { getVenuesForCity } from "@/lib/data/venues";
 import { createClient } from "@/lib/supabase/client";
+import AppleMusicConnect from "@/components/AppleMusicConnect";
 
 const VENUE_TIERS = ["bar", "theatre", "concertHall", "arena"] as const;
 const TIER_LABELS: Record<string, string> = {
@@ -302,8 +303,16 @@ export default function OnboardingPage() {
                     <span className="text-xs text-[#1DB954] animate-pulse">Importing from Spotify…</span>
                   )}
                   {!loadingSpotify && spotifyMatches.length > 0 && (
-                    <span className="text-xs text-[#1DB954]">✓ {spotifyMatches.length} imported from Spotify</span>
+                    <span className="text-xs text-[#1DB954]">✓ {spotifyMatches.length} from Spotify</span>
                   )}
+                  <AppleMusicConnect
+                    onArtists={(artists) => {
+                      setFavArtists((prev) => {
+                        const newIds = artists.map((a) => a.id).filter((id) => !prev.includes(id));
+                        return [...prev, ...newIds];
+                      });
+                    }}
+                  />
                 </div>
 
                 {/* Selected chips */}

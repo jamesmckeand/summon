@@ -10,9 +10,21 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const userId = session.user.id;
   const providerToken = session.provider_token;
+
+  // No token — return cached artists from profile
   if (!providerToken) {
-    return NextResponse.json({ artists: [], reason: "no_spotify_token" });
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("favourite_artists")
+      .eq("id", userId)
+      .single();
+
+    const cached = ARTISTS.filter((a) =>
+      (profile?.favourite_artists ?? []).includes(a.id)
+    );
+    return NextResponse.json({ artists: cached, reason: "cached" });
   }
 
   try {
@@ -22,7 +34,17 @@ export async function GET() {
     );
 
     if (!res.ok) {
-      return NextResponse.json({ artists: [], reason: "spotify_error" });
+      // Spotify error — fall back to cache
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("favourite_artists")
+        .eq("id", userId)
+        .single();
+
+      const cached = ARTISTS.filter((a) =>
+        (profile?.favourite_artists ?? []).includes(a.id)
+      );
+      return NextResponse.json({ artists: cached, reason: "cached" });
     }
 
     const data = await res.json();
@@ -31,6 +53,14 @@ export async function GET() {
     );
 
     const matched = ARTISTS.filter((a) => spotifyNames.has(a.name.toLowerCase()));
+
+    // Cache matched artist IDs to profile
+    if (matched.length > 0) {
+      await supabase
+        .from("profiles")
+        .update({ favourite_artists: matched.map((a) => a.id) })
+        .eq("id", userId);
+    }
 
     return NextResponse.json({ artists: matched });
   } catch {

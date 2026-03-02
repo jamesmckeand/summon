@@ -123,6 +123,16 @@ export default function Nav() {
               Explore
             </Button>
           </Link>
+          <Link href="/cities">
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-sm">
+              Cities
+            </Button>
+          </Link>
+          <Link href="/shows">
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-sm">
+              Shows
+            </Button>
+          </Link>
           <Link href="/submit">
             <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-sm">
               Suggest
@@ -215,6 +225,12 @@ export default function Nav() {
             <div className="flex flex-col px-4 py-3 gap-1">
               <Link href="/explore" className="px-3 py-3 text-sm font-medium text-foreground hover:text-primary transition-colors rounded-lg hover:bg-primary/5">
                 Explore
+              </Link>
+              <Link href="/cities" className="px-3 py-3 text-sm font-medium text-foreground hover:text-primary transition-colors rounded-lg hover:bg-primary/5">
+                Cities
+              </Link>
+              <Link href="/shows" className="px-3 py-3 text-sm font-medium text-foreground hover:text-primary transition-colors rounded-lg hover:bg-primary/5">
+                Shows
               </Link>
               <Link href="/submit" className="px-3 py-3 text-sm font-medium text-foreground hover:text-primary transition-colors rounded-lg hover:bg-primary/5">
                 Suggest an artist
