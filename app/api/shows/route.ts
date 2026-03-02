@@ -73,12 +73,11 @@ export async function GET() {
     })
   );
 
+  type ShowItem = { date: string;[key: string]: unknown };
   const shows = results
-    .filter((r): r is PromiseFulfilledResult<object[]> => r.status === "fulfilled")
+    .filter((r): r is PromiseFulfilledResult<ShowItem[]> => r.status === "fulfilled")
     .flatMap((r) => r.value)
-    .sort((a: { date: string }, b: { date: string }) =>
-      new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   return NextResponse.json({ shows }, {
     headers: { "Cache-Control": "public, max-age=3600" },
