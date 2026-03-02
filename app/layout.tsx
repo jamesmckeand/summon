@@ -1,11 +1,19 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
-const geist = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const neueMontreal = localFont({
+  src: [
+    { path: "../public/fonts/NeueMontreal-Light.ttf",        weight: "300", style: "normal" },
+    { path: "../public/fonts/NeueMontreal-LightItalic.ttf",  weight: "300", style: "italic" },
+    { path: "../public/fonts/NeueMontreal-Regular.ttf",       weight: "400", style: "normal" },
+    { path: "../public/fonts/NeueMontreal-Italic.ttf",        weight: "400", style: "italic" },
+    { path: "../public/fonts/NeueMontreal-Bold.ttf",          weight: "700", style: "normal" },
+    { path: "../public/fonts/NeueMontreal-BoldItalic.ttf",    weight: "700", style: "italic" },
+  ],
+  variable: "--font-neue-montreal",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -21,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${geist.variable} font-sans antialiased`}>
+      <body className={`${neueMontreal.variable} font-sans antialiased`}>
         {children}
         <Analytics />
       </body>
