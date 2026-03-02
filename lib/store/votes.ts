@@ -48,12 +48,14 @@ export const useVoteStore = create<VoteStore>()(
 
       initFromDb: (dbVotes) =>
         set((state) => {
-          const merged = { ...state.votes };
+          // Build a fresh map from DB (source of truth per city)
+          const fromDb: Record<string, string[]> = {};
           for (const { artist_id, city } of dbVotes) {
-            const existing = merged[city] ?? [];
-            if (!existing.includes(artist_id)) merged[city] = [...existing, artist_id];
+            if (!fromDb[city]) fromDb[city] = [];
+            if (!fromDb[city].includes(artist_id)) fromDb[city].push(artist_id);
           }
-          return { votes: merged };
+          // DB wins for any city it mentions; keep local for cities not yet in DB (offline/pending)
+          return { votes: { ...state.votes, ...fromDb } };
         }),
 
       clearVotes: () => set({ votes: {} }),

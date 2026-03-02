@@ -113,8 +113,10 @@ export default function DashboardPage() {
   const totalVotes = cityVotedIds.length;
   const topArtist = cityArtists[0];
   const nextThreshold = getNextThreshold(topArtist.votes);
+  const currentThreshold = getVenueThreshold(topArtist.votes);
+  const prevVotes = currentThreshold?.votes ?? 0;
   const progressPct = nextThreshold
-    ? Math.min((topArtist.votes / nextThreshold.votes) * 100, 100)
+    ? Math.min(((topArtist.votes - prevVotes) / (nextThreshold.votes - prevVotes)) * 100, 100)
     : 100;
 
   // Wait for client hydration before branching on localStorage-backed state
@@ -260,7 +262,7 @@ export default function DashboardPage() {
             <>
               <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
                 <span>Progress to {cityVenues[nextThreshold.tier][0]}</span>
-                <span>{topArtist.votes.toLocaleString()} / {nextThreshold.votes.toLocaleString()}</span>
+                <span>{(topArtist.votes - prevVotes).toLocaleString()} / {(nextThreshold.votes - prevVotes).toLocaleString()}</span>
               </div>
               <div className="h-2 bg-muted rounded-full overflow-hidden">
                 <motion.div

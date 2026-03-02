@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   // Notify admin
   await resend.emails.send({
     from: "Summon <hello@wesummon.com>",
-    to: "jamesmckeand@gmail.com",
+    to: process.env.ADMIN_EMAILS ?? "hello@wesummon.com",
     subject: `New waitlist signup: ${email}`,
     html: `<p><strong>${email}</strong> joined the Summon waitlist.</p>`,
   }).catch(() => {});

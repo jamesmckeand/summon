@@ -184,11 +184,9 @@ export default function Home() {
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold gradient-brand-text">
-              {stats.totalVotes > 0 ? `${stats.totalVotes.toLocaleString()}+` : "Free"}
+              {stats.totalVotes > 0 ? `${stats.totalVotes.toLocaleString()}+` : "0"}
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {stats.totalVotes > 0 ? "Votes cast" : "Always"}
-            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">Votes cast</p>
           </div>
         </motion.div>
 

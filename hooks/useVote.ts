@@ -15,13 +15,20 @@ export function useVote() {
     }
 
     const isVoted = hasVoted(artistId, city);
+    // Optimistic update
     isVoted ? unvote(artistId, city) : vote(artistId, city);
 
-    fetch("/api/votes", {
-      method: isVoted ? "DELETE" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ artistId, city }),
-    }).catch(() => {});
+    try {
+      const res = await fetch("/api/votes", {
+        method: isVoted ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ artistId, city }),
+      });
+      if (!res.ok) throw new Error("vote failed");
+    } catch {
+      // Revert optimistic update on failure
+      isVoted ? vote(artistId, city) : unvote(artistId, city);
+    }
   }
 
   return { handleVote, hasVoted };

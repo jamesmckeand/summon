@@ -33,6 +33,14 @@ function getVenueLabel(votes: number, city: string): string {
   return "";
 }
 
+function getProgressToNext(votes: number): number {
+  const sorted = [...VOTE_TIERS].sort((a, b) => a.votes - b.votes);
+  const next = sorted.find((t) => t.votes > votes);
+  if (!next) return 100;
+  const prev = sorted[sorted.indexOf(next) - 1]?.votes ?? 0;
+  return Math.min(((votes - prev) / (next.votes - prev)) * 100, 100);
+}
+
 function ArtistAvatar({ name, image }: { name: string; image: string | null }) {
   const initials = name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
   if (image) {
@@ -203,11 +211,11 @@ export default function ExplorePage() {
           {/* City dropdown */}
           <div className="relative" ref={cityDropdownRef}>
             <div
-              className="glass rounded-xl px-4 py-3 flex items-center gap-3 cursor-pointer hover:border-primary/30 transition-colors h-11"
+              className={`glass rounded-xl px-4 py-3 flex items-center gap-3 cursor-pointer transition-colors h-11 ${!selectedCity ? "border-primary/30 hover:border-primary/50 bg-primary/5" : "hover:border-primary/30"}`}
               onClick={() => { setShowCityDropdown((v) => !v); setShowGenreDropdown(false); }}
             >
               <MapPin className="w-4 h-4 text-primary shrink-0" />
-              <span className="font-medium flex-1 text-sm truncate">{selectedCity}</span>
+              <span className={`font-medium flex-1 text-sm truncate ${!selectedCity ? "text-primary" : ""}`}>{selectedCity || "Select city"}</span>
               {showCityDropdown ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />}
             </div>
             <AnimatePresence>
@@ -314,8 +322,27 @@ export default function ExplorePage() {
           </div>
         </motion.div>
 
+        {/* No city selected prompt */}
+        {!selectedCity && (
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={fadeUp}
+            custom={0.08}
+            className="glass rounded-2xl p-5 mb-5 border-primary/20 bg-primary/5 flex items-center gap-4"
+          >
+            <div className="w-10 h-10 rounded-xl gradient-brand flex items-center justify-center shrink-0">
+              <MapPin className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Pick your city to get started</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Vote counts are local — select a city to see who's leading in your area.</p>
+            </div>
+          </motion.div>
+        )}
+
         <motion.p initial="hidden" animate="visible" variants={fadeUp} custom={0.1} className="text-xs text-muted-foreground mb-4">
-          {filteredArtists.length} artists · sorted by votes in {selectedCity}
+          {filteredArtists.length} artists{selectedCity ? ` · sorted by votes in ${selectedCity}` : " · select a city to see local rankings"}
           {selectedGenre !== "All" && <span> · <button onClick={() => setSelectedGenre("All")} className="text-primary hover:underline">{selectedGenre} ×</button></span>}
         </motion.p>
 
@@ -389,65 +416,79 @@ export default function ExplorePage() {
                 animate="visible"
                 variants={fadeUp}
                 custom={0.12 + Math.min(i, 10) * 0.03}
-                className={`glass rounded-xl p-4 flex items-center gap-4 transition-all ${confirmed ? "border-green-500/30 hover:border-green-500/50" : "hover:border-primary/20"}`}
+                className={`glass rounded-xl overflow-hidden transition-all ${confirmed ? "border-green-500/30 hover:border-green-500/50" : "hover:border-primary/20"}`}
               >
-                <span className="text-muted-foreground text-sm font-mono w-6 text-center shrink-0 hidden sm:block">{i + 1}</span>
+                <div className="p-4 flex items-center gap-4">
+                  <span className="text-muted-foreground text-sm font-mono w-6 text-center shrink-0 hidden sm:block">{i + 1}</span>
 
-                <ArtistAvatar name={artist.name} image={images[artist.name] ?? null} />
+                  <ArtistAvatar name={artist.name} image={images[artist.name] ?? null} />
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Link href={`/artist/${artist.id}`} className="font-semibold text-sm hover:text-primary transition-colors">{artist.name}</Link>
-                    {confirmed && (
-                      <Badge className="bg-green-500/15 text-green-400 border-green-500/20 text-xs px-1.5 py-0.5">
-                        <Ticket className="w-3 h-3 mr-1" />
-                        Confirmed
-                      </Badge>
-                    )}
-                    {!confirmed && artist.trending && (
-                      <Badge className="bg-primary/15 text-primary border-primary/20 text-xs px-1.5 py-0.5">
-                        <TrendingUp className="w-3 h-3 mr-1" />
-                        Hot
-                      </Badge>
-                    )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Link href={`/artist/${artist.id}`} className="font-semibold text-sm hover:text-primary transition-colors">{artist.name}</Link>
+                      {confirmed && (
+                        <Badge className="bg-green-500/15 text-green-400 border-green-500/20 text-xs px-1.5 py-0.5">
+                          <Ticket className="w-3 h-3 mr-1" />
+                          Confirmed
+                        </Badge>
+                      )}
+                      {!confirmed && artist.trending && (
+                        <Badge className="bg-primary/15 text-primary border-primary/20 text-xs px-1.5 py-0.5">
+                          <TrendingUp className="w-3 h-3 mr-1" />
+                          Hot
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <Music2 className="w-3 h-3" />
+                      {artist.subgenre ? `${artist.genre} · ${artist.subgenre}` : artist.genre}
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                    <Music2 className="w-3 h-3" />
-                    {artist.subgenre ? `${artist.genre} · ${artist.subgenre}` : artist.genre}
-                  </p>
-                </div>
 
-                <div className="text-right shrink-0 hidden sm:block">
-                  <p className="text-sm font-bold text-primary">
-                    {countsLoading ? <span className="text-muted-foreground">—</span> : artist.votes.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-muted-foreground">votes</p>
-                  <p className="text-xs text-muted-foreground/60 truncate max-w-[120px]">
-                    {!countsLoading && getVenueLabel(artist.votes, selectedCity)}
-                  </p>
-                </div>
+                  <div className="text-right shrink-0 hidden sm:block">
+                    <p className="text-sm font-bold text-primary">
+                      {countsLoading ? <span className="text-muted-foreground">—</span> : artist.votes.toLocaleString()}
+                    </p>
+                    <p className="text-xs text-muted-foreground">votes</p>
+                    <p className="text-xs text-muted-foreground/60 truncate max-w-[120px]">
+                      {!countsLoading && getVenueLabel(artist.votes, selectedCity)}
+                    </p>
+                  </div>
 
-                {confirmed ? (
-                  <Link href={`/artist/${artist.id}`} className="shrink-0">
+                  {confirmed ? (
+                    <Link href={`/artist/${artist.id}`} className="shrink-0">
+                      <Button
+                        size="sm"
+                        className="rounded-lg h-9 px-3 font-semibold border-0 bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                      >
+                        <Ticket className="w-4 h-4 mr-1" />
+                        Tickets
+                      </Button>
+                    </Link>
+                  ) : (
                     <Button
                       size="sm"
-                      className="rounded-lg h-9 px-3 font-semibold border-0 bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                      onClick={() => handleVote(artist.id, selectedCity)}
+                      className={`shrink-0 rounded-lg h-9 px-3 font-semibold border-0 transition-all ${
+                        voted ? "gradient-brand text-white glow-primary-sm" : "bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary"
+                      }`}
                     >
-                      <Ticket className="w-4 h-4 mr-1" />
-                      Tickets
+                      <ChevronUp className="w-4 h-4 mr-1" />
+                      {voted ? "Voted" : "Vote"}
                     </Button>
-                  </Link>
-                ) : (
-                  <Button
-                    size="sm"
-                    onClick={() => handleVote(artist.id, selectedCity)}
-                    className={`shrink-0 rounded-lg h-9 px-3 font-semibold border-0 transition-all ${
-                      voted ? "gradient-brand text-white glow-primary-sm" : "bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary"
-                    }`}
-                  >
-                    <ChevronUp className="w-4 h-4 mr-1" />
-                    {voted ? "Voted" : "Vote"}
-                  </Button>
+                  )}
+                </div>
+
+                {/* Progress bar toward next threshold */}
+                {selectedCity && !countsLoading && artist.votes > 0 && (
+                  <div className="h-0.5 bg-muted/60 w-full">
+                    <motion.div
+                      className={`h-full ${confirmed ? "bg-green-500/60" : "gradient-brand opacity-60"}`}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${getProgressToNext(artist.votes)}%` }}
+                      transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 + Math.min(i, 10) * 0.02 }}
+                    />
+                  </div>
                 )}
               </motion.div>
             );

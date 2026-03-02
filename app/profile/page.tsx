@@ -245,6 +245,7 @@ export default function ProfilePage() {
                 onChange={(e) => setUsernameInput(e.target.value)}
                 className="flex-1 bg-muted/50 border-0 rounded-lg h-9"
                 autoFocus
+                maxLength={32}
                 onKeyDown={(e) => { if (e.key === "Enter") saveUsername(); if (e.key === "Escape") setEditingUsername(false); }}
               />
               <Button size="sm" onClick={saveUsername} disabled={saving === "username"} className="gradient-brand border-0 text-white rounded-lg h-9 px-3">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Ticket, CalendarDays, MapPin, Music2, ExternalLink } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { fadeUp } from "@/lib/animations";
@@ -27,6 +28,7 @@ function formatDate(dateStr: string) {
 export default function ShowsPage() {
   const [shows, setShows] = useState<Show[]>([]);
   const [loading, setLoading] = useState(true);
+  const [images, setImages] = useState<Record<string, string | null>>({});
 
   useEffect(() => {
     fetch("/api/shows")
@@ -34,6 +36,11 @@ export default function ShowsPage() {
       .then((data) => setShows(data.shows ?? []))
       .catch(() => {})
       .finally(() => setLoading(false));
+
+    fetch("/api/artist-images")
+      .then((r) => r.json())
+      .then((data) => { if (data.images) setImages(data.images); })
+      .catch(() => {});
   }, []);
 
   return (
@@ -80,25 +87,42 @@ export default function ShowsPage() {
                 custom={0.05 + Math.min(i, 15) * 0.03}
                 className="glass rounded-xl p-5 hover:border-green-500/20 transition-all group"
               >
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-green-500/15 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                    <Ticket className="w-4 h-4 text-green-400" />
-                  </div>
+                <div className="flex items-center gap-4">
+                  {/* Artist avatar */}
+                  <Link href={`/artist/${show.artistId}`} className="shrink-0">
+                    <div className="w-12 h-12 rounded-xl overflow-hidden relative group-hover:scale-105 transition-transform">
+                      {images[show.artistName] ? (
+                        <Image
+                          src={images[show.artistName]!}
+                          alt={show.artistName}
+                          fill
+                          className="object-cover"
+                          sizes="48px"
+                        />
+                      ) : (
+                        <div className="w-full h-full gradient-brand flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">
+                            {show.artistName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </Link>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-3">
-                      <div>
+                      <div className="min-w-0">
                         <Link href={`/artist/${show.artistId}`} className="font-bold text-base hover:text-primary transition-colors">
                           {show.artistName}
                         </Link>
                         <div className="flex items-center gap-3 mt-1 flex-wrap">
-                          <span className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <MapPin className="w-3 h-3" />
+                          <span className="flex items-center gap-1 text-sm text-muted-foreground truncate">
+                            <MapPin className="w-3 h-3 shrink-0" />
                             {show.venue}, {show.city}
                             {show.country && show.country !== "United States Of America" && show.country !== "Canada"
                               ? `, ${show.country}` : ""}
                           </span>
-                          <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1 text-sm text-muted-foreground shrink-0">
                             <CalendarDays className="w-3 h-3" />
                             {formatDate(show.date)}
                           </span>
