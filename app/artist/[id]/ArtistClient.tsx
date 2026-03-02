@@ -401,12 +401,12 @@ export default function ArtistClient({ id }: { id: string }) {
           <Button
             onClick={() => !confirmedShow && handleVote(artist.id, selectedCity || activeCity)}
             disabled={!!confirmedShow}
-            className={`w-full h-11 rounded-xl font-semibold border-0 transition-all ${
+            className={`w-full h-11 rounded-xl font-semibold transition-all ${
               confirmedShow
-                ? "bg-green-500/20 text-green-400 cursor-default"
+                ? "bg-green-500/20 text-green-400 cursor-default border-0"
                 : voted
-                  ? "gradient-brand text-white glow-primary-sm"
-                  : "bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary"
+                  ? "gradient-brand text-white glow-primary-sm border-0"
+                  : "border border-primary/50 bg-primary/8 text-primary hover:bg-primary/15 hover:border-primary/70"
             }`}
           >
             {confirmedShow ? (

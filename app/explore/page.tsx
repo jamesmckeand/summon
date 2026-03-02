@@ -363,8 +363,8 @@ export default function ExplorePage() {
                     <Button
                       size="sm"
                       onClick={() => handleVote(artist.id, selectedCity)}
-                      className={`w-full h-7 text-xs rounded-lg border-0 font-semibold px-2 ${
-                        voted ? "gradient-brand text-white" : "bg-muted text-muted-foreground hover:bg-[#1DB954]/20 hover:text-[#1DB954]"
+                      className={`w-full h-7 text-xs rounded-lg font-semibold px-2 ${
+                        voted ? "gradient-brand text-white border-0" : "border border-primary/50 bg-primary/8 text-primary hover:bg-primary/15 hover:border-primary/70"
                       }`}
                     >
                       {voted ? "Voted" : "Vote"}
@@ -460,8 +460,10 @@ export default function ExplorePage() {
                     <Button
                       size="sm"
                       onClick={() => handleVote(artist.id, selectedCity)}
-                      className={`shrink-0 rounded-lg h-9 px-3 font-semibold border-0 transition-all ${
-                        voted ? "gradient-brand text-white glow-primary-sm" : "bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary"
+                      className={`shrink-0 rounded-lg h-9 px-3 font-semibold transition-all ${
+                        voted
+                          ? "gradient-brand text-white glow-primary-sm border-0"
+                          : "border border-primary/50 bg-primary/8 text-primary hover:bg-primary/15 hover:border-primary/70"
                       }`}
                     >
                       <ChevronUp className="w-4 h-4 mr-1" />
