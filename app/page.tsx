@@ -76,10 +76,10 @@ export default function Home() {
       {/* ── HERO ── */}
       <section className="relative flex flex-col items-center justify-center min-h-screen px-6 text-center overflow-hidden pt-24">
 
-        {/* Ambient glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] rounded-full bg-primary/8 blur-[140px] pointer-events-none" />
-        <div className="absolute top-1/4 left-1/3 w-[200px] h-[200px] rounded-full bg-violet-600/6 blur-[80px] pointer-events-none" />
-        <div className="absolute bottom-1/3 right-1/4 w-[200px] h-[200px] rounded-full bg-pink-600/6 blur-[80px] pointer-events-none" />
+        {/* Ambient glow — brand colours */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] rounded-full bg-[#2D2349]/50 blur-[140px] pointer-events-none" />
+        <div className="absolute top-1/4 left-1/3 w-[200px] h-[200px] rounded-full bg-[#7C2EAD]/10 blur-[80px] pointer-events-none" />
+        <div className="absolute bottom-1/3 right-1/4 w-[200px] h-[200px] rounded-full bg-[#FBC2FF]/8 blur-[80px] pointer-events-none" />
 
         {/* Badge */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.1}>
