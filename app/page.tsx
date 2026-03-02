@@ -41,7 +41,7 @@ async function signInWithSpotify() {
     provider: "spotify",
     options: {
       redirectTo: `${window.location.origin}/auth/callback`,
-      scopes: "user-read-email user-read-private",
+      scopes: "user-read-email user-read-private user-top-read",
     },
   });
 }

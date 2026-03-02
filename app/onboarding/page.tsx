@@ -31,6 +31,8 @@ export default function OnboardingPage() {
   const [favArtists, setFavArtists] = useState<string[]>([]);
   const [artistSearch, setArtistSearch] = useState("");
   const [saving, setSaving] = useState(false);
+  const [spotifyMatches, setSpotifyMatches] = useState<typeof ARTISTS>([]);
+  const [loadingSpotify, setLoadingSpotify] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -54,6 +56,25 @@ export default function OnboardingPage() {
   );
 
   const cityVenues = city ? getVenuesForCity(city) : null;
+
+  // When entering step 3, fetch Spotify top artists
+  useEffect(() => {
+    if (step !== 3) return;
+    setLoadingSpotify(true);
+    fetch("/api/spotify-top-artists")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data.artists) && data.artists.length > 0) {
+          setSpotifyMatches(data.artists);
+          setFavArtists((prev) => {
+            const newIds = data.artists.map((a: { id: string }) => a.id).filter((id: string) => !prev.includes(id));
+            return [...prev, ...newIds];
+          });
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingSpotify(false));
+  }, [step]);
 
   const filteredArtists = useMemo(() => {
     if (!artistSearch.trim()) return [];
@@ -273,9 +294,17 @@ export default function OnboardingPage() {
 
               {/* Artists */}
               <div>
-                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-3">
-                  Artists you'd love to see
-                </p>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">
+                    Artists you'd love to see
+                  </p>
+                  {loadingSpotify && (
+                    <span className="text-xs text-[#1DB954] animate-pulse">Importing from Spotify…</span>
+                  )}
+                  {!loadingSpotify && spotifyMatches.length > 0 && (
+                    <span className="text-xs text-[#1DB954]">✓ {spotifyMatches.length} imported from Spotify</span>
+                  )}
+                </div>
 
                 {/* Selected chips */}
                 {favArtists.length > 0 && (

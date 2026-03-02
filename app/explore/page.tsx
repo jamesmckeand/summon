@@ -65,8 +65,16 @@ export default function ExplorePage() {
   const [selectedCity, setSelectedCity] = useState(activeCity);
   const { counts, loading: countsLoading } = useVoteCounts(selectedCity);
   const [confirmedShows, setConfirmedShows] = useState<Record<string, boolean>>({});
+  const [forYouArtists, setForYouArtists] = useState<typeof ARTISTS>([]);
 
   useEffect(() => { setMounted(true); }, []);
+
+  useEffect(() => {
+    fetch("/api/spotify-top-artists")
+      .then((r) => r.json())
+      .then((data) => { if (Array.isArray(data.artists)) setForYouArtists(data.artists); })
+      .catch(() => {});
+  }, []);
 
   // Fetch community-approved artists
   useEffect(() => {
@@ -308,6 +316,37 @@ export default function ExplorePage() {
           {filteredArtists.length} artists · sorted by votes in {selectedCity}
           {selectedGenre !== "All" && <span> · <button onClick={() => setSelectedGenre("All")} className="text-primary hover:underline">{selectedGenre} ×</button></span>}
         </motion.p>
+
+        {/* For You — Spotify matches */}
+        {forYouArtists.length > 0 && (
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.08} className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+              <p className="text-xs font-semibold uppercase tracking-widest text-[#1DB954]">For You</p>
+              <span className="text-xs text-muted-foreground">Based on your Spotify listening</span>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              {forYouArtists.slice(0, 10).map((artist) => {
+                const voted = mounted && hasVoted(artist.id, selectedCity);
+                return (
+                  <div key={artist.id} className="glass rounded-xl p-3 flex flex-col items-center gap-2 shrink-0 w-28 hover:border-[#1DB954]/30 transition-colors">
+                    <ArtistAvatar name={artist.name} image={images[artist.name] ?? null} />
+                    <p className="text-xs font-semibold text-center leading-tight line-clamp-2">{artist.name}</p>
+                    <Button
+                      size="sm"
+                      onClick={() => handleVote(artist.id, selectedCity)}
+                      className={`w-full h-7 text-xs rounded-lg border-0 font-semibold px-2 ${
+                        voted ? "gradient-brand text-white" : "bg-muted text-muted-foreground hover:bg-[#1DB954]/20 hover:text-[#1DB954]"
+                      }`}
+                    >
+                      {voted ? "Voted" : "Vote"}
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
 
         {/* Artist list */}
         {countsLoading && (
