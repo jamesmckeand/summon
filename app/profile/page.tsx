@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import {
   User, MapPin, Search, ChevronDown, ChevronUp, Check, X,
   Music2, Pencil, Save, Headphones,
@@ -34,6 +35,8 @@ type Profile = {
   favourite_artists: string[];
 };
 
+type DbVote = { artist_id: string; city: string };
+
 function GradientAvatar({ name }: { name: string }) {
   const initials = name
     .split(" ")
@@ -60,6 +63,7 @@ export default function ProfilePage() {
     favourite_artists: [],
   });
   const [loading, setLoading] = useState(true);
+  const [dbVotes, setDbVotes] = useState<DbVote[]>([]);
 
   // Editing states
   const [editingUsername, setEditingUsername] = useState(false);
@@ -76,21 +80,21 @@ export default function ProfilePage() {
       setUser(data.user);
     });
 
-    fetch("/api/profile")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.profile) {
-          setProfile({
-            username: data.profile.username ?? null,
-            city: data.profile.city ?? null,
-            favourite_venues: data.profile.favourite_venues ?? [],
-            favourite_artists: data.profile.favourite_artists ?? [],
-          });
-          setUsernameInput(data.profile.username ?? "");
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    Promise.all([
+      fetch("/api/profile").then((r) => r.json()),
+      fetch("/api/votes").then((r) => r.json()),
+    ]).then(([profileData, votesData]) => {
+      if (profileData.profile) {
+        setProfile({
+          username: profileData.profile.username ?? null,
+          city: profileData.profile.city ?? null,
+          favourite_venues: profileData.profile.favourite_venues ?? [],
+          favourite_artists: profileData.profile.favourite_artists ?? [],
+        });
+        setUsernameInput(profileData.profile.username ?? "");
+      }
+      if (votesData.votes) setDbVotes(votesData.votes);
+    }).catch(() => {}).finally(() => setLoading(false));
   }, [router]);
 
   const filteredCities = useMemo(
@@ -158,8 +162,20 @@ export default function ProfilePage() {
     user?.email?.split("@")[0] ||
     "User";
 
-  const totalVotes = Object.values(votes).reduce((sum, ids) => sum + ids.length, 0);
-  const citiesVotedIn = Object.entries(votes).filter(([, ids]) => ids.length > 0).length;
+  const totalVotes = dbVotes.length || Object.values(votes).reduce((sum, ids) => sum + ids.length, 0);
+  const citiesVotedIn = dbVotes.length
+    ? new Set(dbVotes.map((v) => v.city)).size
+    : Object.entries(votes).filter(([, ids]) => ids.length > 0).length;
+
+  // Group DB votes by city for the history section
+  const votesByCity = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    for (const { artist_id, city } of dbVotes) {
+      if (!map[city]) map[city] = [];
+      map[city].push(artist_id);
+    }
+    return Object.entries(map).sort((a, b) => b[1].length - a[1].length);
+  }, [dbVotes]);
 
   if (loading) {
     return (
@@ -334,6 +350,39 @@ export default function ProfilePage() {
             </div>
           )}
         </motion.div>
+
+        {/* Vote history */}
+        {votesByCity.length > 0 && (
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.225} className="glass rounded-2xl p-5 mb-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">Vote History</p>
+            <div className="flex flex-col gap-5">
+              {votesByCity.map(([city, artistIds]) => (
+                <div key={city}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
+                    <p className="text-sm font-semibold">{city}</p>
+                    <span className="text-xs text-muted-foreground ml-auto">{artistIds.length} vote{artistIds.length !== 1 ? "s" : ""}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {artistIds.map((id) => {
+                      const a = ARTISTS.find((a) => a.id === id);
+                      if (!a) return null;
+                      return (
+                        <Link
+                          key={id}
+                          href={`/artist/${id}`}
+                          className="px-2.5 py-1 rounded-full glass text-xs font-medium hover:border-primary/40 hover:text-primary transition-colors"
+                        >
+                          {a.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Favourite artists */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.25} className="glass rounded-2xl p-5">
