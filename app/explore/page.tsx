@@ -136,28 +136,19 @@ export default function ExplorePage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showGenreDropdown]);
 
-  // Fetch confirmed shows for top 15 artists when city changes
+  // Fetch confirmed shows from the cached /api/shows endpoint (1 request, not 15)
   useEffect(() => {
-    if (!selectedCity) return;
-    setConfirmedShows({});
-    const topArtists = [...ARTISTS]
-      .map((a) => ({ ...a, votes: counts[a.id] ?? 0 }))
-      .sort((a, b) => b.votes - a.votes)
-      .slice(0, 15);
-
-    topArtists.forEach(async (artist) => {
-      try {
-        const res = await fetch(
-          `/api/artist-shows?artistName=${encodeURIComponent(artist.name)}&city=${encodeURIComponent(selectedCity)}`
-        );
-        const data = await res.json();
-        if ((data.shows ?? []).length > 0) {
-          setConfirmedShows((prev) => ({ ...prev, [artist.id]: true }));
+    fetch("/api/shows")
+      .then((r) => r.json())
+      .then((data) => {
+        const map: Record<string, boolean> = {};
+        for (const show of data.shows ?? []) {
+          if (show.artistId) map[show.artistId] = true;
         }
-      } catch { /* ignore */ }
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCity]);
+        setConfirmedShows(map);
+      })
+      .catch(() => {});
+  }, []);
 
   const filteredCities = useMemo(
     () => CITIES.filter((c) => c.toLowerCase().includes(citySearch.toLowerCase())),
