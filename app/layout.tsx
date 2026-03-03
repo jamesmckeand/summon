@@ -28,7 +28,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" style={{ colorScheme: "dark", backgroundColor: "#0C0A18" }}>
+      <head>
+        <meta name="color-scheme" content="dark" />
+      </head>
       <body className={`${neueMontreal.variable} font-sans antialiased`}>
         {children}
         <Analytics />
