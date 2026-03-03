@@ -73,11 +73,14 @@ function showLocation(show: Show) {
   return parts.join(", ");
 }
 
+const PAGE_SIZE = 10; // artist-groups per page
+
 export default function ShowsPage() {
   const [shows, setShows] = useState<Show[]>([]);
   const [loading, setLoading] = useState(true);
   const [images, setImages] = useState<Record<string, string | null>>({});
   const [cityFilter, setCityFilter] = useState("All");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
     fetch("/api/shows")
@@ -129,6 +132,13 @@ export default function ShowsPage() {
       .filter((g) => g.shows.length > 0);
   }, [artistGroups, cityFilter]);
 
+  // Reset pagination when filter changes
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [cityFilter]);
+
+  const visibleGroups = filteredGroups.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredGroups.length;
+  const remaining = filteredGroups.length - visibleCount;
+
   return (
     <div className="min-h-screen bg-background">
       <Nav />
@@ -142,7 +152,12 @@ export default function ShowsPage() {
           </div>
           <h1 className="text-3xl font-bold tracking-tight">Confirmed Shows</h1>
           <p className="mt-1 text-muted-foreground">
-            Upcoming shows for the most voted artists on Summon.
+            {loading
+              ? "Loading shows…"
+              : shows.length > 0
+                ? `${shows.length} upcoming show${shows.length !== 1 ? "s" : ""} across ${filteredGroups.length} artist${filteredGroups.length !== 1 ? "s" : ""}`
+                : "Upcoming shows for the most voted artists on Summon."
+            }
           </p>
         </motion.div>
 
@@ -233,7 +248,7 @@ export default function ShowsPage() {
 
         ) : (
           <div className="flex flex-col gap-4">
-            {filteredGroups.map((group, gi) => {
+            {visibleGroups.map((group, gi) => {
               const img = images[group.artistName] ?? null;
               const initials = group.artistName
                 .split(" ")
@@ -342,6 +357,25 @@ export default function ShowsPage() {
               );
             })}
 
+            {/* Load more */}
+            {hasMore && (
+              <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={fadeUp}
+                custom={0.35}
+                className="flex flex-col items-center gap-2 pt-2"
+              >
+                <Button
+                  variant="outline"
+                  onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                  className="border-border/50 hover:border-primary/40 hover:text-primary px-8 h-10 rounded-xl font-semibold"
+                >
+                  Load more · {remaining} more artist{remaining !== 1 ? "s" : ""}
+                </Button>
+              </motion.div>
+            )}
+
             <motion.p
               initial="hidden"
               animate="visible"
@@ -350,7 +384,7 @@ export default function ShowsPage() {
               className="text-center text-xs text-muted-foreground mt-2 flex items-center justify-center gap-1.5"
             >
               <Music2 className="w-3 h-3" />
-              Shows sourced from Ticketmaster for the top voted artists on Summon
+              Shows from Ticketmaster, Bandsintown &amp; Songkick
             </motion.p>
           </div>
         )}

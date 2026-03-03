@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { ARTISTS } from "@/lib/data/artists";
 
-type ShowItem = {
+export type ShowItem = {
   id: string;
   artistId: string;
   artistName: string;
@@ -11,12 +11,17 @@ type ShowItem = {
   country: string;
   date: string;
   ticketUrl: string;
-  source: "ticketmaster" | "songkick";
+  source: "ticketmaster" | "songkick" | "bandsintown";
 };
 
-const normalise = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+// Module-level cache — survives across requests on the same warm instance
+let showsCache: { shows: ShowItem[]; builtAt: number } | null = null;
+const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
-// ── Ticketmaster ────────────────────────────────────────────────────────────
+const normalise = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+const today = () => new Date().toISOString().split("T")[0];
+
+// ── Ticketmaster ─────────────────────────────────────────────────────────────
 async function fetchTicketmaster(
   artist: (typeof ARTISTS)[0],
   apiKey: string,
@@ -27,10 +32,9 @@ async function fetchTicketmaster(
     keyword: artist.name,
     classificationName: "Music",
     sort: "date,asc",
-    size: "5",
+    size: "10",
     startDateTime: now,
   });
-
   try {
     const res = await fetch(
       `https://app.ticketmaster.com/discovery/v2/events.json?${params}`,
@@ -49,7 +53,7 @@ async function fetchTicketmaster(
 
     return events
       .filter((e) => normalise(e.name).includes(artistNorm))
-      .slice(0, 3)
+      .slice(0, 5)
       .map((e) => ({
         id: `tm-${e.id}`,
         artistId: artist.id,
@@ -66,13 +70,49 @@ async function fetchTicketmaster(
   }
 }
 
-// ── Songkick ────────────────────────────────────────────────────────────────
+// ── Bandsintown ───────────────────────────────────────────────────────────────
+async function fetchBandsintown(
+  artist: (typeof ARTISTS)[0],
+  appId: string
+): Promise<ShowItem[]> {
+  try {
+    const res = await fetch(
+      `https://rest.bandsintown.com/artists/${encodeURIComponent(artist.name)}/events?app_id=${appId}&date=upcoming`,
+      { next: { revalidate: 3600 } }
+    );
+    if (!res.ok) return [];
+    const events = await res.json();
+    if (!Array.isArray(events)) return [];
+    const cutoff = today();
+
+    return events
+      .filter((e) => {
+        const date = e.datetime?.split("T")[0];
+        return date && date >= cutoff && date !== "0000-00-00";
+      })
+      .slice(0, 5)
+      .map((e) => ({
+        id: `bit-${e.id}`,
+        artistId: artist.id,
+        artistName: artist.name,
+        venue: e.venue?.name ?? "TBA",
+        city: e.venue?.city ?? "TBA",
+        country: e.venue?.country ?? "",
+        date: e.datetime.split("T")[0],
+        ticketUrl: e.offers?.[0]?.url ?? e.url,
+        source: "bandsintown" as const,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+// ── Songkick ──────────────────────────────────────────────────────────────────
 async function fetchSongkick(
   artist: (typeof ARTISTS)[0],
   apiKey: string
 ): Promise<ShowItem[]> {
   try {
-    // Step 1: find the Songkick artist ID
     const searchRes = await fetch(
       `https://api.songkick.com/api/3.0/search/artists.json?query=${encodeURIComponent(artist.name)}&apikey=${apiKey}`,
       { next: { revalidate: 86400 } }
@@ -81,13 +121,10 @@ async function fetchSongkick(
     const searchData = await searchRes.json();
     const artists: { id: number; displayName: string }[] =
       searchData.resultsPage?.results?.artist ?? [];
-
-    // Match by normalised name
     const artistNorm = normalise(artist.name);
     const match = artists.find((a) => normalise(a.displayName) === artistNorm);
     if (!match) return [];
 
-    // Step 2: fetch upcoming events
     const eventsRes = await fetch(
       `https://api.songkick.com/api/3.0/artists/${match.id}/calendar.json?apikey=${apiKey}`,
       { next: { revalidate: 3600 } }
@@ -101,7 +138,7 @@ async function fetchSongkick(
       venue: { displayName: string; city?: { displayName: string; country?: { displayName: string } } };
     }[] = eventsData.resultsPage?.results?.event ?? [];
 
-    return events.slice(0, 3).map((e) => ({
+    return events.slice(0, 5).map((e) => ({
       id: `sk-${e.id}`,
       artistId: artist.id,
       artistName: artist.name,
@@ -117,64 +154,90 @@ async function fetchSongkick(
   }
 }
 
-// ── Main route ───────────────────────────────────────────────────────────────
-export async function GET() {
-  const supabase = await createClient();
+// ── Build full shows dataset ──────────────────────────────────────────────────
+async function buildShows(
+  artists: typeof ARTISTS,
+  tmKey: string | undefined,
+  skKey: string | undefined,
+  bitId: string | undefined
+): Promise<ShowItem[]> {
+  const now = new Date().toISOString().split(".")[0] + "Z";
+  const allShows: ShowItem[] = [];
 
+  // Process in batches of 20 — parallel within each batch, sequential between
+  const BATCH = 20;
+  for (let i = 0; i < artists.length; i += BATCH) {
+    const batch = artists.slice(i, i + BATCH);
+    const results = await Promise.allSettled(
+      batch.map(async (artist) => {
+        const [tmShows, skShows, bitShows] = await Promise.all([
+          tmKey ? fetchTicketmaster(artist, tmKey, now) : Promise.resolve([]),
+          skKey ? fetchSongkick(artist, skKey) : Promise.resolve([]),
+          bitId ? fetchBandsintown(artist, bitId) : Promise.resolve([]),
+        ]);
+
+        // Merge + deduplicate (Bandsintown first as it often has richer data)
+        const seen = new Set<string>();
+        const merged: ShowItem[] = [];
+        for (const show of [...bitShows, ...tmShows, ...skShows]) {
+          const key = `${show.artistId}|${show.date}|${normalise(show.venue).slice(0, 10)}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            merged.push(show);
+          }
+        }
+        return merged.sort((a, b) => a.date.localeCompare(b.date)).slice(0, 5);
+      })
+    );
+
+    for (const r of results) {
+      if (r.status === "fulfilled") allShows.push(...r.value);
+    }
+  }
+
+  return allShows.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+}
+
+// ── Main route ────────────────────────────────────────────────────────────────
+export async function GET() {
+  // Serve from memory cache if fresh — zero additional API calls
+  if (showsCache && Date.now() - showsCache.builtAt < CACHE_TTL) {
+    return NextResponse.json({ shows: showsCache.shows }, {
+      headers: { "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400" },
+    });
+  }
+
+  const tmKey = process.env.TICKETMASTER_API_KEY;
+  const skKey = process.env.SONGKICK_API_KEY || undefined;
+  // Register at https://bandsintown.com/api_key_requests to get a production key
+  // "test" works for development only
+  const bitId = process.env.BANDSINTOWN_APP_ID || "test";
+
+  if (!tmKey && !skKey && !bitId) {
+    return NextResponse.json({ shows: [] });
+  }
+
+  // Sort all artists: voted ones first, then alphabetical
+  const supabase = await createClient();
   const { data } = await supabase
     .from("vote_counts")
     .select("artist_id, vote_count")
     .order("vote_count", { ascending: false });
 
-  // Sum votes per artist, take top 15
   const artistVotes: Record<string, number> = {};
   for (const row of data ?? []) {
     artistVotes[row.artist_id] = (artistVotes[row.artist_id] ?? 0) + Number(row.vote_count);
   }
 
-  const topArtists = Object.entries(artistVotes)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 15)
-    .map(([id]) => ARTISTS.find((a) => a.id === id))
-    .filter(Boolean) as typeof ARTISTS;
-
-  const tmKey = process.env.TICKETMASTER_API_KEY;
-  const skKey = process.env.SONGKICK_API_KEY;
-
-  if ((!tmKey && !skKey) || topArtists.length === 0) {
-    return NextResponse.json({ shows: [] });
-  }
-
-  const now = new Date().toISOString().split(".")[0] + "Z";
-
-  // Fetch from both sources in parallel per artist
-  const results = await Promise.allSettled(
-    topArtists.map(async (artist) => {
-      const [tmShows, skShows] = await Promise.all([
-        tmKey ? fetchTicketmaster(artist, tmKey, now) : Promise.resolve([]),
-        skKey ? fetchSongkick(artist, skKey) : Promise.resolve([]),
-      ]);
-
-      // Merge and deduplicate by date (same artist + same date = same show)
-      const seen = new Set<string>();
-      const merged: ShowItem[] = [];
-      for (const show of [...tmShows, ...skShows]) {
-        const key = `${show.artistId}|${show.date}|${normalise(show.venue).slice(0, 10)}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          merged.push(show);
-        }
-      }
-      return merged.sort((a, b) => a.date.localeCompare(b.date));
-    })
+  // Query all artists, voted ones sorted to the front
+  const sortedArtists = [...ARTISTS].sort(
+    (a, b) => (artistVotes[b.id] ?? 0) - (artistVotes[a.id] ?? 0)
   );
 
-  const shows = results
-    .filter((r): r is PromiseFulfilledResult<ShowItem[]> => r.status === "fulfilled")
-    .flatMap((r) => r.value)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const shows = await buildShows(sortedArtists, tmKey, skKey, bitId);
+  showsCache = { shows, builtAt: Date.now() };
 
   return NextResponse.json({ shows }, {
-    headers: { "Cache-Control": "public, max-age=3600" },
+    headers: { "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400" },
   });
 }
