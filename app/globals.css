@@ -81,10 +81,6 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    /* Brand radial glows layer on top of the base background colour */
-    background-image:
-      radial-gradient(ellipse 130% 55% at 50% -5%, #2D2349 0%, transparent 65%),
-      radial-gradient(ellipse 60% 35% at 95% 105%, #19132B 0%, transparent 55%);
   }
 
   ::selection {
