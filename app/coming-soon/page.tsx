@@ -31,13 +31,13 @@ export default function ComingSoonPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 relative overflow-hidden">
-      {/* Brand gradient background */}
-      <div className="absolute inset-0 bg-[linear-gradient(160deg,#000000_0%,#19132B_30%,#2D2349_60%,#19132B_80%,#000000_100%)]" />
-      {/* Ambient glow — brand lavender pink */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[450px] rounded-full bg-[#FBC2FF]/6 blur-[130px] pointer-events-none" />
-      <div className="absolute top-1/4 left-1/3 w-[220px] h-[220px] rounded-full bg-[#7C2EAD]/12 blur-[80px] pointer-events-none" />
-      <div className="absolute bottom-1/3 right-1/4 w-[200px] h-[200px] rounded-full bg-[#FBC2FF]/8 blur-[80px] pointer-events-none" />
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 relative overflow-hidden">
+      {/* Subtle dark radial depth — stays within the dark range, no brightness jump */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,#19132B_0%,transparent_70%)] pointer-events-none" />
+      {/* Ambient glow — very low opacity so they don't brighten the base */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[450px] rounded-full bg-[#7C2EAD]/8 blur-[140px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/3 w-[220px] h-[220px] rounded-full bg-[#FBC2FF]/5 blur-[90px] pointer-events-none" />
+      <div className="absolute bottom-1/3 right-1/4 w-[200px] h-[200px] rounded-full bg-[#7C2EAD]/6 blur-[80px] pointer-events-none" />
 
       <motion.div
         initial="hidden"
