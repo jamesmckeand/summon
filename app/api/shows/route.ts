@@ -227,6 +227,10 @@ async function buildShows(
 }
 
 // ── Main route ────────────────────────────────────────────────────────────────
+// Tell Next.js to cache this route for 1 hour at the CDN/platform level,
+// so cold-start serverless instances don't all hammer Ticketmaster at once.
+export const revalidate = 3600;
+
 export async function GET() {
   // Serve from memory cache if fresh — filter out past shows before responding
   if (showsCache && Date.now() - showsCache.builtAt < CACHE_TTL) {
