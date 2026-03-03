@@ -72,19 +72,10 @@ export default function Marquee() {
   const [images, setImages] = useState<Record<string, string | null>>({});
 
   useEffect(() => {
-    const names = [...new Set([...row1, ...row2].map((a) => a.name))];
-    names.forEach(async (name) => {
-      try {
-        const res = await fetch(`/api/artist-image?name=${encodeURIComponent(name)}`);
-        const data = await res.json();
-        if (data.image) {
-          setImages((prev) => ({ ...prev, [name]: data.image }));
-        }
-      } catch {
-        // fallback to initials
-      }
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetch("/api/artist-images")
+      .then((r) => r.json())
+      .then((data) => { if (data.images) setImages(data.images); })
+      .catch(() => {});
   }, []);
 
   return (

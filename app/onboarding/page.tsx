@@ -300,10 +300,13 @@ export default function OnboardingPage() {
                     Artists you'd love to see
                   </p>
                   {loadingSpotify && (
-                    <span className="text-xs text-[#1DB954] animate-pulse">Importing from Spotify…</span>
+                    <span className="text-xs text-muted-foreground animate-pulse">Checking Spotify…</span>
                   )}
                   {!loadingSpotify && spotifyMatches.length > 0 && (
                     <span className="text-xs text-[#1DB954]">✓ {spotifyMatches.length} from Spotify</span>
+                  )}
+                  {!loadingSpotify && spotifyMatches.length === 0 && (
+                    <span className="text-xs text-muted-foreground">Search below to add artists</span>
                   )}
                   <AppleMusicConnect
                     onArtists={(artists) => {
