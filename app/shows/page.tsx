@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Ticket, Music2, ExternalLink, ChevronRight } from "lucide-react";
+import { Ticket, Music2, ExternalLink, ChevronRight, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -81,6 +81,7 @@ export default function ShowsPage() {
   const [images, setImages] = useState<Record<string, string | null>>({});
   const [cityFilter, setCityFilter] = useState("All");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [favouriteArtistIds, setFavouriteArtistIds] = useState<string[]>([]);
 
   useEffect(() => {
     fetch("/api/shows")
@@ -92,6 +93,16 @@ export default function ShowsPage() {
     fetch("/api/artist-images")
       .then((r) => r.json())
       .then((data) => { if (data.images) setImages(data.images); })
+      .catch(() => {});
+
+    // Silently fetch user's favourite artists — ignored if not logged in
+    fetch("/api/profile")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.profile?.favourite_artists?.length) {
+          setFavouriteArtistIds(data.profile.favourite_artists);
+        }
+      })
       .catch(() => {});
   }, []);
 
@@ -111,11 +122,20 @@ export default function ShowsPage() {
       }
       map[show.artistId].shows.push(show);
     }
-    // Sort groups by their earliest show date
-    return Object.values(map).sort(
-      (a, b) => new Date(a.shows[0].date).getTime() - new Date(b.shows[0].date).getTime()
-    );
-  }, [shows]);
+
+    const favSet = new Set(favouriteArtistIds);
+
+    return Object.values(map).sort((a, b) => {
+      const aFav = favSet.has(a.artistId);
+      const bFav = favSet.has(b.artistId);
+      // 1. Favourites always first
+      if (aFav !== bFav) return aFav ? -1 : 1;
+      // 2. More confirmed shows = more popular / active tour
+      if (b.shows.length !== a.shows.length) return b.shows.length - a.shows.length;
+      // 3. Earliest show date as tiebreaker
+      return new Date(a.shows[0].date).getTime() - new Date(b.shows[0].date).getTime();
+    });
+  }, [shows, favouriteArtistIds]);
 
   // All cities that appear in the current show list
   const cities = useMemo(() => {
@@ -260,6 +280,7 @@ export default function ShowsPage() {
           <div className="flex flex-col gap-4">
             {visibleGroups.map((group, gi) => {
               const img = images[group.artistName] ?? null;
+              const isFavourite = favouriteArtistIds.includes(group.artistId);
               const initials = group.artistName
                 .split(" ")
                 .map((w) => w[0])
@@ -274,7 +295,7 @@ export default function ShowsPage() {
                   animate="visible"
                   variants={fadeUp}
                   custom={0.08 + Math.min(gi, 8) * 0.04}
-                  className="glass rounded-2xl overflow-hidden"
+                  className={`glass rounded-2xl overflow-hidden ${isFavourite ? "border-primary/30" : ""}`}
                 >
                   {/* Artist header */}
                   <Link href={`/artist/${group.artistId}`}>
@@ -296,9 +317,14 @@ export default function ShowsPage() {
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-base leading-tight group-hover:text-primary transition-colors">
-                          {group.artistName}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-base leading-tight group-hover:text-primary transition-colors">
+                            {group.artistName}
+                          </p>
+                          {isFavourite && (
+                            <Star className="w-3.5 h-3.5 text-primary fill-primary shrink-0" />
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {group.subgenre
                             ? `${group.genre} · ${group.subgenre}`
