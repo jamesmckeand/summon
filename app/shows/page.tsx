@@ -137,10 +137,10 @@ export default function ShowsPage() {
     });
   }, [shows, favouriteArtistIds]);
 
-  // Filter by artist name or city/country
+  // Filter by artist name or city/country — nothing shown until user types
   const filteredGroups = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return artistGroups;
+    if (!q) return [];
     return artistGroups
       .map((g) => {
         // Artist name match → show all their shows
@@ -176,18 +176,18 @@ export default function ShowsPage() {
           <p className="mt-1 text-muted-foreground">
             {loading
               ? "Loading shows…"
-              : filteredShowCount > 0
+              : !searchQuery.trim()
+                ? "Search for an artist or city to find shows."
+                : filteredShowCount > 0
                 ? <>
                     <span className="text-foreground font-medium">{filteredShowCount}</span>
                     {" upcoming show"}{filteredShowCount !== 1 ? "s" : ""}
-                    {searchQuery.trim() ? <> matching <span className="text-foreground font-medium">&ldquo;{searchQuery.trim()}&rdquo;</span></> : ""}
+                    {" matching "}<span className="text-foreground font-medium">&ldquo;{searchQuery.trim()}&rdquo;</span>
                     {" across "}
                     <span className="text-foreground font-medium">{filteredGroups.length}</span>
                     {" artist"}{filteredGroups.length !== 1 ? "s" : ""}
                   </>
-                : searchQuery.trim()
-                  ? `No shows found for "${searchQuery.trim()}".`
-                  : "No confirmed shows right now."
+                : `No shows found for "${searchQuery.trim()}".`
             }
           </p>
         </motion.div>
@@ -259,16 +259,18 @@ export default function ShowsPage() {
             <p className="text-muted-foreground mb-2">
               {searchQuery.trim()
                 ? `No shows found for "${searchQuery.trim()}".`
-                : "No confirmed shows right now."}
+                : "Type an artist name or city above to find confirmed shows."}
             </p>
-            <p className="text-sm text-muted-foreground mb-6">
-              Keep voting — when enough fans vote for an artist, we reach out to venues to make it happen.
-            </p>
-            {searchQuery.trim() ? (
-              <Button variant="ghost" onClick={() => setSearchQuery("")} className="mr-2">
-                Clear search
-              </Button>
-            ) : null}
+            {searchQuery.trim() && (
+              <>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Keep voting — when enough fans vote for an artist, we reach out to venues to make it happen.
+                </p>
+                <Button variant="ghost" onClick={() => setSearchQuery("")} className="mr-2">
+                  Clear search
+                </Button>
+              </>
+            )}
             <Link href="/explore">
               <Button className="gradient-brand border-0 text-white">Browse artists</Button>
             </Link>
