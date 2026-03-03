@@ -138,6 +138,7 @@ export default function ShowsPage() {
   const visibleGroups = filteredGroups.slice(0, visibleCount);
   const hasMore = visibleCount < filteredGroups.length;
   const remaining = filteredGroups.length - visibleCount;
+  const filteredShowCount = filteredGroups.reduce((acc, g) => acc + g.shows.length, 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -154,9 +155,18 @@ export default function ShowsPage() {
           <p className="mt-1 text-muted-foreground">
             {loading
               ? "Loading shows…"
-              : shows.length > 0
-                ? `${shows.length} upcoming show${shows.length !== 1 ? "s" : ""} across ${filteredGroups.length} artist${filteredGroups.length !== 1 ? "s" : ""}`
-                : "Upcoming shows for the most voted artists on Summon."
+              : filteredShowCount > 0
+                ? <>
+                    <span className="text-foreground font-medium">{filteredShowCount}</span>
+                    {" upcoming show"}{filteredShowCount !== 1 ? "s" : ""}
+                    {cityFilter !== "All" ? <> in <span className="text-foreground font-medium">{cityFilter}</span></> : ""}
+                    {" across "}
+                    <span className="text-foreground font-medium">{filteredGroups.length}</span>
+                    {" artist"}{filteredGroups.length !== 1 ? "s" : ""}
+                  </>
+                : cityFilter !== "All"
+                  ? `No upcoming shows in ${cityFilter}.`
+                  : "No confirmed shows right now."
             }
           </p>
         </motion.div>
