@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Ticket, Music2, ExternalLink, ChevronRight, Star } from "lucide-react";
+import { Ticket, Music2, ExternalLink, ChevronRight, Star, Search, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -79,7 +79,7 @@ export default function ShowsPage() {
   const [shows, setShows] = useState<Show[]>([]);
   const [loading, setLoading] = useState(true);
   const [images, setImages] = useState<Record<string, string | null>>({});
-  const [cityFilter, setCityFilter] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [favouriteArtistIds, setFavouriteArtistIds] = useState<string[]>([]);
 
@@ -137,23 +137,24 @@ export default function ShowsPage() {
     });
   }, [shows, favouriteArtistIds]);
 
-  // All cities that appear in the current show list
-  const cities = useMemo(() => {
-    const set = new Set<string>();
-    for (const show of shows) if (show.city && show.city !== "TBA") set.add(show.city);
-    return Array.from(set).sort();
-  }, [shows]);
-
-  // Apply city filter
+  // Filter by artist name or city/country
   const filteredGroups = useMemo(() => {
-    if (cityFilter === "All") return artistGroups;
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return artistGroups;
     return artistGroups
-      .map((g) => ({ ...g, shows: g.shows.filter((s) => s.city === cityFilter) }))
+      .map((g) => {
+        // Artist name match → show all their shows
+        if (g.artistName.toLowerCase().includes(q)) return g;
+        // Otherwise filter individual shows by city / country
+        return { ...g, shows: g.shows.filter((s) =>
+          s.city.toLowerCase().includes(q) || s.country.toLowerCase().includes(q)
+        )};
+      })
       .filter((g) => g.shows.length > 0);
-  }, [artistGroups, cityFilter]);
+  }, [artistGroups, searchQuery]);
 
-  // Reset pagination when filter changes
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [cityFilter]);
+  // Reset pagination when search changes
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [searchQuery]);
 
   const visibleGroups = filteredGroups.slice(0, visibleCount);
   const hasMore = visibleCount < filteredGroups.length;
@@ -179,41 +180,38 @@ export default function ShowsPage() {
                 ? <>
                     <span className="text-foreground font-medium">{filteredShowCount}</span>
                     {" upcoming show"}{filteredShowCount !== 1 ? "s" : ""}
-                    {cityFilter !== "All" ? <> in <span className="text-foreground font-medium">{cityFilter}</span></> : ""}
+                    {searchQuery.trim() ? <> matching <span className="text-foreground font-medium">&ldquo;{searchQuery.trim()}&rdquo;</span></> : ""}
                     {" across "}
                     <span className="text-foreground font-medium">{filteredGroups.length}</span>
                     {" artist"}{filteredGroups.length !== 1 ? "s" : ""}
                   </>
-                : cityFilter !== "All"
-                  ? `No upcoming shows in ${cityFilter}.`
+                : searchQuery.trim()
+                  ? `No shows found for "${searchQuery.trim()}".`
                   : "No confirmed shows right now."
             }
           </p>
         </motion.div>
 
-        {/* City filter pills */}
-        {!loading && cities.length > 1 && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeUp}
-            custom={0.05}
-            className="flex gap-2 overflow-x-auto pb-1 mb-6 scrollbar-hide"
-          >
-            {["All", ...cities].map((city) => (
+        {/* Search bar */}
+        {!loading && (
+          <div className="anim-fade-up relative mb-6" style={{ animationDelay: "0.05s" }}>
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search by artist or city…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-11 pl-10 pr-10 rounded-xl bg-muted/40 border border-border/50 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-colors"
+            />
+            {searchQuery && (
               <button
-                key={city}
-                onClick={() => setCityFilter(city)}
-                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all border ${
-                  cityFilter === city
-                    ? "gradient-brand text-white border-transparent glow-primary-sm"
-                    : "glass text-muted-foreground hover:text-foreground border-border/40"
-                }`}
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
-                {city}
+                <X className="w-4 h-4" />
               </button>
-            ))}
-          </motion.div>
+            )}
+          </div>
         )}
 
         {/* Loading skeleton */}
@@ -259,16 +257,16 @@ export default function ShowsPage() {
           >
             <Ticket className="w-10 h-10 mx-auto mb-3 text-muted-foreground opacity-30" />
             <p className="text-muted-foreground mb-2">
-              {cityFilter !== "All"
-                ? `No shows in ${cityFilter} right now.`
+              {searchQuery.trim()
+                ? `No shows found for "${searchQuery.trim()}".`
                 : "No confirmed shows right now."}
             </p>
             <p className="text-sm text-muted-foreground mb-6">
               Keep voting — when enough fans vote for an artist, we reach out to venues to make it happen.
             </p>
-            {cityFilter !== "All" ? (
-              <Button variant="ghost" onClick={() => setCityFilter("All")} className="mr-2">
-                Show all cities
+            {searchQuery.trim() ? (
+              <Button variant="ghost" onClick={() => setSearchQuery("")} className="mr-2">
+                Clear search
               </Button>
             ) : null}
             <Link href="/explore">
