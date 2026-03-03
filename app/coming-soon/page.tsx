@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { Music2, ArrowRight, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { fadeUp } from "@/lib/animations";
 
 export default function ComingSoonPage() {
   const [email, setEmail] = useState("");
@@ -39,36 +38,30 @@ export default function ComingSoonPage() {
       <div className="absolute top-1/4 left-1/3 w-[220px] h-[220px] rounded-full bg-[#FBC2FF]/5 blur-[90px] pointer-events-none" />
       <div className="absolute bottom-1/3 right-1/4 w-[200px] h-[200px] rounded-full bg-[#7C2EAD]/6 blur-[80px] pointer-events-none" />
 
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={fadeUp}
-        custom={0}
-        className="relative z-10 text-center max-w-md w-full"
-      >
+      {/* CSS-animated content — avoids framer-motion SSR hydration flash */}
+      <div className="relative z-10 text-center max-w-md w-full">
+
         {/* Logo */}
-        <motion.div variants={fadeUp} custom={0.05} className="mb-10">
+        <div className="anim-fade-up mb-10" style={{ animationDelay: "0.05s" }}>
           <span className="text-2xl font-bold gradient-brand-text">Summon</span>
-        </motion.div>
+        </div>
 
         {/* Headline */}
-        <motion.h1
-          variants={fadeUp}
-          custom={0.1}
-          className="text-5xl sm:text-6xl font-extrabold tracking-tight leading-tight mb-4"
+        <h1
+          className="anim-fade-up text-5xl sm:text-6xl font-extrabold tracking-tight leading-tight mb-4"
+          style={{ animationDelay: "0.1s" }}
         >
           Something big is{" "}
           <span className="gradient-brand-text">coming.</span>
-        </motion.h1>
+        </h1>
 
-        <motion.p
-          variants={fadeUp}
-          custom={0.2}
-          className="text-muted-foreground text-lg leading-relaxed mb-10"
+        <p
+          className="anim-fade-up text-muted-foreground text-lg leading-relaxed mb-10"
+          style={{ animationDelay: "0.2s" }}
         >
           Summon lets fans vote for the artists they want to see live in their city.
           When enough people agree — we make the show happen.
-        </motion.p>
+        </p>
 
         {/* Email capture */}
         {done ? (
@@ -78,13 +71,16 @@ export default function ComingSoonPage() {
             className="glass rounded-2xl p-8 flex flex-col items-center gap-3"
           >
             <CheckCircle className="w-10 h-10 text-primary" />
-            <p className="font-semibold text-lg">You're on the list.</p>
+            <p className="font-semibold text-lg">You&apos;re on the list.</p>
             <p className="text-sm text-muted-foreground">
-              We'll email you when we launch. Tell your friends.
+              We&apos;ll email you when we launch. Tell your friends.
             </p>
           </motion.div>
         ) : (
-          <motion.div variants={fadeUp} custom={0.3} className="glass rounded-2xl p-6 flex flex-col gap-3">
+          <div
+            className="anim-fade-up glass rounded-2xl p-6 flex flex-col gap-3"
+            style={{ animationDelay: "0.3s" }}
+          >
             <p className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-1">
               Get early access
             </p>
@@ -107,11 +103,14 @@ export default function ComingSoonPage() {
             </div>
             {error && <p className="text-xs text-destructive">{error}</p>}
             <p className="text-xs text-muted-foreground">No spam. Just a heads-up when we go live.</p>
-          </motion.div>
+          </div>
         )}
 
         {/* How it works teaser */}
-        <motion.div variants={fadeUp} custom={0.4} className="mt-10 flex items-center justify-center gap-6 text-xs text-muted-foreground">
+        <div
+          className="anim-fade-up mt-10 flex items-center justify-center gap-6 text-xs text-muted-foreground"
+          style={{ animationDelay: "0.4s" }}
+        >
           <span className="flex items-center gap-1.5">
             <Music2 className="w-3.5 h-3.5 text-primary" />
             Vote for artists
@@ -120,8 +119,8 @@ export default function ComingSoonPage() {
           <span>Demand builds</span>
           <span className="text-border">→</span>
           <span>Show happens</span>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     </div>
   );
 }

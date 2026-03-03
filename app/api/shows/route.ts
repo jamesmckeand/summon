@@ -162,17 +162,21 @@ async function fetchSongkick(
       venue: { displayName: string; city?: { displayName: string; country?: { displayName: string } } };
     }[] = eventsData.resultsPage?.results?.event ?? [];
 
-    return events.slice(0, 5).map((e) => ({
-      id: `sk-${e.id}`,
-      artistId: artist.id,
-      artistName: artist.name,
-      venue: e.venue?.displayName ?? "TBA",
-      city: e.venue?.city?.displayName ?? "TBA",
-      country: e.venue?.city?.country?.displayName ?? "",
-      date: e.start.date,
-      ticketUrl: e.uri,
-      source: "songkick" as const,
-    }));
+    const cutoff = today();
+    return events
+      .filter((e) => e.start.date && e.start.date >= cutoff)
+      .slice(0, 5)
+      .map((e) => ({
+        id: `sk-${e.id}`,
+        artistId: artist.id,
+        artistName: artist.name,
+        venue: e.venue?.displayName ?? "TBA",
+        city: e.venue?.city?.displayName ?? "TBA",
+        country: e.venue?.city?.country?.displayName ?? "",
+        date: e.start.date,
+        ticketUrl: e.uri,
+        source: "songkick" as const,
+      }));
   } catch {
     return [];
   }
@@ -224,9 +228,11 @@ async function buildShows(
 
 // ── Main route ────────────────────────────────────────────────────────────────
 export async function GET() {
-  // Serve from memory cache if fresh — zero additional API calls
+  // Serve from memory cache if fresh — filter out past shows before responding
   if (showsCache && Date.now() - showsCache.builtAt < CACHE_TTL) {
-    return NextResponse.json({ shows: showsCache.shows }, {
+    const cutoff = today();
+    const freshShows = showsCache.shows.filter((s) => s.date >= cutoff);
+    return NextResponse.json({ shows: freshShows }, {
       headers: { "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400" },
     });
   }

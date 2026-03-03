@@ -3,11 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { LogOut, User, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import { fadeIn } from "@/lib/animations";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { useVoteStore } from "@/lib/store/votes";
 import { CITIES } from "@/lib/data/cities";
@@ -105,13 +104,7 @@ export default function Nav() {
 
   return (
     <>
-      <motion.nav
-        initial="hidden"
-        animate="visible"
-        variants={fadeIn}
-        custom={0}
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 glass"
-      >
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 glass">
         <Link href="/">
           <span className="text-lg font-bold tracking-tight gradient-brand-text">Summon</span>
         </Link>
@@ -210,7 +203,7 @@ export default function Nav() {
             {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
-      </motion.nav>
+      </nav>
 
       {/* Mobile menu */}
       <AnimatePresence>

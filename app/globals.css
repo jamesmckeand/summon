@@ -98,6 +98,13 @@
   to   { transform: translateX(0); }
 }
 
+/* Page entrance — pure CSS so the animation starts at first paint,
+   avoiding the framer-motion SSR hydration flash (opacity 1 → 0.01 → 1). */
+@keyframes fade-up-in {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* Gradient utilities */
 @layer utilities {
   /* Brand gradient — dark purple → vibrant purple → lavender pink (#2D2349 → #7C2EAD → #FBC2FF) */
@@ -110,6 +117,9 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+  .anim-fade-up {
+    animation: fade-up-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
   .glow-primary {
     box-shadow: 0 0 40px oklch(0.68 0.26 308 / 25%);

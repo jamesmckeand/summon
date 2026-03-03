@@ -82,46 +82,37 @@ export default function Home() {
         <div className="absolute bottom-1/3 right-1/4 w-[200px] h-[200px] rounded-full bg-[#FBC2FF]/5 blur-[90px] pointer-events-none" />
 
         {/* Badge */}
-        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.1}>
+        <div className="anim-fade-up" style={{ animationDelay: "0.1s" }}>
           <Badge className="mb-8 px-4 py-1.5 bg-primary/10 text-primary border-primary/15 text-xs font-medium tracking-wide uppercase">
             Fan-driven shows
           </Badge>
-        </motion.div>
+        </div>
 
         {/* Headline */}
-        <motion.h1
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          custom={0.2}
-          className="text-5xl sm:text-7xl md:text-8xl font-extrabold tracking-tight leading-[1.04] max-w-4xl"
+        <h1
+          className="anim-fade-up text-5xl sm:text-7xl md:text-8xl font-extrabold tracking-tight leading-[1.04] max-w-4xl"
+          style={{ animationDelay: "0.2s" }}
         >
           Your city.
           <br />
           <span className="gradient-brand-text">Your artists.</span>
           <br />
           Your show.
-        </motion.h1>
+        </h1>
 
         {/* Subtext */}
-        <motion.p
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          custom={0.32}
-          className="mt-7 text-base sm:text-lg text-muted-foreground max-w-md leading-relaxed"
+        <p
+          className="anim-fade-up mt-7 text-base sm:text-lg text-muted-foreground max-w-md leading-relaxed"
+          style={{ animationDelay: "0.32s" }}
         >
           Vote for the artists you want to see live. When enough fans agree,
           we make the show happen — for real.
-        </motion.p>
+        </p>
 
         {/* CTAs */}
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          custom={0.44}
-          className="mt-10 flex flex-col sm:flex-row items-center gap-3"
+        <div
+          className="anim-fade-up mt-10 flex flex-col sm:flex-row items-center gap-3"
+          style={{ animationDelay: "0.44s" }}
         >
           <Button
             size="lg"
@@ -151,28 +142,22 @@ export default function Home() {
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </Link>
-        </motion.div>
+        </div>
 
-        <motion.p
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          custom={0.52}
-          className="mt-4 text-xs text-muted-foreground"
+        <p
+          className="anim-fade-up mt-4 text-xs text-muted-foreground"
+          style={{ animationDelay: "0.52s" }}
         >
           Or{" "}
           <Link href="/login" className="text-foreground underline underline-offset-2 hover:text-primary transition-colors">
             sign in with email
           </Link>
-        </motion.p>
+        </p>
 
         {/* Stats */}
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          custom={0.58}
-          className="mt-12 flex items-center gap-8"
+        <div
+          className="anim-fade-up mt-12 flex items-center gap-8"
+          style={{ animationDelay: "0.58s" }}
         >
           <div className="text-center">
             <p className="text-2xl font-bold gradient-brand-text">{stats.artistCount}+</p>
@@ -188,20 +173,17 @@ export default function Home() {
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">Votes cast</p>
           </div>
-        </motion.div>
+        </div>
 
         {/* Scrolling marquee */}
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          custom={0.65}
-          className="w-screen relative left-1/2 -translate-x-1/2"
+        <div
+          className="anim-fade-up w-screen relative left-1/2 -translate-x-1/2"
+          style={{ animationDelay: "0.65s" }}
         >
           <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
           <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
           <Marquee />
-        </motion.div>
+        </div>
       </section>
 
       {/* ── HOW IT WORKS ── */}

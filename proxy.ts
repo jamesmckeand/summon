@@ -33,7 +33,9 @@ export async function proxy(request: NextRequest) {
       // Check bypass cookie
       const cookie = request.cookies.get(BYPASS_COOKIE)?.value;
       if (!launchToken || cookie !== launchToken) {
-        return NextResponse.redirect(new URL("/coming-soon", request.url));
+        // Rewrite (not redirect) — serves coming-soon content with no HTTP round-trip,
+        // eliminating the white flash a redirect causes between requests.
+        return NextResponse.rewrite(new URL("/coming-soon", request.url));
       }
     }
   }
