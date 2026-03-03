@@ -47,12 +47,26 @@ async function fetchTicketmaster(
       name: string;
       url: string;
       dates: { start: { localDate: string } };
-      _embedded?: { venues?: { name: string; city?: { name: string }; country?: { name: string } }[] };
+      _embedded?: {
+        venues?: { name: string; city?: { name: string }; country?: { name: string } }[];
+        attractions?: { name: string; id: string }[];
+      };
     }[] = json._embedded?.events ?? [];
     const artistNorm = normalise(artist.name);
 
     return events
-      .filter((e) => normalise(e.name).includes(artistNorm))
+      .filter((e) => {
+        // Exact match against the performers list (attractions) — prevents
+        // "Drake" matching "Drake White", "Sir Drake", etc.
+        const attractions = e._embedded?.attractions ?? [];
+        if (attractions.length > 0) {
+          return attractions.some((a) => normalise(a.name) === artistNorm);
+        }
+        // No attractions data — fall back to exact word match in event title
+        const eventNorm = normalise(e.name);
+        return eventNorm === artistNorm || eventNorm.startsWith(artistNorm + " ") ||
+          eventNorm.includes(" " + artistNorm + " ") || eventNorm.endsWith(" " + artistNorm);
+      })
       .slice(0, 5)
       .map((e) => ({
         id: `tm-${e.id}`,
@@ -76,6 +90,16 @@ async function fetchBandsintown(
   appId: string
 ): Promise<ShowItem[]> {
   try {
+    // Verify the artist exists and name matches before fetching events
+    const artistRes = await fetch(
+      `https://rest.bandsintown.com/artists/${encodeURIComponent(artist.name)}?app_id=${appId}`,
+      { next: { revalidate: 86400 } }
+    );
+    if (!artistRes.ok) return [];
+    const artistData = await artistRes.json();
+    // Bandsintown may resolve to a different artist — confirm name matches
+    if (!artistData?.name || normalise(artistData.name) !== normalise(artist.name)) return [];
+
     const res = await fetch(
       `https://rest.bandsintown.com/artists/${encodeURIComponent(artist.name)}/events?app_id=${appId}&date=upcoming`,
       { next: { revalidate: 3600 } }
