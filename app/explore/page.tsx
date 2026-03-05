@@ -155,41 +155,6 @@ export default function ExplorePage() {
       .catch(() => {});
   }, []);
 
-  // Deezer search — fires only when no static/live results match
-  useEffect(() => {
-    const q = artistSearch.trim();
-    if (q.length < 2 || filteredArtists.length > 0) {
-      setDeezerResults([]);
-      return;
-    }
-    setDeezerLoading(true);
-    const timer = setTimeout(() => {
-      fetch(`/api/search-artists?q=${encodeURIComponent(q)}`)
-        .then((r) => r.json())
-        .then((data) => { if (Array.isArray(data.artists)) setDeezerResults(data.artists); })
-        .catch(() => {})
-        .finally(() => setDeezerLoading(false));
-    }, 400);
-    return () => { clearTimeout(timer); setDeezerLoading(false); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [artistSearch, filteredArtists.length]);
-
-  const handleDeezerVote = useCallback(async (artist: { id: string; deezerId: number; name: string; image: string | null }) => {
-    if (!selectedCity) return;
-    setDeezerVoting((v) => ({ ...v, [artist.id]: true }));
-    try {
-      const res = await fetch("/api/register-artist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deezerId: artist.deezerId, name: artist.name, image: artist.image }),
-      });
-      if (!res.ok) return;
-      await handleVote(artist.id, selectedCity);
-    } finally {
-      setDeezerVoting((v) => ({ ...v, [artist.id]: false }));
-    }
-  }, [selectedCity, handleVote]);
-
   const filteredCities = useMemo(
     () => CITIES.filter((c) => c.toLowerCase().includes(citySearch.toLowerCase())),
     [citySearch]
@@ -216,6 +181,40 @@ export default function ExplorePage() {
       .sort((a, b) => b.votes - a.votes);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [artistSearch, selectedGenre, selectedCity, counts, liveArtists]);
+
+  // Deezer search — fires only when no static/live results match
+  useEffect(() => {
+    const q = artistSearch.trim();
+    if (q.length < 2 || filteredArtists.length > 0) {
+      setDeezerResults([]);
+      return;
+    }
+    setDeezerLoading(true);
+    const timer = setTimeout(() => {
+      fetch(`/api/search-artists?q=${encodeURIComponent(q)}`)
+        .then((r) => r.json())
+        .then((data) => { if (Array.isArray(data.artists)) setDeezerResults(data.artists); })
+        .catch(() => {})
+        .finally(() => setDeezerLoading(false));
+    }, 400);
+    return () => { clearTimeout(timer); setDeezerLoading(false); };
+  }, [artistSearch, filteredArtists.length]);
+
+  const handleDeezerVote = useCallback(async (artist: { id: string; deezerId: number; name: string; image: string | null }) => {
+    if (!selectedCity) return;
+    setDeezerVoting((v) => ({ ...v, [artist.id]: true }));
+    try {
+      const res = await fetch("/api/register-artist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deezerId: artist.deezerId, name: artist.name, image: artist.image }),
+      });
+      if (!res.ok) return;
+      await handleVote(artist.id, selectedCity);
+    } finally {
+      setDeezerVoting((v) => ({ ...v, [artist.id]: false }));
+    }
+  }, [selectedCity, handleVote]);
 
   return (
     <div className="min-h-screen bg-background">
