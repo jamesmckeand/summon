@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Music2, MapPin, TrendingUp, Zap, ChevronRight, ArrowRight, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
 import { fadeUp } from "@/lib/animations";
@@ -80,13 +79,6 @@ export default function Home() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] rounded-full bg-[#19132B]/80 blur-[140px] pointer-events-none" />
         <div className="absolute top-1/4 left-1/3 w-[200px] h-[200px] rounded-full bg-[#7C2EAD]/8 blur-[90px] pointer-events-none" />
         <div className="absolute bottom-1/3 right-1/4 w-[200px] h-[200px] rounded-full bg-[#FBC2FF]/5 blur-[90px] pointer-events-none" />
-
-        {/* Badge */}
-        <div className="anim-fade-up" style={{ animationDelay: "0.1s" }}>
-          <Badge className="mb-8 px-4 py-1.5 bg-primary/10 text-primary border-primary/15 text-xs font-medium tracking-wide uppercase">
-            Fan-driven shows
-          </Badge>
-        </div>
 
         {/* Headline */}
         <h1
