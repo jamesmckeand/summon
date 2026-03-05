@@ -43,7 +43,7 @@ async function sendOutreachAlert(
   const venueName = venues[tier]?.[0] ?? tierLabel;
   const allVenuesForTier = venues[tier] ?? [];
   const artistObj = ARTISTS.find((a) => a.name === artistName);
-  const artistUrl = `https://wesummon.com${artistObj ? `/artist/${artistObj.id}` : "/explore"}`;
+  const artistUrl = `https://wesummon.com${artistObj ? `/artist/${artistObj.id}` : "/explore"}`; // live artists fall back to /explore
   const nextThreshold = THRESHOLDS.find((t) => t.votes > voteCount);
 
   const draftOutreach = `Subject: ${voteCount.toLocaleString()} fans want ${artistName} at ${venueName}
@@ -195,8 +195,14 @@ export async function POST(request: Request) {
 
   const { artistId, city } = await request.json();
 
-  if (!VALID_ARTIST_IDS.has(artistId) || !VALID_CITIES.has(city)) {
+  if (!VALID_CITIES.has(city)) {
     return NextResponse.json({ error: "Invalid artist or city" }, { status: 400 });
+  }
+
+  const isStaticArtist = VALID_ARTIST_IDS.has(artistId);
+  if (!isStaticArtist) {
+    const { data } = await supabase.from("live_artists").select("id").eq("id", artistId).single();
+    if (!data) return NextResponse.json({ error: "Invalid artist or city" }, { status: 400 });
   }
 
   // Count before inserting to detect threshold crossings
@@ -220,15 +226,17 @@ export async function POST(request: Request) {
     const after = before + 1;
     const crossed = THRESHOLDS.find((t) => before < t.votes && after >= t.votes);
     if (crossed) {
-      const artist = ARTISTS.find((a) => a.id === artistId);
-      if (artist) {
-        // Email the voter
+      const staticArtist = ARTISTS.find((a) => a.id === artistId);
+      const artistName = staticArtist?.name ?? (await (async () => {
+        const { data } = await supabase.from("live_artists").select("name").eq("id", artistId).single();
+        return data?.name;
+      })());
+      if (artistName) {
         if (user.email) {
-          sendThresholdEmail(user.email, artist.name, city, after, crossed.tier, crossed.label)
+          sendThresholdEmail(user.email, artistName, city, after, crossed.tier, crossed.label)
             .catch(() => {});
         }
-        // Email the Summon team with venue outreach brief
-        sendOutreachAlert(artist.name, city, after, crossed.tier, crossed.label)
+        sendOutreachAlert(artistName, city, after, crossed.tier, crossed.label)
           .catch(() => {});
       }
     }
@@ -244,8 +252,13 @@ export async function DELETE(request: Request) {
 
   const { artistId, city } = await request.json();
 
-  if (!VALID_ARTIST_IDS.has(artistId) || !VALID_CITIES.has(city)) {
+  if (!VALID_CITIES.has(city)) {
     return NextResponse.json({ error: "Invalid artist or city" }, { status: 400 });
+  }
+
+  if (!VALID_ARTIST_IDS.has(artistId)) {
+    const { data } = await supabase.from("live_artists").select("id").eq("id", artistId).single();
+    if (!data) return NextResponse.json({ error: "Invalid artist or city" }, { status: 400 });
   }
 
   const { error } = await supabase

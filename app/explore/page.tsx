@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, MapPin, TrendingUp, Music2, ChevronUp, ChevronDown, Ticket } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -76,6 +76,11 @@ export default function ExplorePage() {
   const [confirmedShows, setConfirmedShows] = useState<Record<string, boolean>>({});
   const [forYouArtists, setForYouArtists] = useState<typeof ARTISTS>([]);
 
+  type DeezerArtist = { id: string; deezerId: number; name: string; image: string | null };
+  const [deezerResults, setDeezerResults] = useState<DeezerArtist[]>([]);
+  const [deezerLoading, setDeezerLoading] = useState(false);
+  const [deezerVoting, setDeezerVoting] = useState<Record<string, boolean>>({});
+
   useEffect(() => { setMounted(true); }, []);
 
   // Pre-select city from referral URL param
@@ -149,6 +154,41 @@ export default function ExplorePage() {
       })
       .catch(() => {});
   }, []);
+
+  // Deezer search — fires only when no static/live results match
+  useEffect(() => {
+    const q = artistSearch.trim();
+    if (q.length < 2 || filteredArtists.length > 0) {
+      setDeezerResults([]);
+      return;
+    }
+    setDeezerLoading(true);
+    const timer = setTimeout(() => {
+      fetch(`/api/search-artists?q=${encodeURIComponent(q)}`)
+        .then((r) => r.json())
+        .then((data) => { if (Array.isArray(data.artists)) setDeezerResults(data.artists); })
+        .catch(() => {})
+        .finally(() => setDeezerLoading(false));
+    }, 400);
+    return () => { clearTimeout(timer); setDeezerLoading(false); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [artistSearch, filteredArtists.length]);
+
+  const handleDeezerVote = useCallback(async (artist: { id: string; deezerId: number; name: string; image: string | null }) => {
+    if (!selectedCity) return;
+    setDeezerVoting((v) => ({ ...v, [artist.id]: true }));
+    try {
+      const res = await fetch("/api/register-artist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deezerId: artist.deezerId, name: artist.name, image: artist.image }),
+      });
+      if (!res.ok) return;
+      await handleVote(artist.id, selectedCity);
+    } finally {
+      setDeezerVoting((v) => ({ ...v, [artist.id]: false }));
+    }
+  }, [selectedCity, handleVote]);
 
   const filteredCities = useMemo(
     () => CITIES.filter((c) => c.toLowerCase().includes(citySearch.toLowerCase())),
@@ -463,10 +503,52 @@ export default function ExplorePage() {
           })}
         </div>
 
-        {!countsLoading && filteredArtists.length === 0 && (
+        {!countsLoading && filteredArtists.length === 0 && deezerResults.length === 0 && !deezerLoading && (
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0} className="text-center py-16 text-muted-foreground">
             <Music2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
             <p>No artists found. Try a different search or genre.</p>
+          </motion.div>
+        )}
+
+        {/* Deezer "More artists" section */}
+        {(deezerResults.length > 0 || deezerLoading) && filteredArtists.length === 0 && (
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.05} className="mt-2">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+              {deezerLoading ? "Searching…" : "More artists"}
+            </p>
+            <div className="flex flex-col gap-3">
+              {deezerResults.map((artist) => {
+                const voted = mounted && hasVoted(artist.id, selectedCity);
+                const loading = deezerVoting[artist.id] ?? false;
+                return (
+                  <div key={artist.id} className="glass glass-hover rounded-xl overflow-hidden hover:border-primary/20">
+                    <div className="p-4 flex items-center gap-4">
+                      <ArtistAvatar name={artist.name} image={artist.image} />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm">{artist.name}</p>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                          <Music2 className="w-3 h-3" />
+                          Music
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        disabled={loading || !selectedCity}
+                        onClick={() => handleDeezerVote(artist)}
+                        className={`shrink-0 rounded-lg h-9 px-3 font-semibold btn-press transition-all ${
+                          voted
+                            ? "gradient-brand text-white glow-primary-sm border-0"
+                            : "border border-primary/50 bg-primary/8 text-primary hover:bg-primary/15 hover:border-primary/70"
+                        }`}
+                      >
+                        <ChevronUp className="w-4 h-4 mr-1" />
+                        {loading ? "…" : voted ? "Voted" : "Vote"}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </motion.div>
         )}
       </div>
