@@ -22,7 +22,7 @@ export async function searchArtist(name: string): Promise<DeezerArtist | null> {
   if (!res.ok) return null;
 
   const data = await res.json();
-  const items: { id: number; name: string; picture_medium: string; picture_big: string }[] =
+  const items: { id: number; name: string; picture_medium: string; picture_big: string; picture_xl: string }[] =
     data.data ?? [];
 
   const nameNorm = normalise(name);
@@ -35,7 +35,7 @@ export async function searchArtist(name: string): Promise<DeezerArtist | null> {
 
   if (!match) return null;
 
-  const image = match.picture_big || match.picture_medium || null;
+  const image = match.picture_xl || match.picture_big || match.picture_medium || null;
   return { id: match.id, name: match.name, image };
 }
 

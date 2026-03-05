@@ -26,6 +26,17 @@ const src = readFileSync(join(root, "lib/data/artists.ts"), "utf8");
 const names = [...src.matchAll(/name:\s*"([^"]+)"/g)].map((m) => m[1]);
 
 const existing = JSON.parse(readFileSync(join(root, "lib/data/artist-images.json"), "utf8"));
+
+// Upgrade any stored 500x500 URLs to 1000x1000
+let upgraded = 0;
+for (const name of Object.keys(existing)) {
+  if (existing[name]?.includes("/500x500-")) {
+    existing[name] = existing[name].replace("/500x500-", "/1000x1000-");
+    upgraded++;
+  }
+}
+if (upgraded) console.log(`Upgraded ${upgraded} existing URLs to 1000x1000`);
+
 const missing = names.filter((n) => !existing[n]);
 
 console.log(`Total: ${names.length} | Already have: ${names.length - missing.length} | Fetching: ${missing.length}`);
@@ -63,7 +74,7 @@ async function fetchImage(name, retries = 3) {
         }
       }
 
-      return match?.picture_big ?? match?.picture_medium ?? null;
+      return match?.picture_xl ?? match?.picture_big ?? match?.picture_medium ?? null;
     } catch {
       if (attempt < retries - 1) await new Promise((r) => setTimeout(r, 1000));
     }

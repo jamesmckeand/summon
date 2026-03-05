@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { fadeUp } from "@/lib/animations";
 import { ARTISTS } from "@/lib/data/artists";
 import { CITIES } from "@/lib/data/cities";
-import { getVenuesForCity } from "@/lib/data/venues";
 import { useVote } from "@/hooks/useVote";
 import { useVoteStore } from "@/lib/store/votes";
 import { createClient } from "@/lib/supabase/client";
@@ -191,7 +190,6 @@ export default function ArtistClient({ id }: { id: string }) {
   const topCity = cityVotes[0];
   const selectedCityData = cityVotes.find((cv) => cv.city === selectedCity);
   const selectedVoteCount = selectedCityData?.vote_count ?? 0;
-  const cityVenues = getVenuesForCity(selectedCity || activeCity);
   const nextThreshold = getNextThreshold(selectedVoteCount);
   const currentThreshold = getVenueThreshold(selectedVoteCount);
 
@@ -233,7 +231,7 @@ export default function ArtistClient({ id }: { id: string }) {
           {image && (
             <div className="relative w-full h-52 sm:h-64">
               <Image
-                src={image}
+                src={image.replace(/\/\d+x\d+-/, "/1000x1000-")}
                 alt={artist.name}
                 fill
                 className="object-cover object-top"
@@ -301,20 +299,17 @@ export default function ArtistClient({ id }: { id: string }) {
             <p className="text-primary font-semibold text-sm mb-3">{topCity.vote_count.toLocaleString()} votes</p>
 
             {(() => {
-              const topVenues = getVenuesForCity(topCity.city);
               const topNext = getNextThreshold(topCity.vote_count);
               const topCurrent = getVenueThreshold(topCity.vote_count);
               const topPrev = topCurrent?.votes ?? 0;
               const topPct = topNext
                 ? Math.min(((topCity.vote_count - topPrev) / (topNext.votes - topPrev)) * 100, 100)
                 : 100;
-              const currentName = topCurrent ? topVenues[topCurrent.tier][0] : "Building demand";
-              const nextName = topNext ? topVenues[topNext.tier][0] : null;
               return (
                 <>
                   <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                    <span>{currentName}</span>
-                    <span>{nextName ? `${nextName} at ${topNext!.votes.toLocaleString()}` : "Max reached"}</span>
+                    <span>{topCurrent?.label ?? "Building demand"}</span>
+                    <span>{topNext ? `${topNext.votes.toLocaleString()} for ${topNext.label}` : "Max reached"}</span>
                   </div>
                   <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                     <motion.div
@@ -439,8 +434,8 @@ export default function ArtistClient({ id }: { id: string }) {
               ) : (
                 <>
                   <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                    <span>{currentThreshold ? cityVenues[currentThreshold.tier][0] : "Building demand"}</span>
-                    <span>{nextThreshold ? `${cityVenues[nextThreshold.tier][0]} at ${nextThreshold.votes.toLocaleString()}` : "Max reached"}</span>
+                    <span>{currentThreshold?.label ?? "Building demand"}</span>
+                    <span>{nextThreshold ? `${nextThreshold.votes.toLocaleString()} for ${nextThreshold.label}` : "Max reached"}</span>
                   </div>
                   <div className="h-1 bg-muted rounded-full overflow-hidden">
                     <motion.div
@@ -500,7 +495,7 @@ export default function ArtistClient({ id }: { id: string }) {
                         {confirmedShow
                           ? `${artist.name} has a confirmed show in ${voteCity}`
                           : nextThreshold && votesNeeded > 0
-                            ? `${votesNeeded.toLocaleString()} more votes to ${cityVenues[nextThreshold.tier][0]}`
+                            ? `${votesNeeded.toLocaleString()} more votes for ${nextThreshold.label}`
                             : "You're making this happen!"}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
