@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   TrendingUp, Music2, MapPin, ChevronUp, ChevronDown, Search,
-  ExternalLink, Play, Users, Zap, Ticket, CalendarDays, PartyPopper,
+  ExternalLink, Play, Users, Zap, Ticket, CalendarDays, PartyPopper, ArrowLeft,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -38,12 +39,15 @@ function getVenueThreshold(votes: number) {
   return null;
 }
 
+type ArtistData = { id: string; name: string; genre: string; subgenre?: string; trending?: boolean };
 type CityVote = { city: string; vote_count: number };
 type Track = { title: string; preview: string; link: string };
 type Show = { id: string; venue: string; city: string; date: string; ticketUrl: string };
 
 export default function ArtistClient({ id }: { id: string }) {
-  const artist = ARTISTS.find((a) => a.id === id);
+  const staticArtist = ARTISTS.find((a) => a.id === id);
+  const [artist, setArtist] = useState<ArtistData | null>(staticArtist ?? null);
+  const [artistLoading, setArtistLoading] = useState(!staticArtist);
 
   const [image, setImage] = useState<string | null>(null);
   const [cityVotes, setCityVotes] = useState<CityVote[]>([]);
@@ -61,6 +65,19 @@ export default function ArtistClient({ id }: { id: string }) {
   const { activeCity } = useVoteStore();
 
   useEffect(() => { setMounted(true); }, []);
+
+  // If not a static artist, fetch from live_artists
+  useEffect(() => {
+    if (staticArtist) return;
+    fetch("/api/live-artists")
+      .then((r) => r.json())
+      .then((data) => {
+        const found = (data.artists ?? []).find((a: ArtistData) => a.id === id);
+        setArtist(found ?? null);
+      })
+      .catch(() => {})
+      .finally(() => setArtistLoading(false));
+  }, [id, staticArtist]);
 
   // Fetch confirmed shows whenever artist + city are known
   useEffect(() => {
@@ -92,11 +109,10 @@ export default function ArtistClient({ id }: { id: string }) {
       const votes: CityVote[] = votesData.cityVotes ?? [];
       setCityVotes(votes);
       const topCity = votes[0]?.city ?? activeCity;
-      setSelectedCity(topCity);
+      setSelectedCity(topCity || "");
       setTracks(tracksData.tracks ?? []);
     }).catch(() => {}).finally(() => setLoadingData(false));
 
-    // Realtime: re-fetch city votes whenever any vote for this artist changes
     const supabase = createClient();
     const channel = supabase
       .channel(`artist_votes:${id}`)
@@ -112,14 +128,33 @@ export default function ArtistClient({ id }: { id: string }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, artist?.name]);
 
+  if (artistLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Nav />
+        <div className="pt-24 pb-20 px-6 max-w-2xl mx-auto space-y-5 animate-pulse">
+          <div className="h-64 bg-muted/40 rounded-2xl" />
+          <div className="glass rounded-2xl p-5 space-y-3">
+            <div className="h-3 bg-muted/60 rounded w-20" />
+            <div className="h-6 bg-muted/60 rounded w-40" />
+            <div className="h-2 bg-muted/60 rounded-full w-full mt-2" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!artist) {
     return (
       <div className="min-h-screen bg-background">
         <Nav />
-        <div className="pt-32 text-center">
+        <div className="pt-32 text-center px-6">
           <Music2 className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-30" />
           <h1 className="text-2xl font-bold mb-2">Artist not found</h1>
-          <p className="text-muted-foreground">This artist doesn&apos;t exist in our catalogue.</p>
+          <p className="text-muted-foreground mb-6">This artist doesn&apos;t exist in our catalogue.</p>
+          <Link href="/explore">
+            <Button className="gradient-brand border-0 text-white">Browse artists</Button>
+          </Link>
         </div>
       </div>
     );
@@ -130,20 +165,10 @@ export default function ArtistClient({ id }: { id: string }) {
       <div className="min-h-screen bg-background">
         <Nav />
         <div className="pt-24 pb-20 px-6 max-w-2xl mx-auto space-y-5 animate-pulse">
-          <div className="glass rounded-2xl p-5">
-            <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-full bg-muted/60 shrink-0 ring-2 ring-border/40" />
-              <div className="flex-1 space-y-2">
-                <div className="h-6 bg-muted/60 rounded w-40" />
-                <div className="h-4 bg-muted/60 rounded w-24" />
-                <div className="h-7 bg-muted/60 rounded-lg w-32 mt-1" />
-              </div>
-            </div>
-          </div>
+          <div className="h-64 bg-muted/40 rounded-2xl" />
           <div className="glass rounded-2xl p-5 space-y-3">
             <div className="h-3 bg-muted/60 rounded w-20" />
             <div className="h-6 bg-muted/60 rounded w-40" />
-            <div className="h-4 bg-muted/60 rounded w-24" />
             <div className="h-2 bg-muted/60 rounded-full w-full mt-2" />
           </div>
           <div className="glass rounded-2xl p-5 space-y-3">
@@ -183,86 +208,92 @@ export default function ArtistClient({ id }: { id: string }) {
   const shareText = confirmedShow
     ? `${artist.name} is coming to ${confirmedShow.venue} in ${voteCity}! Get your tickets 🎉`
     : voted && nextThreshold && votesNeeded > 0
-      ? `I just voted for ${artist.name} in ${voteCity} on Summon. Only ${votesNeeded.toLocaleString()} more votes needed to trigger ${cityVenues[nextThreshold.tier][0]} outreach — add yours! 🎶`
-      : `I just voted for ${artist.name} in ${voteCity} on Summon. Add your vote and let's make this show happen! 🎶`;
+      ? `I just voted for ${artist.name} in ${voteCity} on Summon. Only ${votesNeeded.toLocaleString()} more votes needed — add yours! 🎶`
+      : `I just voted for ${artist.name} in ${voteCity} on Summon. Make this show happen! 🎶`;
 
   const spotifySearchUrl = `https://open.spotify.com/search/${encodeURIComponent(artist.name)}`;
-  const instagramSearchUrl = `https://www.instagram.com/${artist.name.toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "")}`;
-
   const filteredCities = CITIES.filter((c) => c.toLowerCase().includes(citySearch.toLowerCase()));
-
   const maxVotes = cityVotes[0]?.vote_count ?? 1;
 
   return (
     <div className="min-h-screen bg-background">
       <Nav />
-      <div className="pt-24 pb-20 px-6 max-w-2xl mx-auto">
+      <div className="pt-20 pb-20 px-6 max-w-2xl mx-auto">
 
-        {/* Hero */}
-        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0} className="glass rounded-2xl p-5 mb-5">
-          <div className="flex items-center gap-4">
-            {/* Circle avatar */}
-            {image ? (
+        {/* Back */}
+        <Link href="/explore" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-5 mt-4">
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Back to explore
+        </Link>
+
+        {/* Hero — full-width image with gradient overlay */}
+        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0} className="glass rounded-2xl overflow-hidden mb-5">
+          {image && (
+            <div className="relative w-full h-52 sm:h-64">
               <Image
                 src={image}
                 alt={artist.name}
-                width={80}
-                height={80}
-                className="w-20 h-20 rounded-full object-cover ring-2 ring-border/60 shrink-0"
+                fill
+                className="object-cover object-top"
+                sizes="(max-width: 768px) 100vw, 672px"
+                priority
               />
-            ) : (
-              <div className="w-20 h-20 rounded-full gradient-brand flex items-center justify-center ring-2 ring-border/60 shrink-0">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            </div>
+          )}
+          <div className={`flex items-end gap-4 p-5 ${image ? "-mt-16 relative z-10" : ""}`}>
+            {/* Avatar — only show if no banner image */}
+            {!image && (
+              <div className="w-20 h-20 rounded-2xl gradient-brand flex items-center justify-center ring-2 ring-border/60 shrink-0">
                 <span className="text-white font-bold text-xl">{initials}</span>
               </div>
             )}
-            {/* Info */}
+            {image && (
+              <div className="w-16 h-16 rounded-xl overflow-hidden ring-2 ring-white/20 shrink-0">
+                <Image src={image} alt={artist.name} width={64} height={64} className="object-cover w-full h-full" />
+              </div>
+            )}
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold leading-tight truncate">{artist.name}</h1>
+              <h1 className={`text-2xl font-bold leading-tight truncate ${image ? "text-white" : ""}`}>{artist.name}</h1>
               <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                 <Badge className="bg-primary/15 text-primary border-primary/20 text-xs">{artist.genre}</Badge>
-                {artist.subgenre && <Badge className="bg-muted text-muted-foreground border-border/60 text-xs">{artist.subgenre}</Badge>}
+                {artist.subgenre && <Badge className="bg-muted/80 text-muted-foreground border-border/60 text-xs">{artist.subgenre}</Badge>}
                 {artist.trending && (
                   <Badge className="bg-primary/80 text-white border-primary/30 text-xs">
                     <TrendingUp className="w-3 h-3 mr-1" /> Trending
                   </Badge>
                 )}
               </div>
-              <div className="flex items-center gap-2 mt-2.5">
-                <a href={spotifySearchUrl} target="_blank" rel="noopener noreferrer"
-                  className="h-7 px-2.5 rounded-lg glass text-xs font-medium flex items-center gap-1.5 hover:border-[#1DB954]/40 hover:text-[#1DB954] transition-colors"
-                  title="Spotify"
-                >
-                  <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
-                  Spotify
-                </a>
-                <a href={instagramSearchUrl} target="_blank" rel="noopener noreferrer"
-                  className="h-7 px-2.5 rounded-lg glass text-xs font-medium flex items-center gap-1.5 hover:border-pink-500/40 hover:text-pink-400 transition-colors"
-                  title="Instagram"
-                >
-                  <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                  Instagram
-                </a>
-                <ShareButton
-                  url={shareUrl}
-                  text={`Vote for ${artist.name} on Summon and help make the show happen! 🎶`}
-                  label="Share"
-                  iconOnly
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 w-7 rounded-lg glass text-muted-foreground hover:text-foreground p-0 border-0"
-                />
-              </div>
             </div>
+          </div>
+
+          {/* Social links */}
+          <div className="flex items-center gap-2 px-5 pb-5">
+            <a href={spotifySearchUrl} target="_blank" rel="noopener noreferrer"
+              className="h-7 px-2.5 rounded-lg glass text-xs font-medium flex items-center gap-1.5 hover:border-[#1DB954]/40 hover:text-[#1DB954] transition-colors"
+            >
+              <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+              Spotify
+            </a>
+            <ShareButton
+              url={shareUrl}
+              text={`Vote for ${artist.name} on Summon and help make the show happen! 🎶`}
+              label="Share"
+              iconOnly
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 rounded-lg glass text-muted-foreground hover:text-foreground p-0 border-0"
+            />
           </div>
         </motion.div>
 
-        {/* Top city + progress */}
+        {/* Top city momentum */}
         {topCity && (
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.05} className="glass rounded-2xl p-5 mb-4 relative overflow-hidden">
             <div className="absolute inset-0 gradient-brand opacity-5 pointer-events-none" />
             <div className="flex items-center gap-2 mb-1">
               <MapPin className="w-4 h-4 text-primary" />
-              <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Top City</span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Highest demand</span>
             </div>
             <h2 className="text-xl font-bold mb-0.5">{topCity.city}</h2>
             <p className="text-primary font-semibold text-sm mb-3">{topCity.vote_count.toLocaleString()} votes</p>
@@ -275,9 +306,8 @@ export default function ArtistClient({ id }: { id: string }) {
               const topPct = topNext
                 ? Math.min(((topCity.vote_count - topPrev) / (topNext.votes - topPrev)) * 100, 100)
                 : 100;
-              const currentName = topCurrent ? topVenues[topCurrent.tier][0] : "Not yet";
+              const currentName = topCurrent ? topVenues[topCurrent.tier][0] : "Building demand";
               const nextName = topNext ? topVenues[topNext.tier][0] : null;
-
               return (
                 <>
                   <div className="flex justify-between text-xs text-muted-foreground mb-1">
@@ -318,8 +348,10 @@ export default function ArtistClient({ id }: { id: string }) {
               onClick={() => setShowCityDropdown((v) => !v)}
             >
               <MapPin className="w-4 h-4 text-primary shrink-0" />
-              <span className="font-medium flex-1">{selectedCity || activeCity}</span>
-              {showCityDropdown ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+              <span className="font-medium flex-1 text-sm">{selectedCity || "Select your city"}</span>
+              {showCityDropdown
+                ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
             </div>
 
             <AnimatePresence>
@@ -395,41 +427,52 @@ export default function ArtistClient({ id }: { id: string }) {
                 </a>
               )}
             </div>
-          ) : (
-            selectedCity && (
-              <div className="mb-4">
-                <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                  <span>{currentThreshold ? cityVenues[currentThreshold.tier][0] : "No votes yet"}</span>
-                  <span>{nextThreshold ? `${cityVenues[nextThreshold.tier][0]} at ${nextThreshold.votes.toLocaleString()}` : "Max reached"}</span>
+          ) : selectedCity && (
+            <div className="mb-4">
+              {selectedVoteCount === 0 ? (
+                <div className="rounded-xl bg-primary/5 border border-primary/15 p-3 mb-3 text-center">
+                  <p className="text-sm font-semibold text-primary">Be the first to vote in {selectedCity}!</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Start the momentum — every show begins with one vote.</p>
                 </div>
-                <div className="h-1 bg-muted rounded-full overflow-hidden">
-                  <motion.div
-                    className="h-full rounded-full gradient-brand"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progressPct}%` }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">{selectedVoteCount.toLocaleString()} votes in {selectedCity}</p>
-              </div>
-            )
+              ) : (
+                <>
+                  <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                    <span>{currentThreshold ? cityVenues[currentThreshold.tier][0] : "Building demand"}</span>
+                    <span>{nextThreshold ? `${cityVenues[nextThreshold.tier][0]} at ${nextThreshold.votes.toLocaleString()}` : "Max reached"}</span>
+                  </div>
+                  <div className="h-1 bg-muted rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full rounded-full gradient-brand"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progressPct}%` }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">{selectedVoteCount.toLocaleString()} votes in {selectedCity}</p>
+                </>
+              )}
+            </div>
           )}
 
           <Button
             onClick={() => !confirmedShow && handleVote(artist.id, selectedCity || activeCity)}
-            disabled={!!confirmedShow}
+            disabled={!!confirmedShow || !voteCity}
             className={`w-full h-11 rounded-xl font-semibold transition-all ${
               confirmedShow
                 ? "bg-green-500/20 text-green-400 cursor-default border-0"
-                : voted
-                  ? "gradient-brand text-white glow-primary-sm border-0"
-                  : "border border-primary/50 bg-primary/8 text-primary hover:bg-primary/15 hover:border-primary/70"
+                : !voteCity
+                  ? "bg-muted text-muted-foreground cursor-default border-0"
+                  : voted
+                    ? "gradient-brand text-white glow-primary-sm border-0"
+                    : "border border-primary/50 bg-primary/8 text-primary hover:bg-primary/15 hover:border-primary/70"
             }`}
           >
             {confirmedShow ? (
               <><Ticket className="w-4 h-4 mr-2" /> Show confirmed in {voteCity}</>
+            ) : !voteCity ? (
+              <><MapPin className="w-4 h-4 mr-2" /> Select a city to vote</>
             ) : (
-              <><ChevronUp className="w-4 h-4 mr-2" />{voted ? "Voted" : `Vote in ${voteCity}`}</>
+              <><ChevronUp className="w-4 h-4 mr-2" />{voted ? `Voted in ${voteCity}` : `Vote for ${voteCity}`}</>
             )}
           </Button>
 
@@ -478,14 +521,10 @@ export default function ArtistClient({ id }: { id: string }) {
         </motion.div>
 
         {/* Top tracks */}
-        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.15} className="glass rounded-2xl p-5 mb-4">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Top Tracks</p>
-          {loadingData ? (
-            <div className="flex justify-center py-4">
-              <div className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-            </div>
-          ) : tracks.length > 0 ? (
-            <div className="flex flex-col gap-2">
+        {tracks.length > 0 && (
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.15} className="glass rounded-2xl p-5 mb-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Top Tracks</p>
+            <div className="flex flex-col gap-1">
               {tracks.map((track, i) => (
                 <a
                   key={i}
@@ -502,19 +541,17 @@ export default function ArtistClient({ id }: { id: string }) {
                 </a>
               ))}
             </div>
-          ) : (
-            <p className="text-sm text-muted-foreground italic text-center py-4">No track data available</p>
-          )}
-        </motion.div>
+          </motion.div>
+        )}
 
         {/* City leaderboard */}
-        {cityVotes.length > 0 && (
+        {cityVotes.length > 0 ? (
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.2} className="glass rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <Users className="w-4 h-4 text-primary" />
               <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">City Leaderboard</p>
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2.5">
               {cityVotes.map((cv, i) => {
                 const pct = Math.round((cv.vote_count / maxVotes) * 100);
                 return (
@@ -522,7 +559,12 @@ export default function ArtistClient({ id }: { id: string }) {
                     <span className={`text-xs font-mono w-5 shrink-0 ${i < 3 ? "text-primary font-bold" : "text-muted-foreground"}`}>
                       {i + 1}
                     </span>
-                    <span className="text-sm font-medium w-28 shrink-0 truncate">{cv.city}</span>
+                    <button
+                      onClick={() => setSelectedCity(cv.city)}
+                      className={`text-sm font-medium w-28 shrink-0 truncate text-left hover:text-primary transition-colors ${cv.city === selectedCity ? "text-primary" : ""}`}
+                    >
+                      {cv.city}
+                    </button>
                     <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                       <motion.div
                         className="h-full rounded-full gradient-brand"
@@ -539,12 +581,11 @@ export default function ArtistClient({ id }: { id: string }) {
               })}
             </div>
           </motion.div>
-        )}
-
-        {cityVotes.length === 0 && !loadingData && (
+        ) : (
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.2} className="glass rounded-2xl p-8 text-center">
-            <MapPin className="w-8 h-8 mx-auto mb-3 text-muted-foreground opacity-40" />
-            <p className="text-sm text-muted-foreground">No votes yet. Be the first to vote!</p>
+            <MapPin className="w-8 h-8 mx-auto mb-3 text-primary opacity-40" />
+            <p className="text-sm font-semibold mb-1">No votes yet anywhere</p>
+            <p className="text-xs text-muted-foreground">Be the first fan to vote for {artist.name} and start the movement.</p>
           </motion.div>
         )}
       </div>
