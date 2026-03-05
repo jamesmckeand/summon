@@ -290,9 +290,9 @@ export default function Home() {
             >
               <div className="absolute bottom-0 right-0 w-48 h-48 bg-pink-600/5 rounded-full blur-[60px] pointer-events-none" />
               <PlusCircle className="w-6 h-6 text-primary mb-4" />
-              <h3 className="text-xl font-bold tracking-tight mb-2">Suggest an artist.</h3>
+              <h3 className="text-xl font-bold tracking-tight mb-2">Any artist, instantly.</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Don&apos;t see your favourite act? Submit them for review. Approved artists go live on Summon and become voteable immediately.
+                Can&apos;t find your favourite act? Search for them on the explore page — we pull from millions of artists and add them to the vote instantly.
               </p>
             </motion.div>
           </Link>
