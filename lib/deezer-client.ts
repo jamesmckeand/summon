@@ -43,6 +43,8 @@ export type DeezerTrack = {
   title: string;
   preview: string | null;
   link: string;
+  albumCover: string | null;
+  duration: number | null; // seconds
 };
 
 /** Fetch up to 5 top tracks for a known Deezer artist ID. */
@@ -55,10 +57,12 @@ export async function getTopTracks(artistId: number): Promise<DeezerTrack[]> {
 
   const data = await res.json();
   return (data.data ?? []).slice(0, 5).map(
-    (t: { title: string; preview: string; link: string }) => ({
+    (t: { title: string; preview: string; link: string; duration?: number; album?: { cover_medium?: string } }) => ({
       title: t.title,
       preview: t.preview || null,
       link: t.link,
+      albumCover: t.album?.cover_medium ?? null,
+      duration: t.duration ?? null,
     })
   );
 }

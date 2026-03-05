@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   TrendingUp, Music2, MapPin, ChevronUp, ChevronDown, Search,
-  ExternalLink, Play, Users, Zap, Ticket, CalendarDays, PartyPopper, ArrowLeft,
+  ExternalLink, Play, Pause, Users, Zap, Ticket, CalendarDays, PartyPopper, ArrowLeft,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -41,7 +41,7 @@ function getVenueThreshold(votes: number) {
 
 type ArtistData = { id: string; name: string; genre: string; subgenre?: string; trending?: boolean };
 type CityVote = { city: string; vote_count: number };
-type Track = { title: string; preview: string; link: string };
+type Track = { title: string; preview: string | null; link: string; albumCover: string | null; duration: number | null };
 type Show = { id: string; venue: string; city: string; date: string; ticketUrl: string };
 
 export default function ArtistClient({ id }: { id: string }) {
@@ -60,6 +60,8 @@ export default function ArtistClient({ id }: { id: string }) {
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [selectedCity, setSelectedCity] = useState<string>("");
   const [mounted, setMounted] = useState(false);
+  const [playingTrack, setPlayingTrack] = useState<string | null>(null); // preview URL
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const { handleVote, hasVoted } = useVote();
   const { activeCity } = useVoteStore();
@@ -523,23 +525,71 @@ export default function ArtistClient({ id }: { id: string }) {
         {/* Top tracks */}
         {tracks.length > 0 && (
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.15} className="glass rounded-2xl p-5 mb-4">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Top Tracks</p>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Top Tracks</p>
+              <p className="text-xs text-muted-foreground">30s preview</p>
+            </div>
             <div className="flex flex-col gap-1">
-              {tracks.map((track, i) => (
-                <a
-                  key={i}
-                  href={track.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-primary/10 transition-colors group"
-                >
-                  <div className="w-7 h-7 rounded-lg gradient-brand flex items-center justify-center shrink-0">
-                    <Play className="w-3 h-3 text-white" />
+              {tracks.map((track, i) => {
+                const isPlaying = playingTrack === track.preview;
+                const mins = track.duration ? Math.floor(track.duration / 60) : null;
+                const secs = track.duration ? String(track.duration % 60).padStart(2, "0") : null;
+                return (
+                  <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-primary/10 transition-colors group">
+                    {/* Album art / play button */}
+                    <button
+                      onClick={() => {
+                        if (!track.preview) return;
+                        if (isPlaying) {
+                          audioRef.current?.pause();
+                          setPlayingTrack(null);
+                        } else {
+                          if (audioRef.current) {
+                            audioRef.current.pause();
+                          }
+                          const audio = new Audio(track.preview);
+                          audioRef.current = audio;
+                          audio.play().catch(() => {});
+                          audio.onended = () => setPlayingTrack(null);
+                          setPlayingTrack(track.preview);
+                        }
+                      }}
+                      disabled={!track.preview}
+                      className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0 disabled:opacity-50"
+                      aria-label={isPlaying ? "Pause" : "Play preview"}
+                    >
+                      {track.albumCover ? (
+                        <Image src={track.albumCover} alt={track.title} fill className="object-cover" sizes="40px" />
+                      ) : (
+                        <div className="w-full h-full gradient-brand" />
+                      )}
+                      <div className={`absolute inset-0 flex items-center justify-center transition-opacity ${track.preview ? "bg-black/40 opacity-0 group-hover:opacity-100" : ""} ${isPlaying ? "opacity-100 bg-black/50" : ""}`}>
+                        {isPlaying
+                          ? <Pause className="w-4 h-4 text-white" />
+                          : <Play className="w-4 h-4 text-white" />}
+                      </div>
+                    </button>
+
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{track.title}</p>
+                      {mins !== null && (
+                        <p className="text-xs text-muted-foreground">{mins}:{secs}</p>
+                      )}
+                    </div>
+
+                    <a
+                      href={track.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-primary/10"
+                      aria-label="Open on Deezer"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+                    </a>
                   </div>
-                  <span className="text-sm font-medium flex-1 truncate">{track.title}</span>
-                  <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-                </a>
-              ))}
+                );
+              })}
             </div>
           </motion.div>
         )}
