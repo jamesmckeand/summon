@@ -76,11 +76,11 @@ export default function TicketMan() {
           style={{
             top: "42vh",
             left: 0,
-            animation: "ticket-run-x 2.2s cubic-bezier(0.4, 0, 0.4, 1) 0.2s forwards",
+            animation: "ticket-run-x 2.2s cubic-bezier(0.4, 0, 0.4, 1) 0.2s both",
           }}
         >
           {/* Inner div handles the bounce so transform axes don't conflict */}
-          <div style={{ animation: "ticket-bounce 0.36s ease-in-out 0.2s infinite" }}>
+          <div style={{ animation: "ticket-bounce 0.36s ease-in-out 0.4s infinite" }}>
             <TicketManSVG />
           </div>
         </div>
