@@ -79,7 +79,7 @@ export const CITIES = [
   "Chilliwack", "Vernon, BC", "Penticton", "Fort McMurray",
   "Grande Prairie", "Moose Jaw", "North Bay",
   // UK & Ireland
-  "London", "Manchester", "Birmingham", "Glasgow", "Edinburgh", "Bristol", "Leeds", "Liverpool",
+  "London", "Manchester", "Birmingham, UK", "Glasgow", "Edinburgh", "Bristol", "Leeds", "Liverpool",
   "Sheffield", "Newcastle", "Dublin", "Belfast", "Cardiff", "Brighton", "Nottingham", "Leicester",
   "Coventry", "Southampton", "Oxford", "Cambridge",
   // Australia & NZ

@@ -531,7 +531,7 @@ export const CITY_VENUES: Record<string, CityVenues> = {
     concertHall: ["Manchester Apollo", "O2 Ritz Manchester", "Bridgewater Hall", "Castlefield Bowl"],
     arena: ["AO Arena", "Emirates Old Trafford", "Etihad Stadium", "Co-op Live"],
   },
-  "Birmingham": {
+  "Birmingham, UK": {
     bar: ["The Hare & Hounds", "The Sunflower Lounge", "Actress & Bishop", "The Victoria"],
     theatre: ["O2 Institute Birmingham", "The Glee Club", "Town Hall", "Birmingham Town Hall"],
     concertHall: ["O2 Academy Birmingham", "Symphony Hall", "Utilita Arena Birmingham", "NEC Birmingham"],
