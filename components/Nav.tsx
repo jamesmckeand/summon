@@ -55,6 +55,14 @@ export default function Nav() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   const router = useRouter();
   const pathname = usePathname();
   const { initFromDb, clearVotes, setActiveCity, activeCity } = useVoteStore();
@@ -104,7 +112,11 @@ export default function Nav() {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 glass">
+      <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 backdrop-blur-xl border-b transition-all duration-300 ${
+        scrolled
+          ? "bg-background/80 border-border/50 shadow-sm shadow-black/10"
+          : "bg-transparent border-transparent"
+      }`}>
         <Link href="/">
           <span className="text-lg font-bold tracking-tight gradient-brand-text">Summon</span>
         </Link>

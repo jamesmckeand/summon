@@ -22,5 +22,7 @@ export async function GET(request: Request) {
     vote_count: Number(row.vote_count),
   }));
 
-  return NextResponse.json({ cityVotes });
+  return NextResponse.json({ cityVotes }, {
+    headers: { "Cache-Control": "public, max-age=30, stale-while-revalidate=120" },
+  });
 }

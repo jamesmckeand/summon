@@ -10,6 +10,7 @@ import Link from "next/link";
 import { fadeUp } from "@/lib/animations";
 import Marquee from "@/components/Marquee";
 import Nav from "@/components/Nav";
+import TicketMan from "@/components/TicketMan";
 import { ARTISTS } from "@/lib/data/artists";
 import { CITIES } from "@/lib/data/cities";
 import { createClient } from "@/lib/supabase/client";
@@ -89,16 +90,19 @@ export default function Home() {
         </div>
 
         {/* Headline */}
-        <h1
-          className="anim-fade-up text-5xl sm:text-7xl md:text-8xl font-extrabold tracking-tight leading-[1.04] max-w-4xl"
-          style={{ animationDelay: "0.2s" }}
-        >
-          Your city.
-          <br />
-          <span className="gradient-brand-text">Your artists.</span>
-          <br />
-          Your show.
-        </h1>
+        <div className="relative">
+          <h1
+            className="anim-fade-up text-5xl sm:text-7xl md:text-8xl font-extrabold tracking-tight leading-[1.04] max-w-4xl"
+            style={{ animationDelay: "0.2s" }}
+          >
+            Your city.
+            <br />
+            <span className="gradient-brand-text">Your artists.</span>
+            <br />
+            Your show.
+          </h1>
+          <TicketMan />
+        </div>
 
         {/* Subtext */}
         <p

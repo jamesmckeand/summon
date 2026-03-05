@@ -30,5 +30,7 @@ export async function GET() {
     }))
     .sort((a, b) => b.totalVotes - a.totalVotes);
 
-  return NextResponse.json({ cities });
+  return NextResponse.json({ cities }, {
+    headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=300" },
+  });
 }

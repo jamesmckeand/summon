@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { ARTISTS } from "@/lib/data/artists";
-import { searchArtist } from "@/lib/spotify-client";
+import { searchArtist } from "@/lib/deezer-client";
 
 export const revalidate = 86400;
 
@@ -15,7 +15,7 @@ export async function GET() {
     });
   }
 
-  // Fan out Spotify requests in batches of 10 to stay within rate limits
+  // Fan out Deezer requests in batches of 10
   const BATCH = 10;
   const images: Record<string, string | null> = {};
 

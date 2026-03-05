@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { searchArtist } from "@/lib/spotify-client";
+import { searchArtist } from "@/lib/deezer-client";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

@@ -377,37 +377,14 @@ export default function ExplorePage() {
         )}
 
         {/* Artist list */}
-        {countsLoading && (
-          <div className="flex flex-col gap-3">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="glass rounded-xl p-4 flex items-center gap-4 animate-pulse">
-                <div className="w-6 h-4 bg-muted/60 rounded hidden sm:block shrink-0" />
-                <div className="w-12 h-12 rounded-xl bg-muted/60 shrink-0" />
-                <div className="flex-1 space-y-2 min-w-0">
-                  <div className="h-4 bg-muted/60 rounded w-32" />
-                  <div className="h-3 bg-muted/60 rounded w-20" />
-                </div>
-                <div className="hidden sm:block space-y-1 text-right shrink-0">
-                  <div className="h-4 bg-muted/60 rounded w-12 ml-auto" />
-                  <div className="h-3 bg-muted/60 rounded w-8 ml-auto" />
-                </div>
-                <div className="w-16 h-9 bg-muted/60 rounded-lg shrink-0" />
-              </div>
-            ))}
-          </div>
-        )}
-        <div className={`flex flex-col gap-3 ${countsLoading ? "hidden" : ""}`}>
+        <div className="flex flex-col gap-3">
           {filteredArtists.map((artist, i) => {
             const voted = mounted && hasVoted(artist.id, selectedCity);
             const confirmed = confirmedShows[artist.id] ?? false;
             return (
-              <motion.div
+              <div
                 key={artist.id}
-                initial="hidden"
-                animate="visible"
-                variants={fadeUp}
-                custom={0.12 + Math.min(i, 10) * 0.03}
-                className={`glass rounded-xl overflow-hidden transition-all ${confirmed ? "border-green-500/30 hover:border-green-500/50" : "hover:border-primary/20"}`}
+                className={`glass glass-hover rounded-xl overflow-hidden ${confirmed ? "border-green-500/30 hover:border-green-500/50" : "hover:border-primary/20"}`}
               >
                 <div className="p-4 flex items-center gap-4">
                   <span className="text-muted-foreground text-sm font-mono w-6 text-center shrink-0 hidden sm:block">{i + 1}</span>
@@ -460,7 +437,7 @@ export default function ExplorePage() {
                     <Button
                       size="sm"
                       onClick={() => handleVote(artist.id, selectedCity)}
-                      className={`shrink-0 rounded-lg h-9 px-3 font-semibold transition-all ${
+                      className={`shrink-0 rounded-lg h-9 px-3 font-semibold btn-press transition-all ${
                         voted
                           ? "gradient-brand text-white glow-primary-sm border-0"
                           : "border border-primary/50 bg-primary/8 text-primary hover:bg-primary/15 hover:border-primary/70"
@@ -475,15 +452,13 @@ export default function ExplorePage() {
                 {/* Progress bar toward next threshold */}
                 {selectedCity && !countsLoading && artist.votes > 0 && (
                   <div className="h-0.5 bg-muted/60 w-full">
-                    <motion.div
-                      className={`h-full ${confirmed ? "bg-green-500/60" : "gradient-brand opacity-60"}`}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${getProgressToNext(artist.votes)}%` }}
-                      transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 + Math.min(i, 10) * 0.02 }}
+                    <div
+                      className={`h-full transition-all duration-700 ${confirmed ? "bg-green-500/60" : "gradient-brand opacity-60"}`}
+                      style={{ width: `${getProgressToNext(artist.votes)}%` }}
                     />
                   </div>
                 )}
-              </motion.div>
+              </div>
             );
           })}
         </div>

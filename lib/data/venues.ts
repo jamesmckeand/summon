@@ -517,6 +517,154 @@ export const CITY_VENUES: Record<string, CityVenues> = {
     concertHall: ["Barrie Molson Theatre", "Georgian Downs", "Sadlon Arena", "Barrie Curling Club"],
     arena: ["Sadlon Arena", "Georgian Downs", "Barrie Molson Theatre", "Lamoureux Park"],
   },
+
+  // UK & Ireland
+  "London": {
+    bar: ["Moth Club", "The Windmill Brixton", "The Lexington", "Oslo Hackney"],
+    theatre: ["O2 Forum Kentish Town", "Scala", "Electric Ballroom", "Jazz Cafe"],
+    concertHall: ["O2 Academy Brixton", "Roundhouse", "Alexandra Palace", "Royal Albert Hall"],
+    arena: ["The O2 Arena", "Wembley Arena", "SSE Arena Wembley", "Crystal Palace Park"],
+  },
+  "Manchester": {
+    bar: ["Night & Day Cafe", "The Castle Hotel", "Gullivers", "The Soup Kitchen"],
+    theatre: ["Band on the Wall", "Gorilla", "Albert Hall", "Deaf Institute"],
+    concertHall: ["Manchester Apollo", "O2 Ritz Manchester", "Bridgewater Hall", "Castlefield Bowl"],
+    arena: ["AO Arena", "Emirates Old Trafford", "Etihad Stadium", "Co-op Live"],
+  },
+  "Birmingham": {
+    bar: ["The Hare & Hounds", "The Sunflower Lounge", "Actress & Bishop", "The Victoria"],
+    theatre: ["O2 Institute Birmingham", "The Glee Club", "Town Hall", "Birmingham Town Hall"],
+    concertHall: ["O2 Academy Birmingham", "Symphony Hall", "Utilita Arena Birmingham", "NEC Birmingham"],
+    arena: ["Utilita Arena Birmingham", "Villa Park", "St Andrew's", "Resorts World Arena"],
+  },
+  "Glasgow": {
+    bar: ["King Tut's Wah Wah Hut", "Stereo", "The Hug and Pint", "Nice 'N' Sleazy"],
+    theatre: ["SWG3", "The Art School", "St Luke's", "Òran Mór"],
+    concertHall: ["O2 Academy Glasgow", "The Barrowland Ballroom", "Glasgow Royal Concert Hall", "SEC Armadillo"],
+    arena: ["OVO Hydro", "Hampden Park", "Ibrox Stadium", "Celtic Park"],
+  },
+  "Edinburgh": {
+    bar: ["Sneaky Pete's", "Cabaret Voltaire", "The Caves", "Henry's Cellar Bar"],
+    theatre: ["Liquid Room", "The Voodoo Rooms", "Assembly Rooms", "Queen's Hall"],
+    concertHall: ["Usher Hall", "Edinburgh Playhouse", "Festival Theatre", "O2 Academy Edinburgh"],
+    arena: ["Murrayfield Stadium", "Royal Highland Centre", "Edinburgh International Conference Centre", "Meadowbank Stadium"],
+  },
+  "Bristol": {
+    bar: ["The Louisiana", "Exchange", "Crofters Rights", "The Fleece"],
+    theatre: ["The Fleece", "Trinity Centre", "O2 Academy Bristol", "Colston Hall"],
+    concertHall: ["Bristol Beacon", "Marble Factory", "Motion", "SWX Bristol"],
+    arena: ["Ashton Gate Stadium", "Ashton Gate", "UWE Arena", "Tortworth Court"],
+  },
+  "Dublin": {
+    bar: ["Whelan's", "The Grand Social", "Workman's Club", "The Button Factory"],
+    theatre: ["Vicar Street", "The Academy", "Olympia Theatre", "NCH (National Concert Hall)"],
+    concertHall: ["3Arena", "National Concert Hall", "Bord Gáis Energy Theatre", "Helix Theatre"],
+    arena: ["3Arena", "Aviva Stadium", "Croke Park", "RDS Arena"],
+  },
+
+  // Australia & NZ
+  "Sydney": {
+    bar: ["Oxford Art Factory", "The Lansdowne Hotel", "The Bald Faced Stag", "Red Rattler Theatre"],
+    theatre: ["Metro Theatre", "Enmore Theatre", "The Factory Theatre", "Newtown Social Club"],
+    concertHall: ["Sydney Opera House", "Hordern Pavilion", "State Theatre", "Aware Super Theatre"],
+    arena: ["Qudos Bank Arena", "Allianz Stadium", "CommBank Stadium", "Sydney Cricket Ground"],
+  },
+  "Melbourne": {
+    bar: ["The Tote", "Corner Hotel", "Ding Dong Lounge", "The Old Bar"],
+    theatre: ["Forum Melbourne", "The Hi-Fi", "Northcote Social Club", "170 Russell"],
+    concertHall: ["Palais Theatre", "Margaret Court Arena", "Plenary Melbourne", "Sidney Myer Music Bowl"],
+    arena: ["Rod Laver Arena", "Marvel Stadium", "Melbourne Cricket Ground", "John Cain Arena"],
+  },
+  "Brisbane": {
+    bar: ["The Tivoli", "The Zoo", "Woolly Mammoth Alehouse", "Black Bear Lodge"],
+    theatre: ["The Tivoli", "Fortitude Music Hall", "Brisbane Powerhouse", "The Princess Theatre"],
+    concertHall: ["Riverstage", "Queensland Performing Arts Centre", "QPAC Concert Hall", "Eatons Hill Hotel"],
+    arena: ["Brisbane Entertainment Centre", "Suncorp Stadium", "Nissan Arena", "Sleeman Sports Complex"],
+  },
+
+  // Europe
+  "Berlin": {
+    bar: ["Berghain Kantine", "Privatclub", "Monarch", "Cassiopeia"],
+    theatre: ["Lido Berlin", "Columbia Theater", "Metropol", "Festsaal Kreuzberg"],
+    concertHall: ["Tempodrom", "Huxleys Neue Welt", "Columbiahalle", "Zitadelle Spandau"],
+    arena: ["Mercedes-Benz Arena", "Waldbühne", "Olympiastadion Berlin", "Max-Schmeling-Halle"],
+  },
+  "Amsterdam": {
+    bar: ["Bitterzoet", "OT301", "OCCII", "Shelter Amsterdam"],
+    theatre: ["Paradiso", "Melkweg", "Tolhuistuin", "AFAS Live"],
+    concertHall: ["Heineken Music Hall", "AFAS Live", "Carré", "Ziggo Dome"],
+    arena: ["Ziggo Dome", "Johan Cruijff Arena", "AFAS Live", "Amsterdam Arena"],
+  },
+  "Paris": {
+    bar: ["La Maroquinerie", "Le Supersonic", "La Fleche d'Or", "Point Ephémère"],
+    theatre: ["La Cigale", "Le Bataclan", "Casino de Paris", "L'Olympia"],
+    concertHall: ["L'Olympia", "Palais des Congrès", "Salle Pleyel", "Grand Rex"],
+    arena: ["Accor Arena", "La Défense Arena", "Stade de France", "Paris La Défense Arena"],
+  },
+  "Barcelona": {
+    bar: ["Sala Apolo (Nitsa)", "BARTS", "Sidecar", "Razzmatazz (Club)"],
+    theatre: ["Razzmatazz", "Sala Apolo", "Pacha Barcelona", "Bikini Barcelona"],
+    concertHall: ["Palau de la Música Catalana", "Gran Teatre del Liceu", "Auditori de Barcelona", "Poble Espanyol"],
+    arena: ["Palau Sant Jordi", "Estadi Olímpic Lluís Companys", "Camp Nou", "Estadi Olímpic"],
+  },
+  "Madrid": {
+    bar: ["Sala Changó", "Moby Dick Club", "El Sol", "Tupperware Club"],
+    theatre: ["Joy Eslava", "Sala But", "Teatro Monumental", "La Riviera"],
+    concertHall: ["WiZink Center", "La Riviera", "Teatro Real", "Auditorio Nacional"],
+    arena: ["WiZink Center", "Civitas Metropolitano", "Santiago Bernabéu", "Palacio de los Deportes"],
+  },
+  "Stockholm": {
+    bar: ["Debaser Strand", "Nalen", "Pub Anchor", "Hus 7"],
+    theatre: ["Berns", "Cirkus", "Södra Teatern", "Göta Lejon"],
+    concertHall: ["Annexet", "Ericsson Globe", "Stockholms Konserthus", "Rival"],
+    arena: ["Avicii Arena", "Tele2 Arena", "Stockholm Stadion", "Friends Arena"],
+  },
+  "Vienna": {
+    bar: ["Chelsea Vienna", "Fluc", "Arena Wien", "Shelter Club"],
+    theatre: ["WUK", "Flex", "B72", "Porgy & Bess"],
+    concertHall: ["Gasometer Wien", "Stadthalle Wien", "Wiener Konzerthaus", "Wiener Musikverein"],
+    arena: ["Wiener Stadthalle", "Ernst Happel Stadion", "Wiener Stadion", "Marx Halle"],
+  },
+
+  // Asia
+  "Tokyo": {
+    bar: ["Club Quattro", "WWW Tokyo", "Shibuya O-East", "Liquidroom"],
+    theatre: ["Zepp Tokyo", "Shibuya O-East", "EX Theater Roppongi", "Stellar Ball"],
+    concertHall: ["NHK Hall", "Tokyo Garden Theatre", "Budokan", "Tokyo International Forum"],
+    arena: ["Tokyo Dome", "Saitama Super Arena", "Makuhari Messe", "Nippon Budokan"],
+  },
+  "Seoul": {
+    bar: ["Club FF", "Dgbd", "Rolling Hall", "Platoon Kunsthalle"],
+    theatre: ["Yes24 Live Hall", "Muv Hall", "Blue Square", "Olympic Hall"],
+    concertHall: ["Olympic Hall", "Jamsil Indoor Stadium", "Seoul Arts Center", "KBS Hall"],
+    arena: ["KSPO Dome", "Seoul World Cup Stadium", "Jamsil Olympic Stadium", "COEX Auditorium"],
+  },
+  "Singapore": {
+    bar: ["Blu Jaz Cafe", "Zirca Mega Club", "Canvas Club", "Headquarters by The Council"],
+    theatre: ["Esplanade Theatre Studio", "The Pavilion at Far East Square", "Aliwal Arts Centre", "Capitol Theatre"],
+    concertHall: ["Esplanade Concert Hall", "Capitol Theatre", "Sands Theatre", "Star Theatre"],
+    arena: ["Singapore Indoor Stadium", "National Stadium", "Suntec Convention Centre", "MAX Atria"],
+  },
+
+  // Latin America
+  "São Paulo": {
+    bar: ["Inferno Club", "D-Edge", "Audio SP", "Cine Joia"],
+    theatre: ["Cine Joia", "Vibra São Paulo", "Tom Brasil", "Audio"],
+    concertHall: ["Vibra São Paulo", "Espaço das Américas", "Credicard Hall", "Citibank Hall"],
+    arena: ["Allianz Parque", "Morumbi Stadium", "Espaço Unimed", "Neo Química Arena"],
+  },
+  "Buenos Aires": {
+    bar: ["Niceto Club", "Club Araoz", "Mitos Argentinos", "Crobar"],
+    theatre: ["Teatro Vorterix", "Teatro Opera", "La Trastienda", "Konex City"],
+    concertHall: ["Luna Park", "Teatro Gran Rex", "Movistar Arena", "Estadio Obras Sanitarias"],
+    arena: ["Estadio River Plate", "Vélez Sársfield", "Movistar Arena", "Luna Park"],
+  },
+  "Mexico City": {
+    bar: ["El Imperial", "Multiforo Alicia", "Cine Tonalá", "Bar Ocho"],
+    theatre: ["Foro Indie Rocks!", "Teatro Metropólitan", "El Plaza Condesa", "Lunario del Auditorio"],
+    concertHall: ["Auditorio Nacional", "Pepsi Center WTC", "Palacio de los Deportes", "Forum Buenavista"],
+    arena: ["Foro Sol", "Estadio Azteca", "Palacio de los Deportes", "Estadio GNP Seguros"],
+  },
 };
 
 export function getVenuesForCity(city: string): CityVenues {

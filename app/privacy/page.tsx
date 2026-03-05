@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Privacy Policy — Summon",
@@ -85,6 +86,7 @@ export default function PrivacyPage() {
 
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

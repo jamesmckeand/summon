@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { ARTISTS } from "@/lib/data/artists";
+import { affiliateUrl } from "@/lib/affiliate";
 
 export type ShowItem = {
   id: string;
@@ -76,7 +77,7 @@ async function fetchTicketmaster(
         city: e._embedded?.venues?.[0]?.city?.name ?? "TBA",
         country: e._embedded?.venues?.[0]?.country?.name ?? "",
         date: e.dates.start.localDate,
-        ticketUrl: e.url,
+        ticketUrl: affiliateUrl(e.url),
         source: "ticketmaster" as const,
       }));
   } catch {
@@ -123,9 +124,10 @@ async function fetchBandsintown(
         city: e.venue?.city ?? "TBA",
         country: e.venue?.country ?? "",
         date: e.datetime.split("T")[0],
-        ticketUrl: e.offers?.[0]?.url ?? e.url,
+        ticketUrl: affiliateUrl((e.offers?.[0]?.url || e.url || "") as string),
         source: "bandsintown" as const,
-      }));
+      }))
+      .filter((s) => !!s.ticketUrl);
   } catch {
     return [];
   }
@@ -174,7 +176,7 @@ async function fetchSongkick(
         city: e.venue?.city?.displayName ?? "TBA",
         country: e.venue?.city?.country?.displayName ?? "",
         date: e.start.date,
-        ticketUrl: e.uri,
+        ticketUrl: affiliateUrl(e.uri),
         source: "songkick" as const,
       }));
   } catch {

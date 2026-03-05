@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Terms of Service — Summon",
@@ -79,6 +80,7 @@ export default function TermsPage() {
 
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

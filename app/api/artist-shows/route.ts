@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { affiliateUrl } from "@/lib/affiliate";
 
 // City name → Ticketmaster stateCode / countryCode lookup
 // Lets us narrow searches so "Portland" doesn't match Portland, UK etc.
@@ -157,8 +158,9 @@ export async function GET(request: Request) {
         venue: e._embedded?.venues?.[0]?.name ?? "TBA",
         city,
         date: e.dates.start.localDate,
-        ticketUrl: e.url,
-      }));
+        ticketUrl: affiliateUrl(e.url ?? ""),
+      }))
+      .filter((s: Show) => !!s.ticketUrl);
 
     return NextResponse.json({ shows }, {
       headers: { "Cache-Control": "public, max-age=3600" },

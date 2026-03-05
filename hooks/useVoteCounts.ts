@@ -4,9 +4,10 @@ import { createClient } from "@/lib/supabase/client";
 
 export function useVoteCounts(city: string) {
   const [counts, setCounts] = useState<Record<string, number>>({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!!city);
 
   const fetchCounts = useCallback(() => {
+    if (!city) { setLoading(false); return; }
     fetch(`/api/vote-counts?city=${encodeURIComponent(city)}`)
       .then((r) => r.json())
       .then((data) => { if (data.counts) setCounts(data.counts); })
@@ -15,7 +16,7 @@ export function useVoteCounts(city: string) {
   }, [city]);
 
   useEffect(() => {
-    setLoading(true);
+    if (city) setLoading(true);
     fetchCounts();
 
     const supabase = createClient();

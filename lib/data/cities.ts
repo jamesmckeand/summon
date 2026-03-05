@@ -78,4 +78,22 @@ export const CITIES = [
   "Waterloo, ON", "Oshawa", "Whitby", "Newmarket",
   "Chilliwack", "Vernon, BC", "Penticton", "Fort McMurray",
   "Grande Prairie", "Moose Jaw", "North Bay",
+  // UK & Ireland
+  "London", "Manchester", "Birmingham", "Glasgow", "Edinburgh", "Bristol", "Leeds", "Liverpool",
+  "Sheffield", "Newcastle", "Dublin", "Belfast", "Cardiff", "Brighton", "Nottingham", "Leicester",
+  "Coventry", "Southampton", "Oxford", "Cambridge",
+  // Australia & NZ
+  "Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide", "Auckland", "Wellington", "Christchurch",
+  "Gold Coast", "Canberra",
+  // Europe
+  "Berlin", "Munich", "Hamburg", "Cologne", "Frankfurt", "Amsterdam", "Paris", "Lyon",
+  "Barcelona", "Madrid", "Stockholm", "Copenhagen", "Oslo", "Helsinki", "Vienna", "Zurich",
+  "Brussels", "Lisbon", "Porto", "Athens", "Warsaw", "Prague", "Budapest", "Bucharest",
+  "Milan", "Rome", "Rotterdam", "Utrecht",
+  // Latin America
+  "Mexico City", "São Paulo", "Buenos Aires", "Bogotá", "Santiago", "Lima", "Monterrey",
+  "Guadalajara", "Medellín",
+  // Asia
+  "Tokyo", "Seoul", "Singapore", "Bangkok", "Mumbai", "Delhi", "Bangalore", "Hong Kong",
+  "Taipei", "Jakarta", "Kuala Lumpur", "Manila", "Shanghai", "Beijing",
 ].sort();

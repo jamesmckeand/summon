@@ -24,7 +24,13 @@ export async function PATCH(request: Request) {
   const allowed = ["username", "city", "favourite_venues", "favourite_artists"];
   const updates: Record<string, unknown> = { id: user.id };
   for (const key of allowed) {
-    if (key in body) updates[key] = body[key];
+    if (!(key in body)) continue;
+    if (key === "username") {
+      const trimmed = String(body[key] ?? "").trim().slice(0, 50);
+      updates[key] = trimmed || null;
+    } else {
+      updates[key] = body[key];
+    }
   }
 
   const { error } = await supabase
