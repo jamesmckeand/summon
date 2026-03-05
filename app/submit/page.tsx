@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Music2, MapPin, Search, ChevronDown, ChevronUp,
@@ -184,12 +185,19 @@ export default function SubmitPage() {
               <p className="text-muted-foreground text-sm">
                 We'll review it and add it to the app if it's a good fit.
               </p>
-              <Button
-                className="mt-6 gradient-brand border-0 text-white"
-                onClick={() => { setResult(null); setArtistName(""); setArtistGenre(""); setArtistSubgenre(""); setArtistInstagram(""); setArtistSpotify(""); setVenueCity(""); setVenueName(""); setVenueCapacity(""); }}
-              >
-                Submit another
-              </Button>
+              <div className="mt-6 flex gap-3 justify-center flex-wrap">
+                <Button
+                  className="gradient-brand border-0 text-white"
+                  onClick={() => { setResult(null); setArtistName(""); setArtistGenre(""); setArtistSubgenre(""); setArtistInstagram(""); setArtistSpotify(""); setVenueCity(""); setVenueName(""); setVenueCapacity(""); }}
+                >
+                  Submit another
+                </Button>
+                <Link href="/explore">
+                  <Button variant="outline" className="border-border/50">
+                    Explore artists
+                  </Button>
+                </Link>
+              </div>
             </motion.div>
           ) : tab === "artist" ? (
             <motion.div key="artist" initial="hidden" animate="visible" variants={fadeUp} custom={0.1} className="space-y-4">

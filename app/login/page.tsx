@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Music2, Headphones, CheckCircle } from "lucide-react";
+import { Mail, Music2, Headphones, CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fadeUp } from "@/lib/animations";
@@ -103,7 +103,7 @@ export default function LoginPage() {
                   disabled={loading || !email}
                   className="w-full h-12 rounded-xl gradient-brand border-0 text-white font-semibold glow-primary-sm"
                 >
-                  <Mail className="w-5 h-5 mr-2" />
+                  {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Mail className="w-5 h-5 mr-2" />}
                   {loading ? "Sending..." : "Continue with Email"}
                 </Button>
 

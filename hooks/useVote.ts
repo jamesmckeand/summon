@@ -25,9 +25,11 @@ export function useVote() {
         body: JSON.stringify({ artistId, city }),
       });
       if (!res.ok) throw new Error("vote failed");
+      return { ok: true };
     } catch {
       // Revert optimistic update on failure
       isVoted ? vote(artistId, city) : unvote(artistId, city);
+      return { ok: false };
     }
   }
 

@@ -80,6 +80,7 @@ export default function ExplorePage() {
   const [deezerResults, setDeezerResults] = useState<DeezerArtist[]>([]);
   const [deezerLoading, setDeezerLoading] = useState(false);
   const [deezerVoting, setDeezerVoting] = useState<Record<string, boolean>>({});
+  const [voteError, setVoteError] = useState<string | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -110,11 +111,11 @@ export default function ExplorePage() {
       .catch(() => {});
   }, []);
 
-  // Fetch all artist images in one batch request
+  // Fetch pre-baked artist images from static public file
   useEffect(() => {
-    fetch("/api/artist-images")
+    fetch("/artist-images.json")
       .then((r) => r.json())
-      .then((data) => { if (data.images) setImages(data.images); })
+      .then((data) => { if (data && typeof data === "object") setImages(data); })
       .catch(() => {});
   }, []);
 
@@ -359,20 +360,42 @@ export default function ExplorePage() {
             animate="visible"
             variants={fadeUp}
             custom={0.08}
-            className="glass rounded-2xl p-5 mb-5 border-primary/20 bg-primary/5 flex items-center gap-4"
+            className="glass rounded-2xl p-5 mb-5 border-primary/20 bg-primary/5"
           >
-            <div className="w-10 h-10 rounded-xl gradient-brand flex items-center justify-center shrink-0">
-              <MapPin className="w-5 h-5 text-white" />
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-10 h-10 rounded-xl gradient-brand flex items-center justify-center shrink-0">
+                <MapPin className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm">Pick your city to get started</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Vote counts are local — select a city to see who&apos;s leading in your area.</p>
+              </div>
             </div>
-            <div>
-              <p className="font-semibold text-sm">Pick your city to get started</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Vote counts are local — select a city to see who's leading in your area.</p>
+            <div className="flex gap-2 flex-wrap">
+              {["London", "New York", "Los Angeles", "Manchester", "Toronto"].map((city) => (
+                <button
+                  key={city}
+                  onClick={() => { setSelectedCity(city); setActiveCity(city); }}
+                  className="px-3 py-1.5 rounded-full text-xs font-medium glass hover:border-primary/40 hover:text-primary transition-colors"
+                >
+                  {city}
+                </button>
+              ))}
             </div>
           </motion.div>
         )}
 
+        {/* Vote error toast */}
+        {voteError && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-destructive text-destructive-foreground text-sm px-4 py-2.5 rounded-xl shadow-lg">
+            {voteError}
+          </div>
+        )}
+
         <motion.p initial="hidden" animate="visible" variants={fadeUp} custom={0.1} className="text-xs text-muted-foreground mb-4">
-          {filteredArtists.length} artists{selectedCity ? ` · sorted by votes in ${selectedCity}` : " · select a city to see local rankings"}
+          {artistSearch.trim().length === 1
+            ? "Keep typing to search…"
+            : `${filteredArtists.length} artists${selectedCity ? ` · sorted by votes in ${selectedCity}` : " · select a city to see local rankings"}`}
           {selectedGenre !== "All" && <span> · <button onClick={() => setSelectedGenre("All")} className="text-primary hover:underline">{selectedGenre} ×</button></span>}
         </motion.p>
 
@@ -452,15 +475,17 @@ export default function ExplorePage() {
                     </p>
                   </div>
 
-                  <div className="text-right shrink-0 hidden sm:block">
-                    <p className="text-sm font-bold text-primary">
-                      {countsLoading ? <span className="text-muted-foreground">—</span> : artist.votes.toLocaleString()}
-                    </p>
-                    <p className="text-xs text-muted-foreground">votes</p>
-                    <p className="text-xs text-muted-foreground/60 truncate max-w-[120px]">
-                      {!countsLoading && getVenueLabel(artist.votes, selectedCity)}
-                    </p>
-                  </div>
+                  {selectedCity && (
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-bold text-primary">
+                        {countsLoading ? <span className="text-muted-foreground">—</span> : artist.votes.toLocaleString()}
+                      </p>
+                      <p className="text-xs text-muted-foreground">votes</p>
+                      <p className="text-xs text-muted-foreground/60 truncate max-w-[120px] hidden sm:block">
+                        {!countsLoading && getVenueLabel(artist.votes, selectedCity)}
+                      </p>
+                    </div>
+                  )}
 
                   {confirmed ? (
                     <Link href={`/artist/${artist.id}`} className="shrink-0">
@@ -475,7 +500,13 @@ export default function ExplorePage() {
                   ) : (
                     <Button
                       size="sm"
-                      onClick={() => handleVote(artist.id, selectedCity)}
+                      onClick={async () => {
+                        const result = await handleVote(artist.id, selectedCity);
+                        if (result && !result.ok) {
+                          setVoteError("Couldn't save your vote — please try again");
+                          setTimeout(() => setVoteError(null), 3000);
+                        }
+                      }}
                       className={`shrink-0 rounded-lg h-9 px-3 font-semibold btn-press transition-all ${
                         voted
                           ? "gradient-brand text-white glow-primary-sm border-0"

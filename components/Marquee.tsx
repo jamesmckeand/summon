@@ -86,10 +86,10 @@ export default function Marquee() {
       })
       .catch(() => {}); // keep fallback on error
 
-    // Fetch images in parallel
-    fetch("/api/artist-images")
+    // Fetch pre-baked artist images from static public file
+    fetch("/artist-images.json")
       .then((r) => r.json())
-      .then((data) => { if (data.images) setImages(data.images); })
+      .then((data) => { if (data && typeof data === "object") setImages(data); })
       .catch(() => {});
   }, []);
 

@@ -346,8 +346,10 @@ export default function DashboardPage() {
                     <Button
                       size="sm"
                       onClick={() => handleVote(artist.id, activeCity)}
-                      className="gradient-brand border-0 text-white rounded-lg h-8 px-3 text-xs font-semibold glow-primary-sm"
+                      className="gradient-brand border-0 text-white rounded-lg h-8 px-3 text-xs font-semibold glow-primary-sm hover:opacity-80"
+                      title="Click to unvote"
                     >
+                      <ChevronUp className="w-3 h-3 mr-1" />
                       Voted
                     </Button>
                   </div>
