@@ -4,8 +4,9 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import {
   MapPin, TrendingUp, Music2, ChevronUp, Zap,
-  Trophy, Users, ChevronRight, ArrowRight
+  Trophy, Users, ChevronRight, ArrowRight, Flame
 } from "lucide-react";
+import ShareButton from "@/components/ShareButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
@@ -109,6 +110,15 @@ export default function DashboardPage() {
     .filter((a) => cityVotedIds.includes(a.id))
     .map((a) => ({ ...a, votes: counts[a.id] ?? 0 }))
     .sort((a, b) => b.votes - a.votes);
+
+  const closingInArtists = userVotedArtists.filter((artist) => {
+    const next = getNextThreshold(artist.votes);
+    if (!next) return false;
+    const current = getVenueThreshold(artist.votes);
+    const prevVotes = current?.votes ?? 0;
+    const progress = (artist.votes - prevVotes) / (next.votes - prevVotes);
+    return progress >= 0.75;
+  });
 
   const totalVotes = cityVotedIds.length;
   const topArtist = cityArtists[0];
@@ -368,6 +378,45 @@ export default function DashboardPage() {
                   Vote in {activeCity} <ArrowRight className="w-3 h-3 ml-1.5" />
                 </Button>
               </Link>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Close to a milestone */}
+        {closingInArtists.length > 0 && (
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.28} className="mb-6">
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2">
+              <Flame className="w-4 h-4 text-orange-400" /> Close to a milestone
+            </h2>
+            <div className="flex flex-col gap-2">
+              {closingInArtists.map((artist) => {
+                const next = getNextThreshold(artist.votes);
+                const current = getVenueThreshold(artist.votes);
+                const prevVotes = current?.votes ?? 0;
+                const votesNeeded = next ? next.votes - artist.votes : 0;
+                const progress = next ? Math.min(((artist.votes - prevVotes) / (next.votes - prevVotes)) * 100, 100) : 100;
+                const shareUrl = mounted ? `${window.location.origin}/artist/${artist.id}?city=${encodeURIComponent(activeCity)}` : `/artist/${artist.id}`;
+                return (
+                  <div key={artist.id} className="glass rounded-xl px-4 py-3 flex items-center gap-3 border-orange-400/20">
+                    <ArtistInitials name={artist.name} />
+                    <div className="flex-1 min-w-0">
+                      <Link href={`/artist/${artist.id}`} className="font-semibold text-sm hover:text-primary transition-colors truncate block">{artist.name}</Link>
+                      <p className="text-xs text-orange-400 mt-0.5">{votesNeeded.toLocaleString()} votes to {next?.label}</p>
+                      <div className="h-1 bg-muted rounded-full overflow-hidden mt-1.5">
+                        <div className="h-full rounded-full bg-orange-400/70 transition-all" style={{ width: `${progress}%` }} />
+                      </div>
+                    </div>
+                    <ShareButton
+                      url={shareUrl}
+                      text={`Only ${votesNeeded.toLocaleString()} more votes to get ${artist.name} to ${next?.label} in ${activeCity}! Vote on Summon 🎶`}
+                      label="Share"
+                      size="sm"
+                      variant="ghost"
+                      className="shrink-0 h-8 px-3 rounded-lg glass text-muted-foreground hover:text-foreground text-xs border-0"
+                    />
+                  </div>
+                );
+              })}
             </div>
           </motion.div>
         )}

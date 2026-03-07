@@ -7,10 +7,14 @@ export function useVote() {
   const { vote, unvote, hasVoted } = useVoteStore();
   const router = useRouter();
 
-  async function handleVote(artistId: string, city: string) {
+  async function handleVote(artistId: string, city: string, onUnauthenticated?: () => void) {
     const { data: { user } } = await createClient().auth.getUser();
     if (!user) {
-      router.push("/login");
+      if (onUnauthenticated) {
+        onUnauthenticated();
+      } else {
+        router.push("/login");
+      }
       return;
     }
 

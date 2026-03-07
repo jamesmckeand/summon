@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, MapPin, TrendingUp, Music2, ChevronUp, ChevronDown, Ticket } from "lucide-react";
+import { Search, MapPin, TrendingUp, Music2, ChevronUp, ChevronDown, Ticket, CheckCircle, Loader2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,8 @@ import { useVoteCounts } from "@/hooks/useVoteCounts";
 import { useVoteStore } from "@/lib/store/votes";
 import Nav from "@/components/Nav";
 import AppleMusicConnect from "@/components/AppleMusicConnect";
+import ShareButton from "@/components/ShareButton";
+import { createClient } from "@/lib/supabase/client";
 
 const VOTE_TIERS = [
   { votes: 25000, key: "arena" as const },
@@ -81,8 +83,30 @@ export default function ExplorePage() {
   const [deezerLoading, setDeezerLoading] = useState(false);
   const [deezerVoting, setDeezerVoting] = useState<Record<string, boolean>>({});
   const [voteError, setVoteError] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(50);
+  const [recentlyVoted, setRecentlyVoted] = useState<string | null>(null);
+  const [pendingVote, setPendingVote] = useState<{ artistId: string; city: string } | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [modalEmail, setModalEmail] = useState("");
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalSent, setModalSent] = useState(false);
+  const [modalError, setModalError] = useState("");
 
   useEffect(() => { setMounted(true); }, []);
+
+  // Auto-cast pending vote after magic-link sign-in
+  useEffect(() => {
+    const raw = localStorage.getItem("summon-pending-vote");
+    if (!raw) return;
+    createClient().auth.getUser().then(({ data }) => {
+      if (data.user) {
+        const { artistId, city } = JSON.parse(raw);
+        localStorage.removeItem("summon-pending-vote");
+        handleVote(artistId, city);
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Pre-select city from referral URL param
   useEffect(() => {
@@ -166,6 +190,8 @@ export default function ExplorePage() {
     [genreSearch]
   );
 
+  useEffect(() => { setVisibleCount(50); }, [artistSearch, selectedGenre, selectedCity]);
+
   const filteredArtists = useMemo(() => {
     const allArtists = [...ARTISTS, ...liveArtists.filter((la) => !ARTISTS.some((a) => a.id === la.id))];
     const withVotes = allArtists.map((a) => ({ ...a, votes: counts[a.id] ?? 0 }));
@@ -216,6 +242,24 @@ export default function ExplorePage() {
       setDeezerVoting((v) => ({ ...v, [artist.id]: false }));
     }
   }, [selectedCity, handleVote]);
+
+  async function handleModalSubmit() {
+    if (!modalEmail || !pendingVote) return;
+    setModalLoading(true);
+    setModalError("");
+    localStorage.setItem("summon-pending-vote", JSON.stringify(pendingVote));
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOtp({
+      email: modalEmail,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    });
+    setModalLoading(false);
+    if (error) {
+      setModalError(error.message);
+    } else {
+      setModalSent(true);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -399,6 +443,32 @@ export default function ExplorePage() {
           {selectedGenre !== "All" && <span> · <button onClick={() => setSelectedGenre("All")} className="text-primary hover:underline">{selectedGenre} ×</button></span>}
         </motion.p>
 
+        {/* Connect music banner — shown when no For You artists loaded yet */}
+        {forYouArtists.length === 0 && (
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.08} className="mb-5 glass rounded-xl p-4 flex items-center gap-4 border-primary/15">
+            <div className="w-9 h-9 rounded-xl gradient-brand flex items-center justify-center shrink-0">
+              <Music2 className="w-4 h-4 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold">Connect your music</p>
+              <p className="text-xs text-muted-foreground mt-0.5">See artists from your library and get personalised picks.</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <AppleMusicConnect
+                onArtists={(artists) =>
+                  setForYouArtists((prev) => {
+                    const newOnes = artists.filter((a) => !prev.some((p) => p.id === a.id));
+                    return [...prev, ...newOnes];
+                  })
+                }
+              />
+              <Link href="/login" className="text-xs font-semibold text-[#1DB954] hover:underline whitespace-nowrap">
+                Connect Spotify
+              </Link>
+            </div>
+          </motion.div>
+        )}
+
         {/* For You — Spotify + Apple Music matches */}
         {forYouArtists.length > 0 && (
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.08} className="mb-6">
@@ -424,7 +494,7 @@ export default function ExplorePage() {
                     <p className="text-xs font-semibold text-center leading-tight line-clamp-2">{artist.name}</p>
                     <Button
                       size="sm"
-                      onClick={() => handleVote(artist.id, selectedCity)}
+                      onClick={() => handleVote(artist.id, selectedCity, () => { setPendingVote({ artistId: artist.id, city: selectedCity }); setShowAuthModal(true); })}
                       className={`w-full h-7 text-xs rounded-lg font-semibold px-2 ${
                         voted ? "gradient-brand text-white border-0" : "border border-primary/50 bg-primary/8 text-primary hover:bg-primary/15 hover:border-primary/70"
                       }`}
@@ -440,7 +510,7 @@ export default function ExplorePage() {
 
         {/* Artist list */}
         <div className="flex flex-col gap-3">
-          {filteredArtists.map((artist, i) => {
+          {filteredArtists.slice(0, visibleCount).map((artist, i) => {
             const voted = mounted && hasVoted(artist.id, selectedCity);
             const confirmed = confirmedShows[artist.id] ?? false;
             return (
@@ -501,10 +571,16 @@ export default function ExplorePage() {
                     <Button
                       size="sm"
                       onClick={async () => {
-                        const result = await handleVote(artist.id, selectedCity);
+                        const result = await handleVote(artist.id, selectedCity, () => {
+                          setPendingVote({ artistId: artist.id, city: selectedCity });
+                          setShowAuthModal(true);
+                        });
                         if (result && !result.ok) {
                           setVoteError("Couldn't save your vote — please try again");
                           setTimeout(() => setVoteError(null), 3000);
+                        } else if (result?.ok) {
+                          setRecentlyVoted(artist.id);
+                          setTimeout(() => setRecentlyVoted(null), 8000);
                         }
                       }}
                       className={`shrink-0 rounded-lg h-9 px-3 font-semibold btn-press transition-all ${
@@ -528,10 +604,45 @@ export default function ExplorePage() {
                     />
                   </div>
                 )}
+
+                {/* Share strip after voting */}
+                <AnimatePresence>
+                  {recentlyVoted === artist.id && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-4 py-2.5 flex items-center justify-between gap-3 bg-primary/8 border-t border-primary/15">
+                        <p className="text-xs font-medium text-primary">
+                          Voted! Share to push {artist.name} over the line →
+                        </p>
+                        <ShareButton
+                          url={`${window.location.origin}/artist/${artist.id}?city=${encodeURIComponent(selectedCity)}`}
+                          text={`I just voted for ${artist.name} in ${selectedCity} on Summon. Make this show happen! 🎶`}
+                          label="Share"
+                          size="sm"
+                          className="shrink-0 h-7 px-3 rounded-lg gradient-brand border-0 text-white text-xs font-semibold"
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             );
           })}
         </div>
+
+        {filteredArtists.length > visibleCount && (
+          <button
+            onClick={() => setVisibleCount((v) => v + 50)}
+            className="w-full py-3 text-sm text-muted-foreground hover:text-foreground glass rounded-xl transition-colors mt-1"
+          >
+            Show more ({filteredArtists.length - visibleCount} remaining)
+          </button>
+        )}
 
         {!countsLoading && filteredArtists.length === 0 && deezerResults.length === 0 && !deezerLoading && (
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0} className="text-center py-16 text-muted-foreground">
@@ -582,6 +693,71 @@ export default function ExplorePage() {
           </motion.div>
         )}
       </div>
+
+      {/* Email capture modal for anonymous votes */}
+      <AnimatePresence>
+        {showAuthModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4"
+          >
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => { setShowAuthModal(false); setPendingVote(null); setModalSent(false); setModalEmail(""); setModalError(""); }}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 40 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="relative glass rounded-2xl p-6 w-full max-w-sm z-10"
+            >
+              <button
+                onClick={() => { setShowAuthModal(false); setPendingVote(null); setModalSent(false); setModalEmail(""); setModalError(""); }}
+                className="absolute top-4 right-4 p-1 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {modalSent ? (
+                <div className="flex flex-col items-center gap-3 py-2">
+                  <CheckCircle className="w-12 h-12 text-primary" />
+                  <p className="font-bold text-lg">Check your email</p>
+                  <p className="text-sm text-muted-foreground text-center">
+                    Click the magic link to sign in — your vote will be cast automatically.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <h3 className="font-bold text-xl mb-1 text-center">Sign in to vote</h3>
+                  <p className="text-sm text-muted-foreground text-center mb-5">
+                    Enter your email and we&apos;ll send a magic link. Your vote will be cast automatically after you sign in.
+                  </p>
+                  <Input
+                    type="email"
+                    placeholder="your@email.com"
+                    value={modalEmail}
+                    onChange={(e) => setModalEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleModalSubmit()}
+                    className="h-12 rounded-xl bg-muted/50 border-border/60 text-center mb-3"
+                  />
+                  <Button
+                    size="lg"
+                    onClick={handleModalSubmit}
+                    disabled={modalLoading || !modalEmail}
+                    className="w-full h-12 rounded-xl gradient-brand border-0 text-white font-semibold"
+                  >
+                    {modalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send magic link"}
+                  </Button>
+                  {modalError && <p className="text-xs text-destructive mt-2 text-center">{modalError}</p>}
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

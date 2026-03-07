@@ -329,7 +329,7 @@ export default function ArtistClient({ id }: { id: string }) {
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.1} className="glass rounded-2xl p-5 mb-4">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              {confirmedShow ? "Confirmed Show" : "Vote"}
+              {shows.length > 1 ? "Upcoming Shows" : confirmedShow ? "Confirmed Show" : "Vote"}
             </p>
             {confirmedShow && (
               <Badge className="bg-green-500/15 text-green-400 border-green-500/20 text-xs">
@@ -396,33 +396,38 @@ export default function ArtistClient({ id }: { id: string }) {
               <div className="w-4 h-4 rounded-full border-2 border-green-400 border-t-transparent animate-spin" />
               <span className="text-xs text-muted-foreground">Checking for confirmed shows…</span>
             </div>
-          ) : confirmedShow ? (
-            <div className="rounded-xl bg-green-500/10 border border-green-500/20 p-4 mb-4">
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-lg bg-green-500/20 flex items-center justify-center shrink-0">
-                  <Ticket className="w-4 h-4 text-green-400" />
+          ) : shows.length > 0 ? (
+            <div className="rounded-xl bg-green-500/10 border border-green-500/20 p-4 mb-4 flex flex-col gap-3">
+              {shows.map((show, idx) => (
+                <div key={show.id}>
+                  {idx > 0 && <div className="border-t border-green-500/20 -mx-4 mb-3" />}
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-green-500/20 flex items-center justify-center shrink-0">
+                      <Ticket className="w-4 h-4 text-green-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">{show.venue}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                        <CalendarDays className="w-3 h-3 shrink-0" />
+                        {new Date(show.date + "T00:00:00").toLocaleDateString("en-US", {
+                          weekday: "short", month: "long", day: "numeric", year: "numeric",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  {show.ticketUrl && (
+                    <a
+                      href={show.ticketUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 flex items-center justify-center gap-2 w-full h-9 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-400 text-sm font-semibold transition-colors"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      Get Tickets
+                    </a>
+                  )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground truncate">{confirmedShow.venue}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                    <CalendarDays className="w-3 h-3 shrink-0" />
-                    {new Date(confirmedShow.date + "T00:00:00").toLocaleDateString("en-US", {
-                      weekday: "short", month: "long", day: "numeric", year: "numeric",
-                    })}
-                  </p>
-                </div>
-              </div>
-              {confirmedShow.ticketUrl && (
-                <a
-                  href={confirmedShow.ticketUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 flex items-center justify-center gap-2 w-full h-9 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-400 text-sm font-semibold transition-colors"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  Get Tickets
-                </a>
-              )}
+              ))}
             </div>
           ) : selectedCity && (
             <div className="mb-4">

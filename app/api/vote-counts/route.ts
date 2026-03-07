@@ -19,5 +19,7 @@ export async function GET(request: Request) {
   const counts: Record<string, number> = {};
   for (const row of data ?? []) counts[row.artist_id] = Number(row.vote_count);
 
-  return NextResponse.json({ counts });
+  return NextResponse.json({ counts }, {
+    headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120" },
+  });
 }
