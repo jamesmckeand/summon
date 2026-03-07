@@ -202,13 +202,14 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Marquee */}
-        <div className="anim-fade-up w-screen relative left-1/2 -translate-x-1/2 mt-16" style={{ animationDelay: "0.6s" }}>
-          <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
-          <Marquee />
-        </div>
       </section>
+
+      {/* Marquee — outside overflow-hidden section so w-screen breakout works */}
+      <div className="anim-fade-up relative overflow-hidden pb-8" style={{ animationDelay: "0.6s" }}>
+        <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+        <Marquee />
+      </div>
 
       {/* ── HOW IT WORKS ── */}
       <section className="px-6 py-32 max-w-5xl mx-auto">
