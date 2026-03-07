@@ -1,9 +1,14 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+type CachedUser = { id: string; displayName: string; avatarUrl: string | null };
+
 type VoteStore = {
   votes: Record<string, string[]>; // city → artistIds[]
   activeCity: string; // dashboard selected city
+  // In-memory only (not persisted) — used to avoid Nav flicker on route changes
+  cachedUser: CachedUser | null;
+  setCachedUser: (user: CachedUser | null) => void;
   vote: (artistId: string, city: string) => void;
   unvote: (artistId: string, city: string) => void;
   hasVoted: (artistId: string, city: string) => boolean;
@@ -18,6 +23,8 @@ export const useVoteStore = create<VoteStore>()(
     (set, get) => ({
       votes: {},
       activeCity: "",
+      cachedUser: null,
+      setCachedUser: (user) => set({ cachedUser: user }),
 
       vote: (artistId, city) =>
         set((state) => {

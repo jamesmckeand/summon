@@ -270,8 +270,15 @@ export default function ExplorePage() {
     <div className="min-h-screen bg-background">
       <Nav />
 
+      {/* Subtle atmospheric glow */}
+      <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full opacity-20"
+        style={{ background: "radial-gradient(ellipse at top, oklch(0.58 0.22 264 / 40%) 0%, transparent 70%)" }} />
+
       <div className="pt-24 pb-20 px-6 max-w-4xl mx-auto">
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0} className="mb-8">
+          <p className="text-xs font-semibold uppercase tracking-widest text-primary/70 mb-2">
+            {selectedCity ? selectedCity : `${CITIES.length} cities`}
+          </p>
           <h1 className="text-3xl font-bold tracking-tight">Explore Artists</h1>
           <p className="mt-1 text-muted-foreground">
             {selectedCity
@@ -520,12 +527,17 @@ export default function ExplorePage() {
                     <p className="text-xs font-semibold text-center leading-tight line-clamp-2">{artist.name}</p>
                     <Button
                       size="sm"
+                      disabled={!selectedCity}
                       onClick={() => handleVote(artist.id, selectedCity, () => { setPendingVote({ artistId: artist.id, city: selectedCity }); setShowAuthModal(true); })}
                       className={`w-full h-7 text-xs rounded-lg font-semibold px-2 ${
-                        voted ? "gradient-brand text-white border-0" : "border border-primary/50 bg-primary/8 text-primary hover:bg-primary/15 hover:border-primary/70"
+                        !selectedCity
+                          ? "border border-border/40 bg-muted/40 text-muted-foreground cursor-not-allowed"
+                          : voted
+                          ? "gradient-brand text-white border-0"
+                          : "border border-primary/50 bg-primary/8 text-primary hover:bg-primary/15 hover:border-primary/70"
                       }`}
                     >
-                      {voted ? "Voted" : "Vote"}
+                      {!selectedCity ? "Select city" : voted ? "Voted" : "Vote"}
                     </Button>
                   </div>
                 );
@@ -596,6 +608,7 @@ export default function ExplorePage() {
                   ) : (
                     <Button
                       size="sm"
+                      disabled={!selectedCity}
                       onClick={async () => {
                         const result = await handleVote(artist.id, selectedCity, () => {
                           setPendingVote({ artistId: artist.id, city: selectedCity });
@@ -610,13 +623,15 @@ export default function ExplorePage() {
                         }
                       }}
                       className={`shrink-0 rounded-lg h-9 px-3 font-semibold btn-press transition-all ${
-                        voted
+                        !selectedCity
+                          ? "border border-border/40 bg-muted/40 text-muted-foreground cursor-not-allowed"
+                          : voted
                           ? "gradient-brand text-white glow-primary-sm border-0"
                           : "border border-primary/50 bg-primary/8 text-primary hover:bg-primary/15 hover:border-primary/70"
                       }`}
                     >
                       <ChevronUp className="w-4 h-4 mr-1" />
-                      {voted ? "Voted" : "Vote"}
+                      {!selectedCity ? "Select city" : voted ? "Voted" : "Vote"}
                     </Button>
                   )}
                 </div>

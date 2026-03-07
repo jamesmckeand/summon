@@ -1,74 +1,52 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
 import Nav from "@/components/Nav";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Music2, MapPin, TrendingUp, Zap } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "About — Summon",
-  description: "Summon is a fan-driven platform that turns concert demand into real shows.",
+  title: "About | Summon",
+  description: "Summon turns fan demand into real live shows. Vote for the artists you want to see in your city.",
 };
 
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-background">
       <Nav />
-      <div className="pt-32 pb-20 px-6 max-w-2xl mx-auto">
+      <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[350px] rounded-full opacity-20"
+        style={{ background: "radial-gradient(ellipse at top, oklch(0.58 0.22 264 / 40%) 0%, transparent 70%)" }} />
 
-        <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-4">About</p>
-        <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight mb-6">
-          We make shows happen.
-        </h1>
-        <p className="text-lg text-muted-foreground leading-relaxed mb-12">
-          Summon is a fan-driven concert demand platform. Fans vote for the artists they want to see live in their city — and when demand reaches a venue threshold, we reach out to make the show happen for real.
-        </p>
+      <div className="pt-32 pb-20 px-6 max-w-2xl mx-auto anim-fade-up">
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary/70 mb-2">The company</p>
+        <h1 className="text-4xl font-extrabold tracking-tight mb-6">About Summon</h1>
 
-        <div className="space-y-5 mb-16">
-          {[
-            {
-              icon: Music2,
-              title: "Vote for your favourite artists",
-              body: "Browse our catalogue of 1,000+ artists across every genre. Find who you want to see live and cast your vote. Every vote is counted and publicly visible.",
-            },
-            {
-              icon: MapPin,
-              title: "Votes are tied to your city",
-              body: "Votes are city-specific. Whether you're in Toronto, Austin, or Auckland, your votes go toward demand in your local market.",
-            },
-            {
-              icon: TrendingUp,
-              title: "Demand builds over time",
-              body: "Votes accumulate and are tracked against venue thresholds — from intimate bar shows at 500 votes to full arenas at 25,000.",
-            },
-            {
-              icon: Zap,
-              title: "We match demand to venues",
-              body: "When a threshold is hit, Summon contacts local venues and promoters directly on behalf of fans. Real outreach, not just a petition.",
-            },
-          ].map((item) => (
-            <div key={item.title} className="glass rounded-2xl p-6 flex gap-5 items-start">
-              <div className="w-10 h-10 rounded-xl gradient-brand flex items-center justify-center shrink-0">
-                <item.icon className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <h3 className="font-bold mb-1">{item.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{item.body}</p>
-              </div>
-            </div>
-          ))}
+        <div className="space-y-5 text-muted-foreground leading-relaxed">
+          <p>
+            <strong className="text-foreground">Summon</strong> is a live music demand platform. We help fans vote
+            for the artists they want to see in their city — and when enough demand accumulates, we contact venues
+            and promoters on their behalf to make the show happen.
+          </p>
+          <p>
+            The idea is simple: artists and promoters don&apos;t always know where genuine fan demand exists.
+            Summon makes that demand visible, loud, and actionable.
+          </p>
+          <p>
+            When votes for an artist in a city cross a venue threshold — 500 votes for a bar/club,
+            2,500 for a theatre, 7,500 for a concert hall, 25,000 for an arena — we reach out directly to
+            suitable venues in that city with the data in hand.
+          </p>
+          <p>
+            We&apos;re a small team obsessed with live music. We built Summon because we kept asking the same
+            question: &ldquo;Why won&apos;t this artist ever play here?&rdquo;
+          </p>
+
+          <div className="pt-4 flex gap-4">
+            <Link href="/explore" className="text-primary hover:underline underline-offset-4 font-medium">
+              Explore artists →
+            </Link>
+            <a href="mailto:hello@wesummon.com" className="text-primary hover:underline underline-offset-4 font-medium">
+              Get in touch
+            </a>
+          </div>
         </div>
-
-        <div className="glass rounded-2xl p-8 text-center">
-          <h2 className="text-2xl font-bold mb-3">Ready to summon a show?</h2>
-          <p className="text-muted-foreground mb-6">Join fans already voting for their favourite artists.</p>
-          <Link href="/explore">
-            <Button className="gradient-brand border-0 text-white font-semibold px-6 h-11 rounded-xl glow-primary-sm">
-              Browse artists
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </Link>
-        </div>
-
       </div>
     </div>
   );

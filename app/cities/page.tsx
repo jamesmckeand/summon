@@ -42,9 +42,12 @@ export default function CitiesPage() {
   return (
     <div className="min-h-screen bg-background">
       <Nav />
+      <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[350px] rounded-full opacity-20"
+        style={{ background: "radial-gradient(ellipse at top, oklch(0.58 0.22 264 / 40%) 0%, transparent 70%)" }} />
       <div className="pt-24 pb-20 px-6 max-w-3xl mx-auto">
 
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0} className="mb-8">
+          <p className="text-xs font-semibold uppercase tracking-widest text-primary/70 mb-2">Live rankings</p>
           <h1 className="text-3xl font-bold tracking-tight">City Leaderboard</h1>
           <p className="mt-1 text-muted-foreground">The most active cities on Summon, ranked by total votes.</p>
         </motion.div>

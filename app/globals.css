@@ -43,36 +43,36 @@
 :root {
   --radius: 0.75rem;
 
-  /* Summon brand palette — #000000 → #19132B → #2D2349 → #FBC2FF → #F3E4F4 */
-  --background: oklch(0.07 0.06 298);
-  --foreground: oklch(0.96 0.005 310);
-  --card: oklch(0.11 0.06 298);
-  --card-foreground: oklch(0.96 0.005 310);
-  --popover: oklch(0.11 0.06 298);
-  --popover-foreground: oklch(0.96 0.005 310);
+  /* Summon — concert hall dark. Deep blue-black bg, purple→blue gradient accent. */
+  --background: oklch(0.068 0.022 265);
+  --foreground: oklch(0.96 0.006 255);
+  --card: oklch(0.10 0.018 265);
+  --card-foreground: oklch(0.96 0.006 255);
+  --popover: oklch(0.10 0.018 265);
+  --popover-foreground: oklch(0.96 0.006 255);
 
-  /* Primary: the vibrant purple-pink at the gradient's core */
-  --primary: oklch(0.68 0.26 308);
-  --primary-foreground: oklch(0.98 0.005 310);
+  /* Primary: indigo — sits between purple and blue */
+  --primary: oklch(0.58 0.22 264);
+  --primary-foreground: oklch(0.98 0.004 255);
 
-  --secondary: oklch(0.17 0.06 298);
-  --secondary-foreground: oklch(0.96 0.005 310);
-  --muted: oklch(0.15 0.05 298);
-  --muted-foreground: oklch(0.55 0.05 302);
-  --accent: oklch(0.68 0.26 308);
-  --accent-foreground: oklch(0.98 0.005 310);
+  --secondary: oklch(0.15 0.016 265);
+  --secondary-foreground: oklch(0.96 0.006 255);
+  --muted: oklch(0.13 0.014 265);
+  --muted-foreground: oklch(0.52 0.02 260);
+  --accent: oklch(0.58 0.22 264);
+  --accent-foreground: oklch(0.98 0.004 255);
   --destructive: oklch(0.65 0.24 25);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 10%);
-  --ring: oklch(0.68 0.26 308);
-  --sidebar: oklch(0.09 0.05 298);
-  --sidebar-foreground: oklch(0.96 0.005 310);
-  --sidebar-primary: oklch(0.68 0.26 308);
-  --sidebar-primary-foreground: oklch(0.98 0.005 310);
-  --sidebar-accent: oklch(0.17 0.06 298);
-  --sidebar-accent-foreground: oklch(0.96 0.005 310);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.68 0.26 308);
+  --border: oklch(1 0 0 / 7%);
+  --input: oklch(1 0 0 / 9%);
+  --ring: oklch(0.58 0.22 264);
+  --sidebar: oklch(0.088 0.018 265);
+  --sidebar-foreground: oklch(0.96 0.006 255);
+  --sidebar-primary: oklch(0.58 0.22 264);
+  --sidebar-primary-foreground: oklch(0.98 0.004 255);
+  --sidebar-accent: oklch(0.15 0.016 265);
+  --sidebar-accent-foreground: oklch(0.96 0.006 255);
+  --sidebar-border: oklch(1 0 0 / 7%);
+  --sidebar-ring: oklch(0.58 0.22 264);
 }
 
 @layer base {
@@ -107,13 +107,20 @@
 
 /* Gradient utilities */
 @layer utilities {
-  /* Brand gradient — dark purple → vibrant purple → lavender pink (#2D2349 → #7C2EAD → #FBC2FF) */
+  /* Brand gradient — deep purple → indigo → blue (concert hall lighting) */
   .gradient-brand {
-    background: linear-gradient(135deg, #3B1466 0%, #7C2EAD 55%, #C97AD4 100%);
+    background: linear-gradient(135deg, #5B21B6 0%, #6366F1 50%, #3B82F6 100%);
   }
-  /* Text gradient — violet → brand lavender pink (#C084FC → #FBC2FF) — pops on dark bg */
+  /* Text gradient — light purple → indigo → sky blue — pops on dark bg */
   .gradient-brand-text {
-    background: linear-gradient(135deg, #C084FC 0%, #E879F9 50%, #FBC2FF 100%);
+    background: linear-gradient(135deg, #A78BFA 0%, #818CF8 45%, #60A5FA 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  /* Hero display gradient — more saturated, for big headlines */
+  .gradient-display {
+    background: linear-gradient(135deg, #C084FC 0%, #818CF8 40%, #38BDF8 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -122,15 +129,21 @@
     animation: fade-up-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
   .glow-primary {
-    box-shadow: 0 0 40px oklch(0.68 0.26 308 / 25%);
+    box-shadow: 0 0 50px oklch(0.58 0.22 264 / 30%);
   }
   .glow-primary-sm {
-    box-shadow: 0 0 20px oklch(0.68 0.26 308 / 20%);
+    box-shadow: 0 0 24px oklch(0.58 0.22 264 / 22%);
   }
+  /* Glass — kept for inner-app pages, more subtle than before */
   .glass {
-    background: oklch(1 0 0 / 4%);
+    background: oklch(1 0 0 / 3.5%);
     backdrop-filter: blur(12px);
-    border: 1px solid oklch(1 0 0 / 8%);
+    border: 1px solid oklch(1 0 0 / 7%);
+  }
+  /* Solid card — used on marketing/home pages. No blur, cleaner. */
+  .card-solid {
+    background: oklch(0.10 0.018 265);
+    border: 1px solid oklch(1 0 0 / 7%);
   }
 
   /* Micro-interaction: cards lift on hover */
@@ -139,7 +152,7 @@
   }
   .glass-hover:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 32px oklch(0 0 0 / 30%), 0 0 0 1px oklch(0.68 0.26 308 / 12%);
+    box-shadow: 0 8px 32px oklch(0 0 0 / 30%), 0 0 0 1px oklch(0.58 0.22 264 / 14%);
   }
   .glass-hover:active {
     transform: translateY(0px);
@@ -166,9 +179,9 @@
 
   /* Pulse ring for voted state */
   @keyframes vote-pulse {
-    0%   { box-shadow: 0 0 0 0 oklch(0.68 0.26 308 / 40%); }
-    70%  { box-shadow: 0 0 0 10px oklch(0.68 0.26 308 / 0%); }
-    100% { box-shadow: 0 0 0 0 oklch(0.68 0.26 308 / 0%); }
+    0%   { box-shadow: 0 0 0 0 oklch(0.58 0.22 264 / 40%); }
+    70%  { box-shadow: 0 0 0 10px oklch(0.58 0.22 264 / 0%); }
+    100% { box-shadow: 0 0 0 0 oklch(0.58 0.22 264 / 0%); }
   }
   .vote-pulse {
     animation: vote-pulse 0.5s ease-out;

@@ -53,7 +53,8 @@ async function hydrateCity(setActiveCity: (city: string) => void, currentCity: s
 
 export default function Nav() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Start loading=false if we have a cached user — prevents flicker on navigation
+  const [loading, setLoading] = useState(() => typeof window === "undefined" || !useVoteStore.getState().cachedUser);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -65,7 +66,7 @@ export default function Nav() {
   }, []);
   const router = useRouter();
   const pathname = usePathname();
-  const { initFromDb, clearVotes, setActiveCity, activeCity } = useVoteStore();
+  const { initFromDb, clearVotes, setActiveCity, activeCity, cachedUser, setCachedUser } = useVoteStore();
 
   // Close menu on route change
   useEffect(() => { setMenuOpen(false); }, [pathname]);
@@ -74,23 +75,39 @@ export default function Nav() {
     const supabase = createClient();
 
     supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
+      const u = data.user ?? null;
+      setUser(u);
       setLoading(false);
-      if (data.user) {
+      if (u) {
+        setCachedUser({
+          id: u.id,
+          displayName: u.user_metadata?.full_name ?? u.user_metadata?.name ?? u.email?.split("@")[0] ?? "Account",
+          avatarUrl: u.user_metadata?.avatar_url ?? null,
+        });
         hydrateVotes(initFromDb);
         hydrateCity(setActiveCity, activeCity);
-      } else if (!activeCity) {
-        detectCityFromIp(setActiveCity);
+      } else {
+        setCachedUser(null);
+        if (!activeCity) detectCityFromIp(setActiveCity);
       }
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      if (event === "SIGNED_IN") {
+      const u = session?.user ?? null;
+      setUser(u);
+      if (event === "SIGNED_IN" && u) {
+        setCachedUser({
+          id: u.id,
+          displayName: u.user_metadata?.full_name ?? u.user_metadata?.name ?? u.email?.split("@")[0] ?? "Account",
+          avatarUrl: u.user_metadata?.avatar_url ?? null,
+        });
         hydrateVotes(initFromDb);
         hydrateCity(setActiveCity, activeCity);
       }
-      if (event === "SIGNED_OUT") clearVotes();
+      if (event === "SIGNED_OUT") {
+        setCachedUser(null);
+        clearVotes();
+      }
     });
 
     return () => listener.subscription.unsubscribe();
@@ -103,12 +120,10 @@ export default function Nav() {
     router.push("/");
   }
 
-  const displayName = user?.user_metadata?.full_name
-    || user?.user_metadata?.name
-    || user?.email?.split("@")[0]
-    || "Account";
-
-  const avatar = user?.user_metadata?.avatar_url ?? null;
+  // cachedUser gives instant render on navigation; live `user` verifies in background
+  const displayName = cachedUser?.displayName ?? user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? user?.email?.split("@")[0] ?? "Account";
+  const avatar = cachedUser?.avatarUrl ?? user?.user_metadata?.avatar_url ?? null;
+  const isLoggedIn = !!cachedUser || !!user;
 
   return (
     <>
@@ -144,58 +159,53 @@ export default function Nav() {
             </Button>
           </Link>
 
-          {!loading && (
-            user ? (
-              <div className="flex items-center gap-2">
-                <Link href="/dashboard">
-                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-sm">
-                    Dashboard
-                  </Button>
-                </Link>
-                <Link href="/profile">
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg glass hover:border-primary/30 transition-colors cursor-pointer">
-                    {avatar ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={avatar} alt={displayName} className="w-6 h-6 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-6 h-6 rounded-full gradient-brand flex items-center justify-center">
-                        <User className="w-3 h-3 text-white" />
-                      </div>
-                    )}
-                    <span className="text-sm font-medium text-foreground max-w-[120px] truncate">
-                      {displayName}
-                    </span>
-                  </div>
-                </Link>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleSignOut}
-                  className="text-muted-foreground hover:text-foreground px-2"
-                >
-                  <LogOut className="w-4 h-4" />
-                </Button>
-              </div>
-            ) : (
-              <Link href="/login">
-                <Button size="sm" className="gradient-brand border-0 text-white font-medium text-sm px-4 rounded-lg glow-primary-sm">
-                  Sign in
+          {loading && !cachedUser ? (
+            <div className="w-16 h-8 rounded-lg bg-muted/30 animate-pulse" />
+          ) : isLoggedIn ? (
+            <div className="flex items-center gap-2">
+              <Link href="/dashboard">
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-sm">
+                  Dashboard
                 </Button>
               </Link>
-            )
+              <Link href="/profile">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg glass hover:border-primary/30 transition-colors cursor-pointer">
+                  {avatar ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={avatar} alt={displayName} className="w-6 h-6 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full gradient-brand flex items-center justify-center">
+                      <User className="w-3 h-3 text-white" />
+                    </div>
+                  )}
+                  <span className="text-sm font-medium text-foreground max-w-[120px] truncate">
+                    {displayName}
+                  </span>
+                </div>
+              </Link>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSignOut}
+                className="text-muted-foreground hover:text-foreground px-2"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </div>
+          ) : (
+            <Link href="/login">
+              <Button size="sm" className="gradient-brand border-0 text-white font-medium text-sm px-4 rounded-lg glow-primary-sm">
+                Sign in
+              </Button>
+            </Link>
           )}
         </div>
 
         {/* Mobile: right side */}
         <div className="flex sm:hidden items-center gap-2">
-          {!loading && !user && (
-            <Link href="/login">
-              <Button size="sm" className="gradient-brand border-0 text-white font-medium text-sm px-3 rounded-lg">
-                Sign in
-              </Button>
-            </Link>
-          )}
-          {!loading && user && (
+          {loading && !cachedUser ? (
+            <div className="w-8 h-8 rounded-full bg-muted/30 animate-pulse" />
+          ) : isLoggedIn ? (
             <Link href="/profile">
               {avatar ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -205,6 +215,12 @@ export default function Nav() {
                   <User className="w-3.5 h-3.5 text-white" />
                 </div>
               )}
+            </Link>
+          ) : (
+            <Link href="/login">
+              <Button size="sm" className="gradient-brand border-0 text-white font-medium text-sm px-3 rounded-lg">
+                Sign in
+              </Button>
             </Link>
           )}
           <button
@@ -240,7 +256,7 @@ export default function Nav() {
               <Link href="/submit" className="px-3 py-3 text-sm font-medium text-foreground hover:text-primary transition-colors rounded-lg hover:bg-primary/5">
                 Suggest an artist
               </Link>
-              {!loading && user && (
+              {isLoggedIn && (
                 <>
                   <Link href="/dashboard" className="px-3 py-3 text-sm font-medium text-foreground hover:text-primary transition-colors rounded-lg hover:bg-primary/5">
                     Dashboard

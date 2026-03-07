@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
+import CapacitorProvider from "@/components/CapacitorProvider";
 import "./globals.css";
 
 const neueMontreal = localFont({
@@ -20,6 +21,13 @@ export const metadata: Metadata = {
   title: "Summon — Vote for Artists to Play Your City",
   description:
     "Vote for the artists you want to see live in your city. When demand is loud enough, we make it happen.",
+  other: {
+    // iOS full-screen web app experience
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
+    "apple-mobile-web-app-title": "Summon",
+    "format-detection": "telephone=no",
+  },
 };
 
 export default function RootLayout({
@@ -28,11 +36,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" style={{ colorScheme: "dark", backgroundColor: "#0C0A18" }}>
+    <html lang="en" className="dark" style={{ colorScheme: "dark", backgroundColor: "#080B14" }}>
       <head>
         <meta name="color-scheme" content="dark" />
       </head>
       <body className={`${neueMontreal.variable} font-sans antialiased`}>
+        <CapacitorProvider />
         {children}
         <Analytics />
       </body>

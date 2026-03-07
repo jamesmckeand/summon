@@ -137,10 +137,10 @@ export default function ShowsPage() {
     });
   }, [shows, favouriteArtistIds]);
 
-  // Filter by artist name or city/country — nothing shown until user types
+  // Filter by artist name or city/country — show all when no query
   const filteredGroups = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return [];
+    if (!q) return artistGroups;
     return artistGroups
       .map((g) => {
         // Artist name match → show all their shows
@@ -164,6 +164,8 @@ export default function ShowsPage() {
   return (
     <div className="min-h-screen bg-background">
       <Nav />
+      <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[350px] rounded-full opacity-15"
+        style={{ background: "radial-gradient(ellipse at top, oklch(0.65 0.20 155 / 50%) 0%, transparent 70%)" }} />
       <div className="pt-24 pb-20 px-6 max-w-3xl mx-auto">
 
         {/* Header */}
@@ -177,7 +179,7 @@ export default function ShowsPage() {
             {loading
               ? "Loading shows…"
               : !searchQuery.trim()
-                ? "Search for an artist or city to find shows."
+                ? `${filteredShowCount} upcoming show${filteredShowCount !== 1 ? "s" : ""} across ${filteredGroups.length} artist${filteredGroups.length !== 1 ? "s" : ""}`
                 : filteredShowCount > 0
                 ? <>
                     <span className="text-foreground font-medium">{filteredShowCount}</span>
@@ -259,7 +261,7 @@ export default function ShowsPage() {
             <p className="text-muted-foreground mb-2">
               {searchQuery.trim()
                 ? `No shows found for "${searchQuery.trim()}".`
-                : "Type an artist name or city above to find confirmed shows."}
+                : "No confirmed shows yet."}
             </p>
             {searchQuery.trim() && (
               <>

@@ -116,12 +116,14 @@ export default function ProfilePage() {
   async function patch(updates: Partial<Profile>) {
     const key = Object.keys(updates)[0];
     setSaving(key);
-    await fetch("/api/profile", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates),
-    }).catch(() => {});
-    setProfile((prev) => ({ ...prev, ...updates }));
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      if (res.ok) setProfile((prev) => ({ ...prev, ...updates }));
+    } catch { /* network failure — leave state unchanged */ }
     setSaving(null);
   }
 
@@ -191,6 +193,8 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-background">
       <Nav />
+      <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[350px] rounded-full opacity-20"
+        style={{ background: "radial-gradient(ellipse at top, oklch(0.58 0.22 264 / 40%) 0%, transparent 70%)" }} />
       <div className="pt-24 pb-20 px-6 max-w-2xl mx-auto">
 
         {/* Header */}

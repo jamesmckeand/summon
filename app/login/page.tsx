@@ -109,6 +109,12 @@ export default function LoginPage() {
                 <p className="text-sm text-muted-foreground">
                   We sent a magic link to <span className="text-foreground">{email}</span>. Click it to sign in.
                 </p>
+                <button
+                  onClick={() => { setSent(false); setError(""); }}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2 mt-1"
+                >
+                  Use a different email
+                </button>
               </motion.div>
             ) : (
               <motion.div key="form" variants={fadeUp} custom={0.2} className="mt-8 flex flex-col gap-3">
