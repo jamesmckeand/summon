@@ -187,7 +187,7 @@ export default function Home() {
           style={{ animationDelay: "0.58s" }}
         >
           <div className="text-center">
-            <p className="text-2xl font-bold gradient-brand-text">Millions</p>
+            <p className="text-2xl font-bold gradient-brand-text">Millions of</p>
             <p className="text-xs text-muted-foreground mt-0.5">Artists</p>
           </div>
           <div className="text-center">
