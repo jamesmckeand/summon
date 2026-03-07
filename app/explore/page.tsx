@@ -83,6 +83,7 @@ export default function ExplorePage() {
   const [deezerLoading, setDeezerLoading] = useState(false);
   const [deezerVoting, setDeezerVoting] = useState<Record<string, boolean>>({});
   const [voteError, setVoteError] = useState<string | null>(null);
+  const [authedUser, setAuthedUser] = useState<boolean>(false);
   const [visibleCount, setVisibleCount] = useState(50);
   const [recentlyVoted, setRecentlyVoted] = useState<string | null>(null);
   const [pendingVote, setPendingVote] = useState<{ artistId: string; city: string } | null>(null);
@@ -93,6 +94,10 @@ export default function ExplorePage() {
   const [modalError, setModalError] = useState("");
 
   useEffect(() => { setMounted(true); }, []);
+
+  useEffect(() => {
+    createClient().auth.getUser().then(({ data }) => setAuthedUser(!!data.user));
+  }, []);
 
   // Auto-cast pending vote after magic-link sign-in
   useEffect(() => {
@@ -455,16 +460,37 @@ export default function ExplorePage() {
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <AppleMusicConnect
+                label="Apple Music"
                 onArtists={(artists) =>
                   setForYouArtists((prev) => {
                     const newOnes = artists.filter((a) => !prev.some((p) => p.id === a.id));
                     return [...prev, ...newOnes];
                   })
                 }
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/8 hover:bg-white/15 text-xs font-semibold text-foreground transition-colors border border-border/40 whitespace-nowrap"
               />
-              <Link href="/login" className="text-xs font-semibold text-[#1DB954] hover:underline whitespace-nowrap">
+              <button
+                onClick={async () => {
+                  if (authedUser) {
+                    const supabase = createClient();
+                    await supabase.auth.linkIdentity({
+                      provider: "spotify",
+                      options: {
+                        redirectTo: `${window.location.origin}/auth/callback`,
+                        scopes: "user-read-email user-read-private user-top-read",
+                      },
+                    });
+                  } else {
+                    window.location.href = "/login";
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1DB954]/15 hover:bg-[#1DB954]/25 text-xs font-semibold text-[#1DB954] transition-colors border border-[#1DB954]/30 whitespace-nowrap"
+              >
+                <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+                </svg>
                 Connect Spotify
-              </Link>
+              </button>
             </div>
           </motion.div>
         )}
