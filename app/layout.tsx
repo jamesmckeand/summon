@@ -27,6 +27,8 @@ export const metadata: Metadata = {
     "apple-mobile-web-app-status-bar-style": "black-translucent",
     "apple-mobile-web-app-title": "Summon",
     "format-detection": "telephone=no",
+    // Impact affiliate verification
+    "impact-site-verification": "af545394-acc4-447e-9682-c5fa96320e23",
   },
 };
 
@@ -39,7 +41,6 @@ export default function RootLayout({
     <html lang="en" className="dark" style={{ colorScheme: "dark", backgroundColor: "#080B14" }}>
       <head>
         <meta name="color-scheme" content="dark" />
-        <meta name="impact-site-verification" content="af545394-acc4-447e-9682-c5fa96320e23" />
       </head>
       <body className={`${neueMontreal.variable} font-sans antialiased`}>
         <CapacitorProvider />
