@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { fadeUp } from "@/lib/animations";
 import Marquee from "@/components/Marquee";
-import CrowdHero from "@/components/CrowdHero";
 import Nav from "@/components/Nav";
 import { ARTISTS } from "@/lib/data/artists";
 import { CITIES } from "@/lib/data/cities";
@@ -81,10 +80,13 @@ export default function Home() {
       <Nav />
 
       {/* ── HERO ── */}
-      <section id="hero-section" className="relative flex flex-col items-center justify-center min-h-screen px-6 text-center overflow-hidden pt-20">
+      <section className="relative flex flex-col items-center justify-center min-h-screen px-6 text-center overflow-hidden pt-20">
 
-        {/* Animated crowd silhouette + spotlight */}
-        <CrowdHero />
+        {/* Atmospheric background */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-20"
+            style={{ background: "radial-gradient(ellipse at center, #6366F1 0%, transparent 70%)" }} />
+        </div>
 
         {/* Overline badge */}
         <div
