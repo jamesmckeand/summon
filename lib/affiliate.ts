@@ -1,8 +1,10 @@
 /**
  * Affiliate link wrapper.
  *
- * Ticketmaster: sign up at https://www.cj.com → search "Ticketmaster"
- *   Once approved, set TICKETMASTER_AFFILIATE_ID="publisherId-websiteId" in env
+ * Ticketmaster: via Impact (impact.com) → find Ticketmaster program, create a deep link.
+ *   Copy the base tracking URL (e.g. https://ticketmaster.sjv.io/c/{campaignId}/{pubId})
+ *   and set TICKETMASTER_IMPACT_URL="https://ticketmaster.sjv.io/c/..." in Vercel env.
+ *   We append ?url={encodedDestination} for deep linking.
  *
  * Songkick: sign up at https://www.awin.com → search "Songkick"
  *   Once approved, set SONGKICK_AFFILIATE_ID="awinAffiliateId" in env
@@ -15,8 +17,8 @@ export function affiliateUrl(url: string): string {
     const { hostname } = new URL(url);
 
     if (hostname.includes("ticketmaster.com") || hostname.includes("livenation.com")) {
-      const id = process.env.TICKETMASTER_AFFILIATE_ID;
-      if (id) return `https://www.tkqlhce.com/click-${id}?url=${encodeURIComponent(url)}`;
+      const base = process.env.TICKETMASTER_IMPACT_URL;
+      if (base) return `${base}?url=${encodeURIComponent(url)}`;
     }
 
     if (hostname.includes("songkick.com")) {
