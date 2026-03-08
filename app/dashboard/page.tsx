@@ -2,11 +2,11 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import {
   MapPin, TrendingUp, Music2, ChevronUp, Zap,
   Trophy, Users, ChevronRight, ArrowRight, Flame
 } from "lucide-react";
+import ArtistAvatar from "@/components/ArtistAvatar";
 import ShareButton from "@/components/ShareButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,22 +39,6 @@ function getNextThreshold(votes: number) {
   return VENUE_THRESHOLDS.find((t) => t.votes > votes) ?? null;
 }
 
-function ArtistAvatar({ name, image }: { name: string; image: string | null }) {
-  const parts = name.split(" ");
-  const initials = parts.length > 1 ? `${parts[0][0]}${parts[parts.length - 1][0]}` : name.slice(0, 2);
-  if (image) {
-    return (
-      <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 relative">
-        <Image src={image} alt={name} fill className="object-cover" sizes="40px" />
-      </div>
-    );
-  }
-  return (
-    <div className="w-10 h-10 rounded-xl gradient-brand flex items-center justify-center text-white font-bold text-xs shrink-0">
-      {initials.toUpperCase()}
-    </div>
-  );
-}
 
 type ArtistWithVotes = (typeof ARTISTS)[0] & { votes: number; trending?: boolean };
 
@@ -357,7 +341,7 @@ export default function DashboardPage() {
                   className="glass rounded-xl p-4"
                 >
                   <div className="flex items-center gap-3 mb-2">
-                    <ArtistAvatar name={artist.name} image={images[artist.name] ?? null} />
+                    <ArtistAvatar name={artist.name} image={images[artist.name] ?? null} size={40} />
                     <div className="flex-1 min-w-0">
                       <Link href={`/artist/${artist.id}`} className="font-semibold text-sm hover:text-primary transition-colors">{artist.name}</Link>
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
@@ -416,7 +400,7 @@ export default function DashboardPage() {
                 const shareUrl = mounted ? `${window.location.origin}/artist/${artist.id}?city=${encodeURIComponent(activeCity)}` : `/artist/${artist.id}`;
                 return (
                   <div key={artist.id} className="glass rounded-xl px-4 py-3 flex items-center gap-3 border-orange-400/20">
-                    <ArtistAvatar name={artist.name} image={images[artist.name] ?? null} />
+                    <ArtistAvatar name={artist.name} image={images[artist.name] ?? null} size={40} />
                     <div className="flex-1 min-w-0">
                       <Link href={`/artist/${artist.id}`} className="font-semibold text-sm hover:text-primary transition-colors truncate block">{artist.name}</Link>
                       <p className="text-xs text-orange-400 mt-0.5">{votesNeeded.toLocaleString()} votes to {next?.label}</p>
@@ -468,7 +452,7 @@ export default function DashboardPage() {
                   <span className={`text-sm font-mono w-5 shrink-0 ${i < 3 ? "text-primary font-bold" : "text-muted-foreground"}`}>
                     {i + 1}
                   </span>
-                  <ArtistAvatar name={artist.name} image={images[artist.name] ?? null} />
+                  <ArtistAvatar name={artist.name} image={images[artist.name] ?? null} size={40} />
                   <div className="flex-1 min-w-0">
                     <Link href={`/artist/${artist.id}`} className="font-semibold text-sm truncate hover:text-primary transition-colors">{artist.name}</Link>
                     <p className="text-xs text-muted-foreground">{artist.genre}</p>
