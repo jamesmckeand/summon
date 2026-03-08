@@ -15,6 +15,7 @@ import { fadeUp } from "@/lib/animations";
 import { ARTISTS } from "@/lib/data/artists";
 import { getVenuesForCity } from "@/lib/data/venues";
 import CityDropdown from "@/components/CityDropdown";
+import AppleMusicConnect from "@/components/AppleMusicConnect";
 import { useVoteStore } from "@/lib/store/votes";
 import { createClient } from "@/lib/supabase/client";
 import Nav from "@/components/Nav";
@@ -327,6 +328,21 @@ export default function ProfilePage() {
                 </div>
               ))}
             </div>
+          </motion.div>
+        )}
+
+        {/* Apple Music import — shown for Apple users with no favourites yet */}
+        {user?.app_metadata?.provider === "apple" && profile.favourite_artists.length === 0 && (
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.24} className="glass rounded-2xl p-5 mb-4 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold">Import from Apple Music</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Pull your saved artists as favourites.</p>
+            </div>
+            <AppleMusicConnect
+              onArtists={(artists) => setProfile((prev) => ({ ...prev, favourite_artists: artists.map((a) => a.id) }))}
+              className="shrink-0 px-3 py-1.5 rounded-lg glass text-xs font-medium hover:border-primary/30 transition-colors"
+              label="Connect"
+            />
           </motion.div>
         )}
 

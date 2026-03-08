@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     const developerToken = await getDeveloperToken();
 
     const res = await fetch(
-      "https://api.music.apple.com/v1/me/library/artists?limit=25",
+      "https://api.music.apple.com/v1/me/library/artists?limit=100",
       {
         headers: {
           Authorization: `Bearer ${developerToken}`,
