@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { fadeUp } from "@/lib/animations";
 import Marquee from "@/components/Marquee";
+import CrowdHero from "@/components/CrowdHero";
 import Nav from "@/components/Nav";
 import { ARTISTS } from "@/lib/data/artists";
 import { CITIES } from "@/lib/data/cities";
@@ -80,15 +81,10 @@ export default function Home() {
       <Nav />
 
       {/* ── HERO ── */}
-      <section className="relative flex flex-col items-center justify-center min-h-screen px-6 text-center overflow-hidden pt-20">
+      <section id="hero-section" className="relative flex flex-col items-center justify-center min-h-screen px-6 text-center overflow-hidden pt-20">
 
-        {/* Atmospheric stage lighting — two large blurred glows */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(ellipse at center, #4C1D9520 0%, #6366F108 50%, transparent 70%)" }} />
-        <div className="absolute bottom-0 right-0 w-[600px] h-[500px] rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(ellipse at center, #1D4ED814 0%, transparent 65%)" }} />
-        <div className="absolute top-1/3 left-0 w-[400px] h-[400px] rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(ellipse at center, #7C3AED0A 0%, transparent 65%)" }} />
+        {/* Animated crowd silhouette + spotlight */}
+        <CrowdHero />
 
         {/* Overline badge */}
         <div

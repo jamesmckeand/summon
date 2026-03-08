@@ -206,4 +206,16 @@
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
+
+  /* Crowd sway — used by CrowdHero rows */
+  @keyframes crowd-sway {
+    0%, 100% { transform: translateX(0px); }
+    33%       { transform: translateX(-5px); }
+    67%       { transform: translateX(4px); }
+  }
+  @keyframes crowd-sway-r {
+    0%, 100% { transform: translateX(0px); }
+    33%       { transform: translateX(6px); }
+    67%       { transform: translateX(-4px); }
+  }
 }
