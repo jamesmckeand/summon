@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import {
-  User, MapPin, Search, ChevronDown, ChevronUp, Check, X,
+  User, MapPin, Search, Check, X,
   Music2, Pencil, Save, Headphones,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -13,8 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { fadeUp } from "@/lib/animations";
 import { ARTISTS } from "@/lib/data/artists";
-import { CITIES } from "@/lib/data/cities";
 import { getVenuesForCity } from "@/lib/data/venues";
+import CityDropdown from "@/components/CityDropdown";
 import { useVoteStore } from "@/lib/store/votes";
 import { createClient } from "@/lib/supabase/client";
 import Nav from "@/components/Nav";
@@ -68,8 +68,6 @@ export default function ProfilePage() {
   // Editing states
   const [editingUsername, setEditingUsername] = useState(false);
   const [usernameInput, setUsernameInput] = useState("");
-  const [citySearch, setCitySearch] = useState("");
-  const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [artistSearch, setArtistSearch] = useState("");
   const [saving, setSaving] = useState<string | null>(null);
 
@@ -96,11 +94,6 @@ export default function ProfilePage() {
       if (votesData.votes) setDbVotes(votesData.votes);
     }).catch(() => {}).finally(() => setLoading(false));
   }, [router]);
-
-  const filteredCities = useMemo(
-    () => CITIES.filter((c) => c.toLowerCase().includes(citySearch.toLowerCase())),
-    [citySearch]
-  );
 
   const filteredArtists = useMemo(() => {
     if (!artistSearch.trim()) return [];
@@ -133,8 +126,6 @@ export default function ProfilePage() {
   }
 
   async function selectCity(city: string) {
-    setShowCityDropdown(false);
-    setCitySearch("");
     await patch({ city, favourite_venues: [] });
   }
 
@@ -267,57 +258,7 @@ export default function ProfilePage() {
         {/* Home city */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.15} className="glass rounded-2xl p-5 mb-4 relative z-20">
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Home City</p>
-          <div className="relative">
-            <div
-              className="glass rounded-xl px-4 py-3 flex items-center gap-3 cursor-pointer hover:border-primary/30 transition-colors"
-              onClick={() => setShowCityDropdown((v) => !v)}
-            >
-              <MapPin className="w-4 h-4 text-primary shrink-0" />
-              <span className={`flex-1 font-medium ${profile.city ? "text-foreground" : "text-muted-foreground"}`}>
-                {profile.city || "Select a city"}
-              </span>
-              {showCityDropdown ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-            </div>
-
-            <AnimatePresence>
-              {showCityDropdown && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute top-full left-0 right-0 mt-2 glass rounded-xl overflow-hidden z-40 shadow-xl"
-                >
-                  <div className="p-3 border-b border-border/50">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search cities..."
-                        value={citySearch}
-                        onChange={(e) => setCitySearch(e.target.value)}
-                        className="pl-9 bg-muted/50 border-0 h-9 rounded-lg"
-                        autoFocus
-                      />
-                    </div>
-                  </div>
-                  <div className="max-h-48 overflow-y-auto">
-                    {filteredCities.map((c) => (
-                      <button
-                        key={c}
-                        onClick={() => selectCity(c)}
-                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-primary/10 ${
-                          c === profile.city ? "text-primary font-medium bg-primary/5" : "text-foreground"
-                        }`}
-                      >
-                        {c}
-                      </button>
-                    ))}
-                    {filteredCities.length === 0 && <p className="px-4 py-3 text-sm text-muted-foreground">No cities found</p>}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          <CityDropdown value={profile.city ?? ""} onChange={selectCity} />
         </motion.div>
 
         {/* Favourite venues */}

@@ -1,24 +1,25 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  TrendingUp, Music2, MapPin, ChevronUp, ChevronDown, Search,
-  ExternalLink, Play, Pause, Users, Zap, Ticket, CalendarDays, PartyPopper, ArrowLeft,
+  TrendingUp, Music2, MapPin, ChevronUp,
+  ExternalLink, Ticket, CalendarDays, PartyPopper, Zap, ArrowLeft,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { fadeUp } from "@/lib/animations";
 import { ARTISTS } from "@/lib/data/artists";
-import { CITIES } from "@/lib/data/cities";
 import { useVote } from "@/hooks/useVote";
 import { useVoteStore } from "@/lib/store/votes";
 import { createClient } from "@/lib/supabase/client";
 import Nav from "@/components/Nav";
 import ShareButton from "@/components/ShareButton";
+import CityDropdown from "@/components/CityDropdown";
+import TracksSection from "./_components/TracksSection";
+import CityLeaderboard from "./_components/CityLeaderboard";
 
 const VENUE_THRESHOLDS = [
   { label: "Bar / Club", tier: "bar" as const, votes: 500 },
@@ -55,19 +56,15 @@ export default function ArtistClient({ id }: { id: string }) {
   const [loadingShows, setLoadingShows] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
 
-  const [citySearch, setCitySearch] = useState("");
-  const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [selectedCity, setSelectedCity] = useState<string>("");
   const [mounted, setMounted] = useState(false);
-  const [playingTrack, setPlayingTrack] = useState<string | null>(null); // preview URL
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const { handleVote, hasVoted } = useVote();
   const { activeCity } = useVoteStore();
 
   useEffect(() => { setMounted(true); }, []);
 
-  // If not a static artist, fetch from live_artists
+  // Fetch live artist if not in static list
   useEffect(() => {
     if (staticArtist) return;
     fetch("/api/live-artists")
@@ -80,7 +77,7 @@ export default function ArtistClient({ id }: { id: string }) {
       .finally(() => setArtistLoading(false));
   }, [id, staticArtist]);
 
-  // Fetch confirmed shows whenever artist + city are known
+  // Fetch confirmed shows when artist + city are known
   useEffect(() => {
     if (!artist || !selectedCity) return;
     setLoadingShows(true);
@@ -105,86 +102,26 @@ export default function ArtistClient({ id }: { id: string }) {
       fetch(`/api/artist-votes?artistId=${encodeURIComponent(id)}`).then((r) => r.json()),
       fetch(`/api/artist-tracks?name=${encodeURIComponent(artist.name)}`).then((r) => r.json()),
     ]).then(([imgData, votesData, tracksData]) => {
-      const img = imgData.image ?? null;
-      if (img) setImage(img);
+      if (imgData.image) setImage(imgData.image);
       const votes: CityVote[] = votesData.cityVotes ?? [];
       setCityVotes(votes);
-      const topCity = votes[0]?.city ?? activeCity;
-      setSelectedCity(topCity || "");
+      setSelectedCity(votes[0]?.city ?? activeCity ?? "");
       setTracks(tracksData.tracks ?? []);
     }).catch(() => {}).finally(() => setLoadingData(false));
 
     const supabase = createClient();
     const channel = supabase
       .channel(`artist_votes:${id}`)
-      .on("postgres_changes", {
-        event: "*",
-        schema: "public",
-        table: "votes",
-        filter: `artist_id=eq.${id}`,
-      }, loadVotes)
+      .on("postgres_changes", { event: "*", schema: "public", table: "votes", filter: `artist_id=eq.${id}` }, loadVotes)
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, artist?.name]);
 
-  if (artistLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Nav />
-        <div className="pt-24 pb-20 px-6 max-w-2xl mx-auto space-y-5 animate-pulse">
-          <div className="h-64 bg-muted/40 rounded-2xl" />
-          <div className="glass rounded-2xl p-5 space-y-3">
-            <div className="h-3 bg-muted/60 rounded w-20" />
-            <div className="h-6 bg-muted/60 rounded w-40" />
-            <div className="h-2 bg-muted/60 rounded-full w-full mt-2" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!artist) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Nav />
-        <div className="pt-32 text-center px-6">
-          <Music2 className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-30" />
-          <h1 className="text-2xl font-bold mb-2">Artist not found</h1>
-          <p className="text-muted-foreground mb-6">This artist doesn&apos;t exist in our catalogue.</p>
-          <Link href="/explore">
-            <Button className="gradient-brand border-0 text-white">Browse artists</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (loadingData) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Nav />
-        <div className="pt-24 pb-20 px-6 max-w-2xl mx-auto space-y-5 animate-pulse">
-          <div className="h-64 bg-muted/40 rounded-2xl" />
-          <div className="glass rounded-2xl p-5 space-y-3">
-            <div className="h-3 bg-muted/60 rounded w-20" />
-            <div className="h-6 bg-muted/60 rounded w-40" />
-            <div className="h-2 bg-muted/60 rounded-full w-full mt-2" />
-          </div>
-          <div className="glass rounded-2xl p-5 space-y-3">
-            <div className="h-3 bg-muted/60 rounded w-24" />
-            <div className="h-10 bg-muted/60 rounded-xl w-full" />
-          </div>
-          <div className="glass rounded-2xl p-5 space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-12 bg-muted/40 rounded-xl" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (artistLoading) return <LoadingSkeleton />;
+  if (!artist) return <NotFound />;
+  if (loadingData) return <LoadingSkeleton detailed />;
 
   const initials = artist.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
   const topCity = cityVotes[0];
@@ -192,7 +129,6 @@ export default function ArtistClient({ id }: { id: string }) {
   const selectedVoteCount = selectedCityData?.vote_count ?? 0;
   const nextThreshold = getNextThreshold(selectedVoteCount);
   const currentThreshold = getVenueThreshold(selectedVoteCount);
-
   const prevVotes = currentThreshold?.votes ?? 0;
   const progressPct = nextThreshold
     ? Math.min(((selectedVoteCount - prevVotes) / (nextThreshold.votes - prevVotes)) * 100, 100)
@@ -212,21 +148,18 @@ export default function ArtistClient({ id }: { id: string }) {
       : `I just voted for ${artist.name} in ${voteCity} on Summon. Make this show happen! 🎶`;
 
   const spotifySearchUrl = `https://open.spotify.com/search/${encodeURIComponent(artist.name)}`;
-  const filteredCities = CITIES.filter((c) => c.toLowerCase().includes(citySearch.toLowerCase()));
-  const maxVotes = cityVotes[0]?.vote_count ?? 1;
 
   return (
     <div className="min-h-screen bg-background">
       <Nav />
       <div className="pt-20 pb-20 px-6 max-w-2xl mx-auto">
 
-        {/* Back */}
         <Link href="/explore" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-5 mt-4">
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to explore
         </Link>
 
-        {/* Hero — full-width image with gradient overlay */}
+        {/* Hero card */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0} className="glass rounded-2xl overflow-hidden mb-5">
           {image && (
             <div className="relative w-full h-52 sm:h-64">
@@ -242,7 +175,6 @@ export default function ArtistClient({ id }: { id: string }) {
             </div>
           )}
           <div className={`flex items-end gap-4 p-5 ${image ? "-mt-16 relative z-10" : ""}`}>
-            {/* Avatar — only show if no banner image */}
             {!image && (
               <div className="w-20 h-20 rounded-2xl gradient-brand flex items-center justify-center ring-2 ring-border/60 shrink-0">
                 <span className="text-white font-bold text-xl">{initials}</span>
@@ -267,7 +199,6 @@ export default function ArtistClient({ id }: { id: string }) {
             </div>
           </div>
 
-          {/* Social links */}
           <div className="flex items-center gap-2 px-5 pb-5">
             <a href={spotifySearchUrl} target="_blank" rel="noopener noreferrer"
               className="h-7 px-2.5 rounded-lg glass text-xs font-medium flex items-center gap-1.5 hover:border-[#1DB954]/40 hover:text-[#1DB954] transition-colors"
@@ -297,7 +228,6 @@ export default function ArtistClient({ id }: { id: string }) {
             </div>
             <h2 className="text-xl font-bold mb-0.5">{topCity.city}</h2>
             <p className="text-primary font-semibold text-sm mb-3">{topCity.vote_count.toLocaleString()} votes</p>
-
             {(() => {
               const topNext = getNextThreshold(topCity.vote_count);
               const topCurrent = getVenueThreshold(topCity.vote_count);
@@ -338,57 +268,7 @@ export default function ArtistClient({ id }: { id: string }) {
             )}
           </div>
 
-          {/* City selector */}
-          <div className="relative mb-4">
-            <div
-              className="glass rounded-xl px-4 py-3 flex items-center gap-3 cursor-pointer hover:border-primary/30 transition-colors"
-              onClick={() => setShowCityDropdown((v) => !v)}
-            >
-              <MapPin className="w-4 h-4 text-primary shrink-0" />
-              <span className="font-medium flex-1 text-sm">{selectedCity || "Select your city"}</span>
-              {showCityDropdown
-                ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-            </div>
-
-            <AnimatePresence>
-              {showCityDropdown && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute top-full left-0 right-0 mt-2 glass rounded-xl overflow-hidden z-40 shadow-xl"
-                >
-                  <div className="p-3 border-b border-border/50">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search cities..."
-                        value={citySearch}
-                        onChange={(e) => setCitySearch(e.target.value)}
-                        className="pl-9 bg-muted/50 border-0 h-9 rounded-lg"
-                        autoFocus
-                      />
-                    </div>
-                  </div>
-                  <div className="max-h-48 overflow-y-auto">
-                    {filteredCities.map((c) => (
-                      <button
-                        key={c}
-                        onClick={() => { setSelectedCity(c); setShowCityDropdown(false); setCitySearch(""); }}
-                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-primary/10 ${
-                          c === selectedCity ? "text-primary font-medium bg-primary/5" : "text-foreground"
-                        }`}
-                      >
-                        {c}
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          <CityDropdown value={selectedCity} onChange={setSelectedCity} className="mb-4" />
 
           {/* Confirmed show details */}
           {loadingShows ? (
@@ -416,10 +296,7 @@ export default function ArtistClient({ id }: { id: string }) {
                     </div>
                   </div>
                   {show.ticketUrl && (
-                    <a
-                      href={show.ticketUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <a href={show.ticketUrl} target="_blank" rel="noopener noreferrer"
                       className="mt-2 flex items-center justify-center gap-2 w-full h-9 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-400 text-sm font-semibold transition-colors"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -529,115 +406,62 @@ export default function ArtistClient({ id }: { id: string }) {
               <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Top Tracks</p>
               <p className="text-xs text-muted-foreground">30s preview</p>
             </div>
-            <div className="flex flex-col gap-1">
-              {tracks.map((track, i) => {
-                const isPlaying = playingTrack === track.preview;
-                const mins = track.duration ? Math.floor(track.duration / 60) : null;
-                const secs = track.duration ? String(track.duration % 60).padStart(2, "0") : null;
-                return (
-                  <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-primary/10 transition-colors group">
-                    {/* Album art / play button */}
-                    <button
-                      onClick={() => {
-                        if (!track.preview) return;
-                        if (isPlaying) {
-                          audioRef.current?.pause();
-                          setPlayingTrack(null);
-                        } else {
-                          if (audioRef.current) {
-                            audioRef.current.pause();
-                          }
-                          const audio = new Audio(track.preview);
-                          audioRef.current = audio;
-                          audio.play().catch(() => {});
-                          audio.onended = () => setPlayingTrack(null);
-                          setPlayingTrack(track.preview);
-                        }
-                      }}
-                      disabled={!track.preview}
-                      className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0 disabled:opacity-50"
-                      aria-label={isPlaying ? "Pause" : "Play preview"}
-                    >
-                      {track.albumCover ? (
-                        <Image src={track.albumCover} alt={track.title} fill className="object-cover" sizes="40px" />
-                      ) : (
-                        <div className="w-full h-full gradient-brand" />
-                      )}
-                      <div className={`absolute inset-0 flex items-center justify-center transition-opacity ${track.preview ? "bg-black/40 opacity-0 group-hover:opacity-100" : ""} ${isPlaying ? "opacity-100 bg-black/50" : ""}`}>
-                        {isPlaying
-                          ? <Pause className="w-4 h-4 text-white" />
-                          : <Play className="w-4 h-4 text-white" />}
-                      </div>
-                    </button>
-
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{track.title}</p>
-                      {mins !== null && (
-                        <p className="text-xs text-muted-foreground">{mins}:{secs}</p>
-                      )}
-                    </div>
-
-                    <a
-                      href={track.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-primary/10"
-                      aria-label="Open on Deezer"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
-                    </a>
-                  </div>
-                );
-              })}
-            </div>
+            <TracksSection tracks={tracks} />
           </motion.div>
         )}
 
         {/* City leaderboard */}
-        {cityVotes.length > 0 ? (
-          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.2} className="glass rounded-2xl p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Users className="w-4 h-4 text-primary" />
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">City Leaderboard</p>
+        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.2}>
+          <CityLeaderboard
+            cityVotes={cityVotes}
+            selectedCity={selectedCity}
+            onSelectCity={setSelectedCity}
+            artistName={artist.name}
+          />
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+function LoadingSkeleton({ detailed = false }: { detailed?: boolean }) {
+  return (
+    <div className="min-h-screen bg-background">
+      <Nav />
+      <div className="pt-24 pb-20 px-6 max-w-2xl mx-auto space-y-5 animate-pulse">
+        <div className="h-64 bg-muted/40 rounded-2xl" />
+        <div className="glass rounded-2xl p-5 space-y-3">
+          <div className="h-3 bg-muted/60 rounded w-20" />
+          <div className="h-6 bg-muted/60 rounded w-40" />
+          <div className="h-2 bg-muted/60 rounded-full w-full mt-2" />
+        </div>
+        {detailed && (
+          <>
+            <div className="glass rounded-2xl p-5 space-y-3">
+              <div className="h-3 bg-muted/60 rounded w-24" />
+              <div className="h-10 bg-muted/60 rounded-xl w-full" />
             </div>
-            <div className="flex flex-col gap-2.5">
-              {cityVotes.map((cv, i) => {
-                const pct = Math.round((cv.vote_count / maxVotes) * 100);
-                return (
-                  <div key={cv.city} className="flex items-center gap-3">
-                    <span className={`text-xs font-mono w-5 shrink-0 ${i < 3 ? "text-primary font-bold" : "text-muted-foreground"}`}>
-                      {i + 1}
-                    </span>
-                    <button
-                      onClick={() => setSelectedCity(cv.city)}
-                      className={`text-sm font-medium w-28 shrink-0 truncate text-left hover:text-primary transition-colors ${cv.city === selectedCity ? "text-primary" : ""}`}
-                    >
-                      {cv.city}
-                    </button>
-                    <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                      <motion.div
-                        className="h-full rounded-full gradient-brand"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${pct}%` }}
-                        transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 + i * 0.04 }}
-                      />
-                    </div>
-                    <span className="text-xs text-primary font-bold w-14 text-right shrink-0">
-                      {cv.vote_count.toLocaleString()}
-                    </span>
-                  </div>
-                );
-              })}
+            <div className="glass rounded-2xl p-5 space-y-3">
+              {[0, 1, 2].map((i) => <div key={i} className="h-12 bg-muted/40 rounded-xl" />)}
             </div>
-          </motion.div>
-        ) : (
-          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.2} className="glass rounded-2xl p-8 text-center">
-            <MapPin className="w-8 h-8 mx-auto mb-3 text-primary opacity-40" />
-            <p className="text-sm font-semibold mb-1">No votes yet anywhere</p>
-            <p className="text-xs text-muted-foreground">Be the first fan to vote for {artist.name} and start the movement.</p>
-          </motion.div>
+          </>
         )}
+      </div>
+    </div>
+  );
+}
+
+function NotFound() {
+  return (
+    <div className="min-h-screen bg-background">
+      <Nav />
+      <div className="pt-32 text-center px-6">
+        <Music2 className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-30" />
+        <h1 className="text-2xl font-bold mb-2">Artist not found</h1>
+        <p className="text-muted-foreground mb-6">This artist doesn&apos;t exist in our catalogue.</p>
+        <Link href="/explore">
+          <Button className="gradient-brand border-0 text-white">Browse artists</Button>
+        </Link>
       </div>
     </div>
   );
