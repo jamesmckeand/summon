@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, PlusCircle } from "lucide-react";
+import { ArrowRight, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { fadeUp } from "@/lib/animations";
@@ -50,10 +50,10 @@ const STEPS = [
 ];
 
 const TIERS = [
-  { label: "Bar / Club", votes: "500" },
-  { label: "Theatre", votes: "2,500" },
-  { label: "Concert Hall", votes: "7,500" },
-  { label: "Arena", votes: "25,000" },
+  { label: "Bar / Club",    votes: 500   },
+  { label: "Theatre",       votes: 2500  },
+  { label: "Concert Hall",  votes: 7500  },
+  { label: "Arena",         votes: 25000 },
 ];
 
 export default function Home() {
@@ -75,6 +75,17 @@ export default function Home() {
     createClient().auth.getUser().then(({ data }) => setLoggedIn(!!data.user));
   }, []);
 
+  // Progress toward next tier based on total votes
+  const maxTier = TIERS[TIERS.length - 1].votes;
+  const currentVotes = stats.totalVotes;
+  const nextTier = TIERS.find((t) => t.votes > currentVotes);
+  const prevTierVotes = nextTier
+    ? (TIERS[TIERS.indexOf(nextTier) - 1]?.votes ?? 0)
+    : TIERS[TIERS.length - 2].votes;
+  const progressPct = nextTier
+    ? Math.min(((currentVotes - prevTierVotes) / (nextTier.votes - prevTierVotes)) * 100, 100)
+    : 100;
+
   return (
     <div className="min-h-screen bg-background">
       <Nav />
@@ -82,17 +93,14 @@ export default function Home() {
       {/* ── HERO ── */}
       <section className="relative flex flex-col items-center justify-center min-h-screen px-6 text-center overflow-hidden pt-20">
 
-        {/* Atmospheric background */}
+        {/* Atmospheric glow */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-20"
             style={{ background: "radial-gradient(ellipse at center, #6366F1 0%, transparent 70%)" }} />
         </div>
 
         {/* Overline badge */}
-        <div
-          className="anim-fade-up flex items-center gap-2 mb-8"
-          style={{ animationDelay: "0.1s" }}
-        >
+        <div className="anim-fade-up flex items-center gap-2 mb-8" style={{ animationDelay: "0.1s" }}>
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.03] text-xs font-medium text-muted-foreground tracking-wide">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse inline-block" />
             Live music demand · {stats.cityCount} cities
@@ -102,10 +110,7 @@ export default function Home() {
         {/* Headline */}
         <h1
           className="anim-fade-up font-extrabold tracking-tight leading-[1.02] max-w-5xl"
-          style={{
-            animationDelay: "0.18s",
-            fontSize: "clamp(3rem, 9vw, 7rem)",
-          }}
+          style={{ animationDelay: "0.18s", fontSize: "clamp(3rem, 9vw, 7rem)" }}
         >
           Your city.
           <br />
@@ -132,8 +137,7 @@ export default function Home() {
             <>
               <Link href="/explore">
                 <Button size="lg" className="h-12 px-7 rounded-xl gradient-brand glow-primary border-0 text-white font-semibold text-sm w-full sm:w-auto">
-                  Start voting now
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  Start voting now <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
               <Link href="/dashboard">
@@ -166,8 +170,7 @@ export default function Home() {
               </Button>
               <Link href="/explore">
                 <Button size="lg" variant="outline" className="h-12 px-7 rounded-xl border-white/10 bg-white/[0.03] hover:bg-white/[0.06] font-semibold text-sm w-full sm:w-auto">
-                  Browse artists
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  Browse artists <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
             </>
@@ -183,26 +186,27 @@ export default function Home() {
           </p>
         )}
 
-        {/* Stats strip */}
+        {/* Stats cards — dashboard style */}
         <div
-          className="anim-fade-up mt-16 flex items-center gap-10 sm:gap-16"
+          className="anim-fade-up mt-14 grid grid-cols-3 gap-3 w-full max-w-sm"
           style={{ animationDelay: "0.54s" }}
         >
           {[
-            { value: "Millions", label: "Artists" },
-            { value: `${stats.cityCount}+`, label: "Cities" },
-            { value: stats.totalVotes > 0 ? `${stats.totalVotes.toLocaleString()}+` : "Growing", label: "Votes cast" },
+            { value: "1M+",                                                               label: "Artists",    sub: "searchable"  },
+            { value: `${stats.cityCount}+`,                                               label: "Cities",     sub: "worldwide"   },
+            { value: stats.totalVotes > 0 ? stats.totalVotes.toLocaleString() : "—",     label: "Votes cast", sub: "and growing"  },
           ].map((s) => (
-            <div key={s.label} className="text-center">
-              <p className="text-2xl sm:text-3xl font-extrabold gradient-brand-text tabular-nums">{s.value}</p>
-              <p className="text-xs text-muted-foreground mt-1 tracking-wide">{s.label}</p>
+            <div key={s.label} className="card-solid rounded-2xl p-4 text-center flex flex-col gap-1">
+              <p className="text-xl sm:text-2xl font-extrabold gradient-brand-text tabular-nums leading-none">{s.value}</p>
+              <p className="text-xs font-semibold text-foreground">{s.label}</p>
+              <p className="text-[10px] text-muted-foreground">{s.sub}</p>
             </div>
           ))}
         </div>
 
       </section>
 
-      {/* Marquee — outside overflow-hidden section so w-screen breakout works */}
+      {/* Marquee */}
       <div className="anim-fade-up relative overflow-hidden pb-8" style={{ animationDelay: "0.6s" }}>
         <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
         <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
@@ -218,7 +222,7 @@ export default function Home() {
           </h2>
         </motion.div>
 
-        <div className="grid sm:grid-cols-3 gap-5">
+        <div className="grid sm:grid-cols-3 gap-4">
           {STEPS.map((step, i) => (
             <motion.div
               key={step.n}
@@ -227,19 +231,25 @@ export default function Home() {
               viewport={{ once: true }}
               variants={fadeUp}
               custom={i * 0.08}
-              className="card-solid rounded-2xl p-7 flex flex-col gap-5 hover:border-primary/20 transition-colors group"
+              className="card-solid rounded-2xl p-7 flex flex-col gap-6 hover:border-primary/20 transition-colors group"
             >
-              <span className="text-5xl font-extrabold gradient-display leading-none">{step.n}</span>
-              <div>
-                <h3 className="font-bold text-lg mb-2 tracking-tight">{step.title}</h3>
+              {/* Step number badge */}
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold tracking-widest text-muted-foreground uppercase">{step.n}</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
+              </div>
+              <div className="flex flex-col gap-2">
+                <h3 className="font-bold text-xl tracking-tight">{step.title}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">{step.body}</p>
               </div>
+              {/* Bottom accent bar */}
+              <div className="h-0.5 w-8 gradient-brand rounded-full group-hover:w-16 transition-all duration-500" />
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* ── VENUE TIERS ── */}
+      {/* ── VENUE TIERS — budget card style ── */}
       <section className="px-6 pb-32 max-w-5xl mx-auto">
         <motion.div
           initial="hidden"
@@ -249,35 +259,71 @@ export default function Home() {
           custom={0}
           className="card-solid rounded-2xl p-8 sm:p-10 relative overflow-hidden"
         >
-          {/* Subtle glow inside the card */}
           <div className="absolute top-0 right-0 w-80 h-80 rounded-full pointer-events-none"
             style={{ background: "radial-gradient(ellipse at center, #6366F110 0%, transparent 65%)" }} />
 
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary mb-4">The threshold system</p>
-          <h3 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3 max-w-lg">
-            Real shows, not just data.
-          </h3>
-          <p className="text-muted-foreground leading-relaxed max-w-lg mb-8 text-sm sm:text-base">
+          {/* Header — like the budget card */}
+          <div className="flex items-start justify-between mb-8">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary mb-2">The threshold system</p>
+              <h3 className="text-2xl sm:text-3xl font-bold tracking-tight max-w-xs">
+                Real shows, not just data.
+              </h3>
+            </div>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20">
+              <TrendingUp className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs font-bold text-primary tabular-nums">
+                {currentVotes > 0 ? currentVotes.toLocaleString() : "Live"} votes
+              </span>
+            </div>
+          </div>
+
+          <p className="text-muted-foreground leading-relaxed max-w-lg mb-8 text-sm">
             When votes hit a venue threshold, Summon contacts the venue directly on behalf of the fans.
             We match demand to the right sized room — from intimate clubs to full arenas.
           </p>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {TIERS.map((t, i) => (
-              <motion.div
-                key={t.label}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeUp}
-                custom={i * 0.06}
-                className="rounded-xl p-4 border border-white/7 bg-white/[0.025] text-center"
-              >
-                <p className="text-lg font-extrabold gradient-brand-text tabular-nums">{t.votes}</p>
-                <p className="text-xs text-muted-foreground mt-1">{t.label}</p>
-              </motion.div>
-            ))}
+          {/* Progress bars — budget card style */}
+          <div className="space-y-4">
+            {TIERS.map((t) => {
+              const pct = Math.min((currentVotes / t.votes) * 100, 100);
+              const reached = currentVotes >= t.votes;
+              return (
+                <div key={t.label}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-sm font-medium">{t.label}</span>
+                    <div className="flex items-center gap-2">
+                      {reached && <span className="text-[10px] font-bold text-green-400 uppercase tracking-wider">Reached</span>}
+                      <span className="text-sm font-bold tabular-nums gradient-brand-text">{t.votes.toLocaleString()}</span>
+                    </div>
+                  </div>
+                  <div className="h-2 bg-white/[0.06] rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full gradient-brand rounded-full"
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${pct}%` }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 1, delay: 0.1, ease: "easeOut" }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
+
+          {/* Current progress summary */}
+          {nextTier && currentVotes > 0 && (
+            <div className="mt-6 flex items-center justify-between pt-6 border-t border-white/[0.06]">
+              <div>
+                <p className="text-xs text-muted-foreground">Current</p>
+                <p className="text-lg font-bold tabular-nums">{currentVotes.toLocaleString()} votes</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground">Next milestone</p>
+                <p className="text-lg font-bold tabular-nums gradient-brand-text">{nextTier.votes.toLocaleString()} → {nextTier.label}</p>
+              </div>
+            </div>
+          )}
         </motion.div>
 
         {/* Any artist card */}
@@ -287,20 +333,20 @@ export default function Home() {
           viewport={{ once: true }}
           variants={fadeUp}
           custom={0.1}
-          className="mt-5"
+          className="mt-4"
         >
-          <Link href="/submit">
-            <div className="card-solid rounded-2xl p-8 flex items-center gap-6 hover:border-primary/20 transition-colors group cursor-pointer">
-              <div className="w-12 h-12 rounded-xl gradient-brand flex items-center justify-center shrink-0 glow-primary-sm group-hover:scale-105 transition-transform">
-                <PlusCircle className="w-5 h-5 text-white" />
-              </div>
+          <Link href="/explore">
+            <div className="card-solid rounded-2xl p-7 flex items-center gap-5 hover:border-primary/20 transition-colors group cursor-pointer">
               <div className="flex-1">
-                <h3 className="font-bold text-lg tracking-tight mb-1">Any artist, instantly.</h3>
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary mb-2">Any artist</p>
+                <h3 className="font-bold text-xl tracking-tight mb-1.5">Millions of artists. Instantly.</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
                   Can&apos;t find your favourite act? Search on the explore page — we pull from millions of artists and add them to the vote immediately.
                 </p>
               </div>
-              <ArrowRight className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-colors shrink-0" />
+              <div className="w-11 h-11 rounded-xl gradient-brand flex items-center justify-center shrink-0 glow-primary-sm group-hover:scale-105 transition-transform">
+                <ArrowRight className="w-5 h-5 text-white" />
+              </div>
             </div>
           </Link>
         </motion.div>
@@ -331,8 +377,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href={loggedIn ? "/explore" : "/login"}>
               <Button size="lg" className="gradient-brand glow-primary border-0 text-white font-semibold text-base px-8 h-12 rounded-xl">
-                Start voting now
-                <ArrowRight className="ml-2 w-4 h-4" />
+                Start voting now <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
             </Link>
             <Link href="/explore">

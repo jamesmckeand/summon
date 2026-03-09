@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
-import { LogOut, User, Menu, X } from "lucide-react";
+import { motion } from "framer-motion";
+import { LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
@@ -55,7 +55,6 @@ export default function Nav() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   // Start loading=false if we have a cached user — prevents flicker on navigation
   const [loading, setLoading] = useState(() => typeof window === "undefined" || !useVoteStore.getState().cachedUser);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -68,8 +67,6 @@ export default function Nav() {
   const pathname = usePathname();
   const { initFromDb, clearVotes, setActiveCity, activeCity, cachedUser, setCachedUser } = useVoteStore();
 
-  // Close menu on route change
-  useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -116,7 +113,6 @@ export default function Nav() {
   async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    setMenuOpen(false);
     router.push("/");
   }
 
@@ -201,7 +197,7 @@ export default function Nav() {
           )}
         </div>
 
-        {/* Mobile: right side */}
+        {/* Mobile: logo + avatar/sign-in only — nav via bottom tab bar */}
         <div className="flex sm:hidden items-center gap-2">
           {loading && !cachedUser ? (
             <div className="w-8 h-8 rounded-full bg-muted/30 animate-pulse" />
@@ -223,62 +219,8 @@ export default function Nav() {
               </Button>
             </Link>
           )}
-          <button
-            onClick={() => setMenuOpen((v) => !v)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Toggle menu"
-          >
-            {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
         </div>
       </nav>
-
-      {/* Mobile menu */}
-      <AnimatePresence>
-        {menuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18 }}
-            className="fixed top-[60px] left-0 right-0 z-40 glass border-t border-border/40 sm:hidden"
-          >
-            <div className="flex flex-col px-4 py-3 gap-1">
-              <Link href="/explore" className="px-3 py-3 text-sm font-medium text-foreground hover:text-primary transition-colors rounded-lg hover:bg-primary/5">
-                Explore
-              </Link>
-              <Link href="/cities" className="px-3 py-3 text-sm font-medium text-foreground hover:text-primary transition-colors rounded-lg hover:bg-primary/5">
-                Cities
-              </Link>
-              <Link href="/shows" className="px-3 py-3 text-sm font-medium text-foreground hover:text-primary transition-colors rounded-lg hover:bg-primary/5">
-                Shows
-              </Link>
-              <Link href="/submit" className="px-3 py-3 text-sm font-medium text-foreground hover:text-primary transition-colors rounded-lg hover:bg-primary/5">
-                Suggest an artist
-              </Link>
-              {isLoggedIn && (
-                <>
-                  <Link href="/dashboard" className="px-3 py-3 text-sm font-medium text-foreground hover:text-primary transition-colors rounded-lg hover:bg-primary/5">
-                    Dashboard
-                  </Link>
-                  <Link href="/profile" className="px-3 py-3 text-sm font-medium text-foreground hover:text-primary transition-colors rounded-lg hover:bg-primary/5">
-                    Profile
-                  </Link>
-                  <div className="border-t border-border/40 mt-1 pt-1">
-                    <button
-                      onClick={handleSignOut}
-                      className="w-full text-left px-3 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors rounded-lg flex items-center gap-2"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Sign out
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </>
   );
 }

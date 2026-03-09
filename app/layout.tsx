@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
 import CapacitorProvider from "@/components/CapacitorProvider";
+import BottomNav from "@/components/BottomNav";
 import "./globals.css";
 
 const neueMontreal = localFont({
@@ -45,6 +46,7 @@ export default function RootLayout({
       <body className={`${neueMontreal.variable} font-sans antialiased`}>
         <CapacitorProvider />
         {children}
+        <BottomNav />
         <Analytics />
       </body>
     </html>
