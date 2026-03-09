@@ -25,6 +25,34 @@ export function affiliateUrl(url: string): string {
       const id = process.env.SONGKICK_AFFILIATE_ID;
       if (id) return `https://www.awin1.com/cread.php?awinmid=6925&awinaffid=${id}&ued=${encodeURIComponent(url)}`;
     }
+
+    // StubHub — Impact marketplace (search "StubHub" once approved)
+    // Set STUBHUB_IMPACT_URL in Vercel when ready
+    if (hostname.includes("stubhub.com")) {
+      const base = process.env.STUBHUB_IMPACT_URL;
+      if (base) return `${base}?url=${encodeURIComponent(url)}`;
+    }
+
+    // SeatGeek — direct partner program (seatgeek.com/partners)
+    // Set SEATGEEK_AFFILIATE_ID in Vercel when ready
+    if (hostname.includes("seatgeek.com")) {
+      const id = process.env.SEATGEEK_AFFILIATE_ID;
+      if (id) return `${url}${url.includes("?") ? "&" : "?"}aid=${id}`;
+    }
+
+    // Viagogo — Awin (awin.com, search "Viagogo")
+    // Set VIAGOGO_AWIN_ID in Vercel when ready
+    if (hostname.includes("viagogo.com")) {
+      const id = process.env.VIAGOGO_AWIN_ID;
+      if (id) return `https://www.awin1.com/cread.php?awinmid=6138&awinaffid=${id}&ued=${encodeURIComponent(url)}`;
+    }
+
+    // Eventbrite — Awin (awin.com, search "Eventbrite")
+    // Set EVENTBRITE_AWIN_ID in Vercel when ready
+    if (hostname.includes("eventbrite.com")) {
+      const id = process.env.EVENTBRITE_AWIN_ID;
+      if (id) return `https://www.awin1.com/cread.php?awinmid=6724&awinaffid=${id}&ued=${encodeURIComponent(url)}`;
+    }
   } catch {
     // not a valid URL — return as-is
   }

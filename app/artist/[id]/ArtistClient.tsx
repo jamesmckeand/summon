@@ -60,7 +60,7 @@ export default function ArtistClient({ id }: { id: string }) {
   const [mounted, setMounted] = useState(false);
 
   const { handleVote, hasVoted } = useVote();
-  const { activeCity } = useVoteStore();
+  const { activeCity, cachedUser } = useVoteStore();
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -137,9 +137,14 @@ export default function ArtistClient({ id }: { id: string }) {
   const voted = mounted && hasVoted(artist.id, selectedCity || activeCity);
   const voteCity = selectedCity || activeCity;
   const confirmedShow = shows[0] ?? null;
-  const shareUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/artist/${id}${voteCity ? `?city=${encodeURIComponent(voteCity)}` : ""}`
-    : `/artist/${id}`;
+  const shareUrl = (() => {
+    if (typeof window === "undefined") return `/artist/${id}`;
+    const params = new URLSearchParams();
+    if (voteCity) params.set("city", voteCity);
+    if (cachedUser?.id) params.set("ref", cachedUser.id);
+    const qs = params.toString();
+    return `${window.location.origin}/artist/${id}${qs ? `?${qs}` : ""}`;
+  })();
   const votesNeeded = nextThreshold ? nextThreshold.votes - selectedVoteCount : 0;
   const shareText = confirmedShow
     ? `${artist.name} is coming to ${confirmedShow.venue} in ${voteCity}! Get your tickets 🎉`
@@ -152,9 +157,9 @@ export default function ArtistClient({ id }: { id: string }) {
   return (
     <div className="min-h-screen bg-background">
       <Nav />
-      <div className="pt-20 pb-20 px-6 max-w-2xl mx-auto">
+      <div className="pt-24 pb-20 px-6 max-w-2xl mx-auto">
 
-        <Link href="/explore" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-5 mt-4">
+        <Link href="/explore" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-5">
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to explore
         </Link>
@@ -218,45 +223,8 @@ export default function ArtistClient({ id }: { id: string }) {
           </div>
         </motion.div>
 
-        {/* Top city momentum */}
-        {topCity && (
-          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.05} className="glass rounded-2xl p-5 mb-4 relative overflow-hidden">
-            <div className="absolute inset-0 gradient-brand opacity-5 pointer-events-none" />
-            <div className="flex items-center gap-2 mb-1">
-              <MapPin className="w-4 h-4 text-primary" />
-              <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Highest demand</span>
-            </div>
-            <h2 className="text-xl font-bold mb-0.5">{topCity.city}</h2>
-            <p className="text-primary font-semibold text-sm mb-3">{topCity.vote_count.toLocaleString()} votes</p>
-            {(() => {
-              const topNext = getNextThreshold(topCity.vote_count);
-              const topCurrent = getVenueThreshold(topCity.vote_count);
-              const topPrev = topCurrent?.votes ?? 0;
-              const topPct = topNext
-                ? Math.min(((topCity.vote_count - topPrev) / (topNext.votes - topPrev)) * 100, 100)
-                : 100;
-              return (
-                <>
-                  <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                    <span>{topCurrent?.label ?? "Building demand"}</span>
-                    <span>{topNext ? `${topNext.votes.toLocaleString()} for ${topNext.label}` : "Max reached"}</span>
-                  </div>
-                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full rounded-full gradient-brand"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${topPct}%` }}
-                      transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
-                    />
-                  </div>
-                </>
-              );
-            })()}
-          </motion.div>
-        )}
-
         {/* Vote section */}
-        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.1} className="glass rounded-2xl p-5 mb-4">
+        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.05} className="glass rounded-2xl p-5 mb-4">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               {shows.length > 1 ? "Upcoming Shows" : confirmedShow ? "Confirmed Show" : "Vote"}
@@ -267,6 +235,30 @@ export default function ArtistClient({ id }: { id: string }) {
               </Badge>
             )}
           </div>
+
+          {topCity && (
+            <div className="flex items-center gap-2 mb-4 px-3 py-2.5 rounded-xl bg-primary/5 border border-primary/10">
+              <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
+              <span className="text-xs text-muted-foreground shrink-0">Highest demand:</span>
+              <span className="text-sm font-semibold">{topCity.city}</span>
+              <span className="text-xs text-primary font-semibold shrink-0">· {topCity.vote_count.toLocaleString()} votes</span>
+              <div className="flex-1 min-w-0 ml-1">
+                {(() => {
+                  const topNext = getNextThreshold(topCity.vote_count);
+                  const topCurrent = getVenueThreshold(topCity.vote_count);
+                  const topPrev = topCurrent?.votes ?? 0;
+                  const topPct = topNext
+                    ? Math.min(((topCity.vote_count - topPrev) / (topNext.votes - topPrev)) * 100, 100)
+                    : 100;
+                  return (
+                    <div className="h-1 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full rounded-full gradient-brand" style={{ width: `${topPct}%` }} />
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
 
           <CityDropdown value={selectedCity} onChange={setSelectedCity} className="mb-4" />
 
@@ -401,7 +393,7 @@ export default function ArtistClient({ id }: { id: string }) {
 
         {/* Top tracks */}
         {tracks.length > 0 && (
-          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.15} className="glass rounded-2xl p-5 mb-4">
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.1} className="glass rounded-2xl p-5 mb-4">
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Top Tracks</p>
               <p className="text-xs text-muted-foreground">30s preview</p>
@@ -411,7 +403,7 @@ export default function ArtistClient({ id }: { id: string }) {
         )}
 
         {/* City leaderboard */}
-        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.2}>
+        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.15}>
           <CityLeaderboard
             cityVotes={cityVotes}
             selectedCity={selectedCity}

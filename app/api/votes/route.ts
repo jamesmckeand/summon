@@ -120,6 +120,47 @@ hello@wesummon.com`;
   });
 }
 
+async function sendWarningEmail(
+  email: string,
+  artistName: string,
+  city: string,
+  voteCount: number,
+  votesNeeded: number,
+  tierLabel: string,
+) {
+  const artistPath = ARTISTS.find((a) => a.name === artistName)?.id;
+  const artistUrl = `https://wesummon.com${artistPath ? `/artist/${artistPath}` : "/explore"}`;
+
+  await resend.emails.send({
+    from: "Summon <hello@wesummon.com>",
+    to: email,
+    subject: `${votesNeeded} more votes to unlock ${tierLabel} for ${artistName} in ${city}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#0a0a0a;color:#f0f0f0;border-radius:12px">
+        <h2 style="margin:0 0 8px;font-size:22px;color:#fff">Almost there 🔥</h2>
+        <p style="color:#aaa;margin:0 0 24px;font-size:15px">${artistName} in ${city} is closing in on the next milestone.</p>
+
+        <div style="background:#1a1a1a;border-radius:8px;padding:16px;margin-bottom:16px">
+          <p style="margin:0;font-size:13px;color:#888;text-transform:uppercase;letter-spacing:.05em">Artist · City</p>
+          <p style="margin:6px 0 0;font-size:20px;font-weight:700;color:#fff">${artistName} in ${city}</p>
+        </div>
+
+        <div style="background:#0d0d1a;border:1px solid #2a2a4a;border-radius:8px;padding:16px;margin-bottom:24px">
+          <p style="margin:0;font-size:28px;font-weight:800;color:#a78bfa">${votesNeeded}</p>
+          <p style="margin:4px 0 0;font-size:14px;color:#aaa">more votes to unlock <strong style="color:#fff">${tierLabel}</strong></p>
+          <p style="margin:8px 0 0;font-size:13px;color:#666">${voteCount.toLocaleString()} votes so far — share to push it over the line.</p>
+        </div>
+
+        <a href="${artistUrl}" style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px">
+          Share &amp; vote →
+        </a>
+
+        <p style="color:#555;font-size:12px;margin-top:32px">Summon · Fan-driven shows · <a href="https://wesummon.com" style="color:#555">wesummon.com</a></p>
+      </div>
+    `,
+  });
+}
+
 async function sendThresholdEmail(
   email: string,
   artistName: string,
@@ -237,6 +278,23 @@ export async function POST(request: Request) {
             .catch(() => {});
         }
         sendOutreachAlert(artistName, city, after, crossed.tier, crossed.label)
+          .catch(() => {});
+      }
+    }
+
+    // "50 votes away" warning — fires once as a combo enters the final stretch
+    const WARNING_DISTANCE = 50;
+    const warning = THRESHOLDS.find(
+      (t) => before < t.votes - WARNING_DISTANCE && after >= t.votes - WARNING_DISTANCE && after < t.votes
+    );
+    if (warning && user.email) {
+      const staticArtist = ARTISTS.find((a) => a.id === artistId);
+      const artistName = staticArtist?.name ?? (await (async () => {
+        const { data } = await supabase.from("live_artists").select("name").eq("id", artistId).single();
+        return data?.name;
+      })());
+      if (artistName) {
+        sendWarningEmail(user.email, artistName, city, after, warning.votes - after, warning.label)
           .catch(() => {});
       }
     }

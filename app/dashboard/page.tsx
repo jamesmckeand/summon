@@ -3,8 +3,8 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import {
-  MapPin, TrendingUp, Music2, ChevronUp, Zap,
-  Trophy, Users, ChevronRight, ArrowRight, Flame
+  MapPin, TrendingUp, Music2, ChevronUp,
+  ChevronRight, ArrowRight
 } from "lucide-react";
 import ArtistAvatar from "@/components/ArtistAvatar";
 import ShareButton from "@/components/ShareButton";
@@ -20,7 +20,6 @@ import { useVoteCounts } from "@/hooks/useVoteCounts";
 import { createClient } from "@/lib/supabase/client";
 import Nav from "@/components/Nav";
 
-// Venue thresholds by capacity
 const VENUE_THRESHOLDS = [
   { label: "Bar / Club", tier: "bar" as const, capacity: "~200", votes: 500, color: "oklch(0.65 0.28 290)" },
   { label: "Theatre", tier: "theatre" as const, capacity: "~1,000", votes: 2500, color: "oklch(0.6 0.28 320)" },
@@ -38,7 +37,6 @@ function getVenueThreshold(votes: number) {
 function getNextThreshold(votes: number) {
   return VENUE_THRESHOLDS.find((t) => t.votes > votes) ?? null;
 }
-
 
 type ArtistWithVotes = (typeof ARTISTS)[0] & { votes: number; trending?: boolean };
 
@@ -73,13 +71,14 @@ function VoteProgress({ artist, cityVenues }: { artist: ArtistWithVotes; cityVen
 }
 
 export default function DashboardPage() {
-  const { votes, activeCity, setActiveCity, votedCities } = useVoteStore();
+  const { votes, activeCity, setActiveCity, votedCities, cachedUser } = useVoteStore();
   const { handleVote, hasVoted } = useVote();
   const { counts, loading: countsLoading } = useVoteCounts(activeCity);
   const [user, setUser] = useState<{ id: string } | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [images, setImages] = useState<Record<string, string | null>>({});
+  const [referralCount, setReferralCount] = useState<number | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -97,14 +96,26 @@ export default function DashboardPage() {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    fetch("/api/referrals")
+      .then((r) => r.json())
+      .then((data) => { if (typeof data.referrals === "number") setReferralCount(data.referrals); })
+      .catch(() => {});
+  }, []);
+
   const cities = votedCities();
   const cityVotedIds = votes[activeCity] ?? [];
   const cityVenues = getVenuesForCity(activeCity);
 
-  const cityArtists = ARTISTS
-    .map((a) => ({ ...a, votes: counts[a.id] ?? 0 }))
-    .sort((a, b) => b.votes - a.votes)
-    .slice(0, 8);
+  const cityArtists = (() => {
+    const all = ARTISTS
+      .map((a) => ({ ...a, votes: counts[a.id] ?? 0 }))
+      .sort((a, b) => b.votes - a.votes)
+      .slice(0, 8);
+    const maxVotes = all[0]?.votes ?? 0;
+    const hotThreshold = maxVotes * 0.9;
+    return all.map((a) => ({ ...a, trending: a.votes > 0 && a.votes >= hotThreshold }));
+  })();
 
   const userVotedArtists = ARTISTS
     .filter((a) => cityVotedIds.includes(a.id))
@@ -129,10 +140,8 @@ export default function DashboardPage() {
     ? Math.min(((topArtist.votes - prevVotes) / (nextThreshold.votes - prevVotes)) * 100, 100)
     : 100;
 
-  // Wait for client hydration before branching on localStorage-backed state
   if (!mounted) return null;
 
-  // Empty state for logged-out users
   if (!authLoading && !user) {
     return (
       <div className="min-h-screen bg-background">
@@ -155,7 +164,6 @@ export default function DashboardPage() {
     );
   }
 
-  // Empty state when no votes in any city
   if (cities.length === 0) {
     return (
       <div className="min-h-screen bg-background">
@@ -188,10 +196,8 @@ export default function DashboardPage() {
 
         {/* Welcome */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0} className="mb-6">
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary/70 mb-2">Your activity</p>
-          <h1 className="text-3xl font-bold tracking-tight mt-1">
-            Your Dashboard
-          </h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/70 mb-2">Your activity</p>
+          <h1 className="text-3xl font-bold tracking-tight mt-1">Your Dashboard</h1>
         </motion.div>
 
         {/* City switcher */}
@@ -228,17 +234,17 @@ export default function DashboardPage() {
           animate="visible"
           variants={fadeUp}
           custom={0.1}
-          className="grid grid-cols-3 gap-3 mb-6"
+          className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6"
         >
           {[
-            { label: "Your Votes", value: totalVotes, icon: ChevronUp, color: "text-primary" },
-            { label: "City Artists", value: cityArtists.length, icon: Users, color: "text-blue-400" },
-            { label: "Trending", value: cityArtists.filter(a => a.trending).length, icon: TrendingUp, color: "text-green-400" },
+            { label: "Votes Cast", value: totalVotes },
+            { label: "Tracking", value: cityArtists.length },
+            { label: "Trending", value: cityArtists.filter(a => a.trending).length },
+            { label: "Referred", value: referralCount ?? "—" },
           ].map((stat) => (
-            <div key={stat.label} className="glass rounded-xl p-4 text-center">
-              <stat.icon className={`w-5 h-5 mx-auto mb-2 ${stat.color}`} />
-              <p className="text-2xl font-bold">{stat.value}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
+            <div key={stat.label} className="card-solid rounded-2xl p-4 sm:p-5 text-center">
+              <p className="text-2xl sm:text-3xl font-extrabold gradient-brand-text tabular-nums leading-none">{stat.value}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/70 mt-1.5">{stat.label}</p>
             </div>
           ))}
         </motion.div>
@@ -254,20 +260,17 @@ export default function DashboardPage() {
           <div className="absolute inset-0 gradient-brand opacity-5 pointer-events-none" />
           <div className="flex items-start justify-between mb-3">
             <div>
-              <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-primary" />
-                <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  Top momentum in {activeCity}
-                </span>
-              </div>
-              <h2 className="text-xl font-bold mt-1">{topArtist.name}</h2>
+              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/70 mb-1">
+                Top momentum in {activeCity}
+              </p>
+              <h2 className="text-xl font-bold">{topArtist.name}</h2>
               <p className="text-primary font-semibold text-sm">
                 {countsLoading ? "—" : topArtist.votes.toLocaleString()} votes
               </p>
             </div>
             <Badge className="bg-primary/15 text-primary border-primary/20 text-xs">
               <TrendingUp className="w-3 h-3 mr-1" />
-              #{1} in city
+              #1 in city
             </Badge>
           </div>
           {nextThreshold && (
@@ -291,192 +294,176 @@ export default function DashboardPage() {
           )}
         </motion.div>
 
-        {/* Venue threshold guide */}
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          custom={0.2}
-          className="mb-6"
-        >
-          <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2">
-            <Trophy className="w-4 h-4" /> Venue Thresholds in {activeCity}
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {VENUE_THRESHOLDS.map((t) => (
-              <div key={t.label} className="glass rounded-xl p-3">
-                <p className="text-xs font-semibold text-muted-foreground mb-1">{t.label}</p>
-                <p className="text-primary text-xs font-bold mb-1.5">{t.votes.toLocaleString()} votes</p>
-                <ul className="space-y-0.5">
-                  {cityVenues[t.tier].map((name) => (
-                    <li key={name} className="text-xs text-foreground/80 leading-tight">{name}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </motion.div>
+        {/* Main content — desktop 2-col */}
+        <div className="sm:grid sm:grid-cols-5 gap-4">
 
-        {/* Your votes */}
-        {userVotedArtists.length > 0 ? (
-          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.25} className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                Your Votes in {activeCity}
-              </h2>
-              <Link href="/explore">
-                <Button variant="ghost" size="sm" className="text-primary text-xs h-7 px-2">
-                  Add more <ChevronRight className="w-3 h-3 ml-1" />
-                </Button>
-              </Link>
-            </div>
-            <div className="flex flex-col gap-3">
-              {userVotedArtists.map((artist, i) => (
-                <motion.div
-                  key={artist.id}
-                  initial="hidden"
-                  animate="visible"
-                  variants={fadeUp}
-                  custom={0.28 + i * 0.04}
-                  className="glass rounded-xl p-4"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <ArtistAvatar name={artist.name} image={images[artist.name] ?? null} size={40} />
-                    <div className="flex-1 min-w-0">
-                      <Link href={`/artist/${artist.id}`} className="font-semibold text-sm hover:text-primary transition-colors">{artist.name}</Link>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Music2 className="w-3 h-3" />
-                        {artist.genre}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-primary font-bold text-sm">
+          {/* Your Votes — col-span-3 */}
+          <div className="sm:col-span-3 mb-6 sm:mb-0">
+            {userVotedArtists.length > 0 ? (
+              <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.25}>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/70">
+                    Your Votes in {activeCity}
+                  </p>
+                  <Link href="/explore">
+                    <Button variant="ghost" size="sm" className="text-primary text-xs h-7 px-2">
+                      Add more <ChevronRight className="w-3 h-3 ml-1" />
+                    </Button>
+                  </Link>
+                </div>
+                <div className="flex flex-col gap-3">
+                  {userVotedArtists.map((artist, i) => (
+                    <motion.div
+                      key={artist.id}
+                      initial="hidden"
+                      animate="visible"
+                      variants={fadeUp}
+                      custom={0.28 + i * 0.04}
+                      className="glass rounded-xl p-4"
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <ArtistAvatar name={artist.name} image={images[artist.name] ?? null} size={40} />
+                        <div className="flex-1 min-w-0">
+                          <Link href={`/artist/${artist.id}`} className="font-semibold text-sm hover:text-primary transition-colors">{artist.name}</Link>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Music2 className="w-3 h-3" />
+                            {artist.genre}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-primary font-bold text-sm">
+                            {countsLoading ? "—" : artist.votes.toLocaleString()}
+                          </p>
+                          <p className="text-xs text-muted-foreground">votes</p>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => handleVote(artist.id, activeCity)}
+                          className="gradient-brand border-0 text-white rounded-lg h-8 px-3 text-xs font-semibold glow-primary-sm hover:opacity-80"
+                          title="Click to unvote"
+                        >
+                          <ChevronUp className="w-3 h-3 mr-1" />
+                          Voted
+                        </Button>
+                      </div>
+                      <VoteProgress artist={artist} cityVenues={cityVenues} />
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.25}>
+                <div className="glass rounded-xl p-6 text-center">
+                  <Music2 className="w-8 h-8 mx-auto mb-3 text-muted-foreground opacity-40" />
+                  <p className="text-sm text-muted-foreground mb-3">No votes in {activeCity} yet.</p>
+                  <Link href="/explore">
+                    <Button size="sm" className="gradient-brand border-0 text-white">
+                      Vote in {activeCity} <ArrowRight className="w-3 h-3 ml-1.5" />
+                    </Button>
+                  </Link>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Close to a milestone */}
+            {closingInArtists.length > 0 && (
+              <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.28} className="mt-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/70 mb-3">
+                  Close to a milestone
+                </p>
+                <div className="flex flex-col gap-2">
+                  {closingInArtists.map((artist) => {
+                    const next = getNextThreshold(artist.votes);
+                    const current = getVenueThreshold(artist.votes);
+                    const prevVotes = current?.votes ?? 0;
+                    const votesNeeded = next ? next.votes - artist.votes : 0;
+                    const progress = next ? Math.min(((artist.votes - prevVotes) / (next.votes - prevVotes)) * 100, 100) : 100;
+                    const shareParams = new URLSearchParams({ city: activeCity });
+                    if (cachedUser?.id) shareParams.set("ref", cachedUser.id);
+                    const shareUrl = mounted ? `${window.location.origin}/artist/${artist.id}?${shareParams.toString()}` : `/artist/${artist.id}`;
+                    return (
+                      <div key={artist.id} className="glass rounded-xl px-4 py-3 flex items-center gap-3 border-orange-400/20">
+                        <ArtistAvatar name={artist.name} image={images[artist.name] ?? null} size={40} />
+                        <div className="flex-1 min-w-0">
+                          <Link href={`/artist/${artist.id}`} className="font-semibold text-sm hover:text-primary transition-colors truncate block">{artist.name}</Link>
+                          <p className="text-xs text-orange-400 mt-0.5">{votesNeeded.toLocaleString()} votes to {next?.label}</p>
+                          <div className="h-1 bg-muted rounded-full overflow-hidden mt-1.5">
+                            <div className="h-full rounded-full bg-orange-400/70 transition-all" style={{ width: `${progress}%` }} />
+                          </div>
+                        </div>
+                        <ShareButton
+                          url={shareUrl}
+                          text={`Only ${votesNeeded.toLocaleString()} more votes to get ${artist.name} to ${next?.label} in ${activeCity}! Vote on Summon 🎶`}
+                          label="Share"
+                          size="sm"
+                          variant="ghost"
+                          className="shrink-0 h-8 px-3 rounded-lg glass text-muted-foreground hover:text-foreground text-xs border-0"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </div>
+
+          {/* City leaderboard — col-span-2 */}
+          <div className="sm:col-span-2">
+            <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.3}>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/70">
+                  {activeCity} Leaderboard
+                </p>
+                <Link href="/explore">
+                  <Button variant="ghost" size="sm" className="text-primary text-xs h-7 px-2">
+                    See all <ChevronRight className="w-3 h-3 ml-1" />
+                  </Button>
+                </Link>
+              </div>
+              <div className="flex flex-col gap-2">
+                {cityArtists.map((artist, i) => {
+                  const voted = hasVoted(artist.id, activeCity);
+                  return (
+                    <motion.div
+                      key={artist.id}
+                      initial="hidden"
+                      animate="visible"
+                      variants={fadeUp}
+                      custom={0.32 + i * 0.03}
+                      className={`glass rounded-xl px-4 py-3 flex items-center gap-3 transition-all ${
+                        voted ? "border-primary/25" : ""
+                      }`}
+                    >
+                      <span className={`text-sm font-mono w-5 shrink-0 ${i < 3 ? "gradient-brand-text font-bold" : "text-muted-foreground"}`}>
+                        {i + 1}
+                      </span>
+                      <ArtistAvatar name={artist.name} image={images[artist.name] ?? null} size={40} />
+                      <div className="flex-1 min-w-0">
+                        <Link href={`/artist/${artist.id}`} className="font-semibold text-sm truncate hover:text-primary transition-colors">{artist.name}</Link>
+                        <p className="text-xs text-muted-foreground">{artist.genre}</p>
+                      </div>
+                      <p className="text-primary font-bold text-sm shrink-0">
                         {countsLoading ? "—" : artist.votes.toLocaleString()}
                       </p>
-                      <p className="text-xs text-muted-foreground">votes</p>
-                    </div>
-                    <Button
-                      size="sm"
-                      onClick={() => handleVote(artist.id, activeCity)}
-                      className="gradient-brand border-0 text-white rounded-lg h-8 px-3 text-xs font-semibold glow-primary-sm hover:opacity-80"
-                      title="Click to unvote"
-                    >
-                      <ChevronUp className="w-3 h-3 mr-1" />
-                      Voted
-                    </Button>
-                  </div>
-                  <VoteProgress artist={artist} cityVenues={cityVenues} />
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.25} className="mb-6">
-            <div className="glass rounded-xl p-6 text-center">
-              <Music2 className="w-8 h-8 mx-auto mb-3 text-muted-foreground opacity-40" />
-              <p className="text-sm text-muted-foreground mb-3">No votes in {activeCity} yet.</p>
-              <Link href="/explore">
-                <Button size="sm" className="gradient-brand border-0 text-white">
-                  Vote in {activeCity} <ArrowRight className="w-3 h-3 ml-1.5" />
-                </Button>
-              </Link>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Close to a milestone */}
-        {closingInArtists.length > 0 && (
-          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.28} className="mb-6">
-            <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2">
-              <Flame className="w-4 h-4 text-orange-400" /> Close to a milestone
-            </h2>
-            <div className="flex flex-col gap-2">
-              {closingInArtists.map((artist) => {
-                const next = getNextThreshold(artist.votes);
-                const current = getVenueThreshold(artist.votes);
-                const prevVotes = current?.votes ?? 0;
-                const votesNeeded = next ? next.votes - artist.votes : 0;
-                const progress = next ? Math.min(((artist.votes - prevVotes) / (next.votes - prevVotes)) * 100, 100) : 100;
-                const shareUrl = mounted ? `${window.location.origin}/artist/${artist.id}?city=${encodeURIComponent(activeCity)}` : `/artist/${artist.id}`;
-                return (
-                  <div key={artist.id} className="glass rounded-xl px-4 py-3 flex items-center gap-3 border-orange-400/20">
-                    <ArtistAvatar name={artist.name} image={images[artist.name] ?? null} size={40} />
-                    <div className="flex-1 min-w-0">
-                      <Link href={`/artist/${artist.id}`} className="font-semibold text-sm hover:text-primary transition-colors truncate block">{artist.name}</Link>
-                      <p className="text-xs text-orange-400 mt-0.5">{votesNeeded.toLocaleString()} votes to {next?.label}</p>
-                      <div className="h-1 bg-muted rounded-full overflow-hidden mt-1.5">
-                        <div className="h-full rounded-full bg-orange-400/70 transition-all" style={{ width: `${progress}%` }} />
-                      </div>
-                    </div>
-                    <ShareButton
-                      url={shareUrl}
-                      text={`Only ${votesNeeded.toLocaleString()} more votes to get ${artist.name} to ${next?.label} in ${activeCity}! Vote on Summon 🎶`}
-                      label="Share"
-                      size="sm"
-                      variant="ghost"
-                      className="shrink-0 h-8 px-3 rounded-lg glass text-muted-foreground hover:text-foreground text-xs border-0"
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-
-        {/* City leaderboard */}
-        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.3}>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-              {activeCity} Leaderboard
-            </h2>
-            <Link href="/explore">
-              <Button variant="ghost" size="sm" className="text-primary text-xs h-7 px-2">
-                See all <ChevronRight className="w-3 h-3 ml-1" />
-              </Button>
-            </Link>
+                      <Button
+                        size="sm"
+                        onClick={() => handleVote(artist.id, activeCity)}
+                        className={`shrink-0 rounded-lg h-8 px-3 text-xs font-semibold border-0 ${
+                          voted
+                            ? "gradient-brand text-white glow-primary-sm"
+                            : "bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary"
+                        }`}
+                      >
+                        <ChevronUp className="w-3 h-3 mr-1" />
+                        {voted ? "Voted" : "Vote"}
+                      </Button>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
           </div>
-          <div className="flex flex-col gap-2">
-            {cityArtists.map((artist, i) => {
-              const voted = hasVoted(artist.id, activeCity);
-              return (
-                <motion.div
-                  key={artist.id}
-                  initial="hidden"
-                  animate="visible"
-                  variants={fadeUp}
-                  custom={0.32 + i * 0.03}
-                  className={`glass rounded-xl px-4 py-3 flex items-center gap-3 transition-all ${
-                    voted ? "border-primary/25" : ""
-                  }`}
-                >
-                  <span className={`text-sm font-mono w-5 shrink-0 ${i < 3 ? "text-primary font-bold" : "text-muted-foreground"}`}>
-                    {i + 1}
-                  </span>
-                  <ArtistAvatar name={artist.name} image={images[artist.name] ?? null} size={40} />
-                  <div className="flex-1 min-w-0">
-                    <Link href={`/artist/${artist.id}`} className="font-semibold text-sm truncate hover:text-primary transition-colors">{artist.name}</Link>
-                    <p className="text-xs text-muted-foreground">{artist.genre}</p>
-                  </div>
-                  <p className="text-primary font-bold text-sm shrink-0">
-                    {countsLoading ? "—" : artist.votes.toLocaleString()}
-                  </p>
-                  <Button
-                    size="sm"
-                    onClick={() => handleVote(artist.id, activeCity)}
-                    className={`shrink-0 rounded-lg h-8 px-3 text-xs font-semibold border-0 ${
-                      voted
-                        ? "gradient-brand text-white glow-primary-sm"
-                        : "bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary"
-                    }`}
-                  >
-                    <ChevronUp className="w-3 h-3 mr-1" />
-                    {voted ? "Voted" : "Vote"}
-                  </Button>
-                </motion.div>
-              );
-            })}
-          </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

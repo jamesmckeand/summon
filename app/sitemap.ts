@@ -1,6 +1,15 @@
 import type { MetadataRoute } from "next";
 import { CITIES } from "@/lib/data/cities";
+import { ARTISTS } from "@/lib/data/artists";
 import { cityToSlug } from "@/lib/utils/city-slug";
+import { artistToSlug } from "@/lib/utils/artist-slug";
+
+const MAJOR_CITIES = [
+  "London", "New York", "Los Angeles", "Manchester", "Toronto",
+  "Sydney", "Melbourne", "Chicago", "Austin", "Nashville",
+  "Atlanta", "Seattle", "Boston", "San Francisco", "Miami",
+  "Dallas", "Denver", "Berlin", "Amsterdam", "Paris",
+];
 
 const BASE = "https://wesummon.com";
 
@@ -25,5 +34,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "daily" as const,
   }));
 
-  return [...staticRoutes, ...artistRoutes, ...cityRoutes];
+  const liveRoutes: MetadataRoute.Sitemap = ARTISTS.slice(0, 50).flatMap((artist) =>
+    MAJOR_CITIES.map((city) => ({
+      url: `${BASE}/live/${artistToSlug(artist.name)}/${cityToSlug(city)}`,
+      priority: 0.9,
+      changeFrequency: "daily" as const,
+    }))
+  );
+
+  return [...staticRoutes, ...artistRoutes, ...cityRoutes, ...liveRoutes];
 }

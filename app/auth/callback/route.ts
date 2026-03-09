@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { ARTISTS } from "@/lib/data/artists";
 
 // Normalise a name for fuzzy matching (lowercase, strip punctuation)
@@ -95,8 +97,24 @@ export async function GET(request: Request) {
           .eq("id", user.id)
           .single();
 
+        // Credit referral if present (non-fatal — never blocks login)
+        const cookieStore = await cookies();
+        const refCookie = cookieStore.get("summon_ref");
+        if (refCookie?.value && refCookie.value !== user.id) {
+          const admin = createAdminClient();
+          void admin.from("referrals")
+            .insert({ referrer_id: refCookie.value, referred_id: user.id });
+        }
+
         const destination = profile?.city ? next : "/onboarding";
-        return NextResponse.redirect(`${origin}${destination}`);
+        const redirectResponse = NextResponse.redirect(`${origin}${destination}`);
+
+        // Clear the referral cookie after use
+        if (refCookie) {
+          redirectResponse.cookies.delete("summon_ref");
+        }
+
+        return redirectResponse;
       }
       return NextResponse.redirect(`${origin}${next}`);
     }
