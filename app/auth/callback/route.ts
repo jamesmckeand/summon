@@ -55,10 +55,23 @@ async function importAppleMusicTopArtists(userId: string, supabase: Awaited<Retu
   void userId; void supabase;
 }
 
+const ALLOWED_NEXT_PATHS = new Set([
+  "/explore", "/dashboard", "/profile", "/shows", "/cities", "/submit", "/onboarding",
+]);
+
+function safeNext(raw: string | null): string {
+  if (!raw) return "/explore";
+  // Must be a relative path starting with / but not //  (open redirect via //evil.com)
+  if (!raw.startsWith("/") || raw.startsWith("//")) return "/explore";
+  // Allow /artist/*, /cities/* as dynamic sub-paths
+  if (raw.startsWith("/artist/") || raw.startsWith("/cities/")) return raw;
+  return ALLOWED_NEXT_PATHS.has(raw) ? raw : "/explore";
+}
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/explore";
+  const next = safeNext(searchParams.get("next"));
 
   if (code) {
     const supabase = await createClient();
