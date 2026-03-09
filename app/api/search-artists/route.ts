@@ -21,7 +21,7 @@ function allowIp(ip: string): boolean {
 export async function GET(request: Request) {
   const hdrs = await headers();
   const ip = hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  if (!allowIp(ip)) return NextResponse.json({ artists: [] }, { status: 429 });
+  if (!allowIp(ip)) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim();
 

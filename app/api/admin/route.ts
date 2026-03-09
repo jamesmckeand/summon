@@ -1,6 +1,20 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { headers } from "next/headers";
 import { Resend } from "resend";
+
+const adminThrottle = new Map<string, { count: number; resetAt: number }>();
+function allowAdmin(ip: string): boolean {
+  const now = Date.now();
+  const entry = adminThrottle.get(ip);
+  if (!entry || now > entry.resetAt) {
+    adminThrottle.set(ip, { count: 1, resetAt: now + 60_000 });
+    return true;
+  }
+  if (entry.count >= 20) return false;
+  entry.count++;
+  return true;
+}
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -92,6 +106,10 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
+  const hdrs = await headers();
+  const ip = hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  if (!allowAdmin(ip)) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+
   const ctx = await requireAdmin();
   if (!ctx) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 

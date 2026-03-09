@@ -1,5 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { ARTISTS } from "@/lib/data/artists";
+import { CITIES } from "@/lib/data/cities";
+
+const VALID_ARTIST_IDS = new Set(ARTISTS.map((a) => a.id));
+const VALID_CITIES = new Set(CITIES);
 
 export async function GET() {
   const supabase = await createClient();
@@ -28,8 +33,17 @@ export async function PATCH(request: Request) {
     if (key === "username") {
       const trimmed = String(body[key] ?? "").trim().slice(0, 50);
       updates[key] = trimmed || null;
-    } else {
-      updates[key] = body[key];
+    } else if (key === "city") {
+      const city = String(body[key] ?? "").trim();
+      updates[key] = VALID_CITIES.has(city) ? city : null;
+    } else if (key === "favourite_artists") {
+      const ids = Array.isArray(body[key]) ? body[key] : [];
+      updates[key] = ids
+        .filter((id: unknown) => typeof id === "string" && (VALID_ARTIST_IDS.has(id) || /^(da_|dz-)/.test(id)))
+        .slice(0, 200);
+    } else if (key === "favourite_venues") {
+      const venues = Array.isArray(body[key]) ? body[key] : [];
+      updates[key] = venues.filter((v: unknown) => typeof v === "string").slice(0, 50);
     }
   }
 
