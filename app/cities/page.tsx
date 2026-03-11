@@ -47,7 +47,7 @@ export default function CitiesPage() {
       <div className="pt-24 pb-20 px-6 max-w-3xl mx-auto">
 
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0} className="mb-8">
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary/70 mb-2">Live rankings</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/70 mb-2">Live rankings</p>
           <h1 className="text-3xl font-bold tracking-tight">City Leaderboard</h1>
           <p className="mt-1 text-muted-foreground">The most active cities on Summon, ranked by total votes.</p>
         </motion.div>
@@ -68,7 +68,6 @@ export default function CitiesPage() {
             {cities.map((c, i) => {
               const next = getNextThreshold(c.totalVotes);
               const pct = progressPct(c.totalVotes);
-              const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
               return (
                 <motion.div
                   key={c.city}
@@ -80,8 +79,8 @@ export default function CitiesPage() {
                   <Link href={`/explore?city=${encodeURIComponent(c.city)}`}>
                     <div className={`glass rounded-xl p-4 hover:border-primary/20 transition-all group ${i < 3 ? "border-primary/15" : ""}`}>
                       <div className="flex items-center gap-4">
-                        <span className="text-sm font-mono w-7 text-center shrink-0">
-                          {medal ?? <span className="text-muted-foreground">{i + 1}</span>}
+                        <span className={`text-sm font-mono w-7 text-center shrink-0 ${i < 3 ? "font-bold text-primary" : "text-muted-foreground"}`}>
+                          {i + 1}
                         </span>
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform ${i < 3 ? "gradient-brand" : "bg-muted/60"}`}>
                           <MapPin className={`w-4 h-4 ${i < 3 ? "text-white" : "text-muted-foreground"}`} />

@@ -189,45 +189,49 @@ export default function ProfilePage() {
         style={{ background: "radial-gradient(ellipse at top, oklch(0.58 0.22 264 / 40%) 0%, transparent 70%)" }} />
       <div className="pt-24 pb-20 px-6 max-w-2xl mx-auto">
 
-        {/* Header */}
-        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0} className="flex items-center gap-5 mb-8">
-          {user?.user_metadata?.avatar_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={user.user_metadata.avatar_url}
-              alt={displayName}
-              className="w-20 h-20 rounded-2xl object-cover"
-            />
-          ) : (
-            <GradientAvatar name={displayName} />
-          )}
-          <div>
-            <h1 className="text-2xl font-bold">{displayName}</h1>
-            <p className="text-muted-foreground text-sm">{user?.email}</p>
-            {user?.app_metadata?.provider === "spotify" && (
-              <Badge className="mt-1.5 bg-green-500/15 text-green-400 border-green-500/20 text-xs">
-                <Headphones className="w-3 h-3 mr-1" /> Spotify
-              </Badge>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Stats */}
-        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.05} className="grid grid-cols-2 gap-3 mb-8">
-          <div className="glass rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold text-primary">{totalVotes}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Total Votes Cast</p>
-          </div>
-          <div className="glass rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold text-primary">{citiesVotedIn}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Cities Voted In</p>
+        {/* Hero card */}
+        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0} className="mb-8">
+          <div className="card-solid rounded-2xl p-6">
+            <div className="flex items-start gap-5">
+              {user?.user_metadata?.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={user.user_metadata.avatar_url}
+                  alt={displayName}
+                  className="w-20 h-20 rounded-2xl object-cover shrink-0"
+                />
+              ) : (
+                <GradientAvatar name={displayName} />
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="mb-4">
+                  <h1 className="text-2xl font-bold">{displayName}</h1>
+                  <p className="text-muted-foreground text-sm">{user?.email}</p>
+                  {user?.app_metadata?.provider === "spotify" && (
+                    <Badge className="mt-1.5 bg-green-500/15 text-green-400 border-green-500/20 text-xs">
+                      <Headphones className="w-3 h-3 mr-1" /> Spotify
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex gap-6">
+                  <div>
+                    <p className="text-2xl font-extrabold gradient-brand-text tabular-nums leading-none">{totalVotes}</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/70 mt-0.5">Votes Cast</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-extrabold gradient-brand-text tabular-nums leading-none">{citiesVotedIn}</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/70 mt-0.5">Cities</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </motion.div>
 
         {/* Username */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.1} className="glass rounded-2xl p-5 mb-4">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Username</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Username</p>
             {!editingUsername && (
               <button onClick={() => { setEditingUsername(true); setUsernameInput(profile.username ?? ""); }} className="text-muted-foreground hover:text-foreground transition-colors">
                 <Pencil className="w-3.5 h-3.5" />
@@ -258,13 +262,13 @@ export default function ProfilePage() {
 
         {/* Home city */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.15} className="glass rounded-2xl p-5 mb-4 relative z-20">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Home City</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground mb-3">Home City</p>
           <CityDropdown value={profile.city ?? ""} onChange={selectCity} />
         </motion.div>
 
         {/* Favourite venues */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.2} className="glass rounded-2xl p-5 mb-4">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Favourite Venues</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground mb-3">Favourite Venues</p>
           {!profile.city ? (
             <p className="text-sm text-muted-foreground italic">Set your home city first</p>
           ) : (
@@ -301,7 +305,7 @@ export default function ProfilePage() {
         {/* Vote history */}
         {votesByCity.length > 0 && (
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.225} className="glass rounded-2xl p-5 mb-4">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">Vote History</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground mb-4">Vote History</p>
             <div className="flex flex-col gap-5">
               {votesByCity.map(([city, artistIds]) => (
                 <div key={city}>
@@ -348,7 +352,7 @@ export default function ProfilePage() {
 
         {/* Favourite artists */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.25} className="glass rounded-2xl p-5">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Favourite Artists</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground mb-3">Favourite Artists</p>
 
           {profile.favourite_artists.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">

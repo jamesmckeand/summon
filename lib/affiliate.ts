@@ -1,13 +1,18 @@
 /**
  * Affiliate link wrapper.
  *
- * Ticketmaster: via Impact (impact.com) → find Ticketmaster program, create a deep link.
- *   Copy the base tracking URL (e.g. https://ticketmaster.sjv.io/c/{campaignId}/{pubId})
- *   and set TICKETMASTER_IMPACT_URL="https://ticketmaster.sjv.io/c/..." in Vercel env.
- *   We append ?url={encodedDestination} for deep linking.
+ * Ticketmaster: CJ Affiliate (Commission Junction) — apply at ticketmaster.com/affiliates
+ *   Once approved, copy your CJ tracking base URL and set TICKETMASTER_AFFILIATE_URL in Vercel.
+ *   Format: https://www.tkqlhce.com/click-{pubId}-{advId} — we append ?url={encodedDestination}.
  *
- * Songkick: sign up at https://www.awin.com → search "Songkick"
- *   Once approved, set SONGKICK_AFFILIATE_ID="awinAffiliateId" in env
+ * StubHub: Rakuten Advertising — apply at rakutenadvertising.com
+ *   Once approved, set STUBHUB_AFFILIATE_URL in Vercel (same ?url= deep-link pattern).
+ *
+ * SeatGeek: direct — apply at seatgeek.com/partners
+ *   Once approved, set SEATGEEK_AFFILIATE_ID in Vercel.
+ *
+ * Songkick / Viagogo / Eventbrite: Awin — apply at awin.com/us/publishers
+ *   Set SONGKICK_AFFILIATE_ID / VIAGOGO_AWIN_ID / EVENTBRITE_AWIN_ID in Vercel.
  */
 
 export function affiliateUrl(url: string): string {
@@ -17,7 +22,7 @@ export function affiliateUrl(url: string): string {
     const { hostname } = new URL(url);
 
     if (hostname.includes("ticketmaster.com") || hostname.includes("livenation.com")) {
-      const base = process.env.TICKETMASTER_IMPACT_URL;
+      const base = process.env.TICKETMASTER_AFFILIATE_URL;
       if (base) return `${base}?url=${encodeURIComponent(url)}`;
     }
 
@@ -26,10 +31,10 @@ export function affiliateUrl(url: string): string {
       if (id) return `https://www.awin1.com/cread.php?awinmid=6925&awinaffid=${id}&ued=${encodeURIComponent(url)}`;
     }
 
-    // StubHub — Impact marketplace (search "StubHub" once approved)
-    // Set STUBHUB_IMPACT_URL in Vercel when ready
+    // StubHub — Rakuten Advertising (rakutenadvertising.com)
+    // Set STUBHUB_AFFILIATE_URL in Vercel when ready
     if (hostname.includes("stubhub.com")) {
-      const base = process.env.STUBHUB_IMPACT_URL;
+      const base = process.env.STUBHUB_AFFILIATE_URL;
       if (base) return `${base}?url=${encodeURIComponent(url)}`;
     }
 

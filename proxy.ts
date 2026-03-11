@@ -2,6 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 const BYPASS_COOKIE = "summon_preview";
+// UUID format — prevents arbitrary data being stored in the cookie
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -40,6 +42,17 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  // Referral cookie — first touch wins
+  const ref = request.nextUrl.searchParams.get("ref");
+  let refCookieHeader: { name: string; value: string; options: object } | null = null;
+  if (ref && UUID_RE.test(ref) && !request.cookies.get("summon_ref")) {
+    refCookieHeader = {
+      name: "summon_ref",
+      value: ref,
+      options: { httpOnly: true, secure: true, sameSite: "lax" as const, maxAge: 60 * 60 * 24 * 7, path: "/" },
+    };
+  }
+
   // Supabase auth cookie refresh
   let supabaseResponse = NextResponse.next({ request });
 
@@ -65,6 +78,10 @@ export async function proxy(request: NextRequest) {
   );
 
   await supabase.auth.getUser();
+
+  if (refCookieHeader) {
+    supabaseResponse.cookies.set(refCookieHeader.name, refCookieHeader.value, refCookieHeader.options);
+  }
 
   return supabaseResponse;
 }

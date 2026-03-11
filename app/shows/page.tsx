@@ -90,9 +90,9 @@ export default function ShowsPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
 
-    fetch("/api/artist-images")
+    fetch("/artist-images.json")
       .then((r) => r.json())
-      .then((data) => { if (data.images) setImages(data.images); })
+      .then((data) => { if (data && typeof data === "object") setImages(data); })
       .catch(() => {});
 
     // Silently fetch user's favourite artists — ignored if not logged in
@@ -172,7 +172,7 @@ export default function ShowsPage() {
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0} className="mb-8">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-xs font-semibold uppercase tracking-widest text-green-400">Live dates</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.15em] text-green-400">Live dates</span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight">Confirmed Shows</h1>
           <p className="mt-1 text-muted-foreground">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, TrendingUp } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { fadeUp } from "@/lib/animations";
@@ -50,10 +50,10 @@ const STEPS = [
 ];
 
 const TIERS = [
-  { label: "Bar / Club",    votes: 500   },
-  { label: "Theatre",       votes: 2500  },
-  { label: "Concert Hall",  votes: 7500  },
-  { label: "Arena",         votes: 25000 },
+  { label: "Bar / Club",   votes: "500"    },
+  { label: "Theatre",      votes: "2,500"  },
+  { label: "Concert Hall", votes: "7,500"  },
+  { label: "Arena",        votes: "25,000" },
 ];
 
 export default function Home() {
@@ -74,17 +74,6 @@ export default function Home() {
   useEffect(() => {
     createClient().auth.getUser().then(({ data }) => setLoggedIn(!!data.user));
   }, []);
-
-  // Progress toward next tier based on total votes
-  const maxTier = TIERS[TIERS.length - 1].votes;
-  const currentVotes = stats.totalVotes;
-  const nextTier = TIERS.find((t) => t.votes > currentVotes);
-  const prevTierVotes = nextTier
-    ? (TIERS[TIERS.indexOf(nextTier) - 1]?.votes ?? 0)
-    : TIERS[TIERS.length - 2].votes;
-  const progressPct = nextTier
-    ? Math.min(((currentVotes - prevTierVotes) / (nextTier.votes - prevTierVotes)) * 100, 100)
-    : 100;
 
   return (
     <div className="min-h-screen bg-background">
@@ -262,20 +251,12 @@ export default function Home() {
           <div className="absolute top-0 right-0 w-80 h-80 rounded-full pointer-events-none"
             style={{ background: "radial-gradient(ellipse at center, #6366F110 0%, transparent 65%)" }} />
 
-          {/* Header — like the budget card */}
-          <div className="flex items-start justify-between mb-8">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary mb-2">The threshold system</p>
-              <h3 className="text-2xl sm:text-3xl font-bold tracking-tight max-w-xs">
-                Real shows, not just data.
-              </h3>
-            </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20">
-              <TrendingUp className="w-3.5 h-3.5 text-primary" />
-              <span className="text-xs font-bold text-primary tabular-nums">
-                {currentVotes > 0 ? currentVotes.toLocaleString() : "Live"} votes
-              </span>
-            </div>
+          {/* Header */}
+          <div className="mb-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary mb-2">The threshold system</p>
+            <h3 className="text-2xl sm:text-3xl font-bold tracking-tight max-w-xs">
+              Real shows, not just data.
+            </h3>
           </div>
 
           <p className="text-muted-foreground leading-relaxed max-w-lg mb-8 text-sm">
@@ -283,47 +264,23 @@ export default function Home() {
             We match demand to the right sized room — from intimate clubs to full arenas.
           </p>
 
-          {/* Progress bars — budget card style */}
-          <div className="space-y-4">
-            {TIERS.map((t) => {
-              const pct = Math.min((currentVotes / t.votes) * 100, 100);
-              const reached = currentVotes >= t.votes;
-              return (
-                <div key={t.label}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-sm font-medium">{t.label}</span>
-                    <div className="flex items-center gap-2">
-                      {reached && <span className="text-[10px] font-bold text-green-400 uppercase tracking-wider">Reached</span>}
-                      <span className="text-sm font-bold tabular-nums gradient-brand-text">{t.votes.toLocaleString()}</span>
-                    </div>
-                  </div>
-                  <div className="h-2 bg-white/[0.06] rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full gradient-brand rounded-full"
-                      initial={{ width: 0 }}
-                      whileInView={{ width: `${pct}%` }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 1, delay: 0.1, ease: "easeOut" }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+          {/* Venue tier tiles */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {TIERS.map((t, i) => (
+              <motion.div
+                key={t.label}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={fadeUp}
+                custom={i * 0.06}
+                className="rounded-xl p-4 border border-white/7 bg-white/[0.025] text-center"
+              >
+                <p className="text-lg font-extrabold gradient-brand-text tabular-nums">{t.votes}</p>
+                <p className="text-xs text-muted-foreground mt-1">{t.label}</p>
+              </motion.div>
+            ))}
           </div>
-
-          {/* Current progress summary */}
-          {nextTier && currentVotes > 0 && (
-            <div className="mt-6 flex items-center justify-between pt-6 border-t border-white/[0.06]">
-              <div>
-                <p className="text-xs text-muted-foreground">Current</p>
-                <p className="text-lg font-bold tabular-nums">{currentVotes.toLocaleString()} votes</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground">Next milestone</p>
-                <p className="text-lg font-bold tabular-nums gradient-brand-text">{nextTier.votes.toLocaleString()} → {nextTier.label}</p>
-              </div>
-            </div>
-          )}
         </motion.div>
 
         {/* Any artist card */}

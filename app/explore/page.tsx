@@ -156,7 +156,7 @@ export default function ExplorePage() {
       <div className="pt-24 pb-20 px-6 max-w-4xl mx-auto">
         {/* Header */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0} className="mb-8">
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary/70 mb-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/70 mb-2">
             {selectedCity ? selectedCity : `${CITIES.length} cities`}
           </p>
           <h1 className="text-3xl font-bold tracking-tight">Explore Artists</h1>
@@ -178,6 +178,29 @@ export default function ExplorePage() {
             onArtistSearchChange={setArtistSearch}
           />
         </motion.div>
+
+        {/* City Pulse strip */}
+        {selectedCity && (
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.08}
+            className="card-solid rounded-2xl p-4 mb-5">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/70 mb-1">{selectedCity} pulse</p>
+                <p className="text-2xl sm:text-3xl font-extrabold gradient-brand-text tabular-nums leading-none">
+                  {Object.values(counts).reduce((s, v) => s + v, 0).toLocaleString()}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">total votes</p>
+              </div>
+              {filteredArtists[0] && (
+                <div className="text-right">
+                  <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/70 mb-1">Leading</p>
+                  <p className="font-bold text-sm">{filteredArtists[0].name}</p>
+                  <p className="text-xs text-muted-foreground">{filteredArtists[0].votes.toLocaleString()} votes</p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
 
         {/* No city prompt */}
         {!selectedCity && (
@@ -223,7 +246,7 @@ export default function ExplorePage() {
         {/* Connect music banner */}
         {forYouArtists.length === 0 && (
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.08}
-            className="mb-5 glass rounded-xl p-4 flex items-center gap-4 border-primary/15">
+            className="mb-5 card-solid rounded-2xl p-4 flex items-center gap-4">
             <div className="w-9 h-9 rounded-xl gradient-brand flex items-center justify-center shrink-0">
               <Music2 className="w-4 h-4 text-white" />
             </div>

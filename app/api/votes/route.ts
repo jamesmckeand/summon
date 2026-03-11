@@ -1,10 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { Resend } from "resend";
 import { ARTISTS } from "@/lib/data/artists";
 import { CITIES } from "@/lib/data/cities";
 import { getVenuesForCity } from "@/lib/data/venues";
+import { sendPush } from "@/lib/apns";
+import { sendAutomatedOutreach } from "@/lib/outreach";
 
 const VALID_ARTIST_IDS = new Set(ARTISTS.map((a) => a.id));
 const VALID_CITIES = new Set(CITIES);
@@ -279,6 +282,20 @@ export async function POST(request: Request) {
         }
         sendOutreachAlert(artistName, city, after, crossed.tier, crossed.label)
           .catch(() => {});
+        // Auto-email matching promoters directly
+        sendAutomatedOutreach(artistId, artistName, city, after, crossed.tier, crossed.label)
+          .catch(() => {});
+        // Push notification to voter
+        void createAdminClient()
+          .from("push_tokens").select("token").eq("user_id", user.id).eq("platform", "ios").single()
+          .then(({ data }) => {
+            if (data?.token) {
+              void sendPush(data.token, {
+                title: `${artistName} hit ${after.toLocaleString()} votes in ${city} 🎉`,
+                body: "You helped make this happen. We're reaching out to promoters now.",
+              });
+            }
+          });
       }
     }
 

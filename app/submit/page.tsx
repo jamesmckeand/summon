@@ -48,6 +48,7 @@ export default function SubmitPage() {
       <div className="pt-24 pb-20 px-6 max-w-xl mx-auto">
 
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0} className="mb-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/70 mb-2">Community</p>
           <h1 className="text-3xl font-bold tracking-tight">Suggest an addition</h1>
           <p className="text-muted-foreground mt-1">
             Know an artist or venue we're missing? Let us know — we review every submission.
