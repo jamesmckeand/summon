@@ -7,7 +7,7 @@ import { ARTISTS } from "@/lib/data/artists";
 import { CITIES } from "@/lib/data/cities";
 import { getVenuesForCity } from "@/lib/data/venues";
 import { sendPush } from "@/lib/apns";
-import { sendAutomatedOutreach } from "@/lib/outreach";
+import { sendAutomatedOutreach, queueArtistContactOutreach } from "@/lib/outreach";
 
 const VALID_ARTIST_IDS = new Set(ARTISTS.map((a) => a.id));
 const VALID_CITIES = new Set(CITIES);
@@ -285,6 +285,9 @@ export async function POST(request: Request) {
         // Auto-email matching promoters directly
         sendAutomatedOutreach(artistId, artistName, city, after, crossed.tier, crossed.label)
           .catch(() => {});
+        // Queue artist booking/manager contact for outreach
+        queueArtistContactOutreach(artistId, artistName, city, after, crossed.tier, crossed.label)
+          .catch(() => {});
         // Push notification to voter
         void createAdminClient()
           .from("push_tokens").select("token").eq("user_id", user.id).eq("platform", "ios").single()
@@ -304,15 +307,27 @@ export async function POST(request: Request) {
     const warning = THRESHOLDS.find(
       (t) => before < t.votes - WARNING_DISTANCE && after >= t.votes - WARNING_DISTANCE && after < t.votes
     );
-    if (warning && user.email) {
+    if (warning) {
       const staticArtist = ARTISTS.find((a) => a.id === artistId);
       const artistName = staticArtist?.name ?? (await (async () => {
         const { data } = await supabase.from("live_artists").select("name").eq("id", artistId).single();
         return data?.name;
       })());
       if (artistName) {
-        sendWarningEmail(user.email, artistName, city, after, warning.votes - after, warning.label)
-          .catch(() => {});
+        if (user.email) {
+          sendWarningEmail(user.email, artistName, city, after, warning.votes - after, warning.label)
+            .catch(() => {});
+        }
+        // Pre-fetch booking contact so it's ready when threshold is crossed
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wesummon.com";
+        fetch(`${siteUrl}/api/admin/lookup-artist-contact`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-cron-secret": process.env.CRON_SECRET ?? "",
+          },
+          body: JSON.stringify({ artistId, artistName }),
+        }).catch(() => {});
       }
     }
   }

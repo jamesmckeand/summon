@@ -4,6 +4,102 @@ import { createAdminClient } from "@/lib/supabase/admin";
 const resend = new Resend(process.env.RESEND_API_KEY);
 const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wesummon.com";
 
+// When an artist hits a threshold, look up their booking contact and queue outreach
+export async function queueArtistContactOutreach(
+  artistId: string,
+  artistName: string,
+  city: string,
+  voteCount: number,
+  tier: string,
+  tierLabel: string,
+) {
+  const admin = createAdminClient();
+
+  // Look up artist contact info
+  const { data: contact } = await admin
+    .from("artist_contacts")
+    .select("manager_name, manager_email, booking_agent_name, booking_agent_email, agency")
+    .eq("artist_id", artistId)
+    .eq("active", true)
+    .single();
+
+  // If no contact found yet, trigger async lookup (fire-and-forget)
+  if (!contact) {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wesummon.com";
+    fetch(`${siteUrl}/api/admin/lookup-artist-contact`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-cron-secret": process.env.CRON_SECRET ?? "",
+      },
+      body: JSON.stringify({ artistId, artistName }),
+    }).catch(() => {});
+  }
+
+  // Add to log (deduped by artist/city/threshold unique index)
+  const { error } = await admin
+    .from("artist_contact_log")
+    .insert({
+      artist_id:           artistId,
+      artist_name:         artistName,
+      city,
+      threshold:           voteCount,
+      tier,
+      vote_count:          voteCount,
+      manager_name:        contact?.manager_name ?? null,
+      manager_email:       contact?.manager_email ?? null,
+      booking_agent_name:  contact?.booking_agent_name ?? null,
+      booking_agent_email: contact?.booking_agent_email ?? null,
+      agency:              contact?.agency ?? null,
+      status:              "new",
+    });
+
+  // Duplicate — already logged, skip
+  if (error?.code === "23505") return;
+
+  // Send internal alert so you know a contact is queued
+  const demandUrl = `${BASE}/live/${artistId}/${city.toLowerCase().replace(/\s+/g, "-")}`;
+  const hasContact = contact?.booking_agent_email || contact?.manager_email;
+
+  await resend.emails.send({
+    from: "Summon <hello@wesummon.com>",
+    to: "hello@wesummon.com",
+    subject: `🎤 Artist contact queued: ${artistName} hit ${voteCount.toLocaleString()} votes in ${city}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0a0a0a;color:#f0f0f0;border-radius:12px">
+        <h2 style="margin:0 0 4px;font-size:20px;color:#fff">Artist contact queued</h2>
+        <p style="color:#aaa;margin:0 0 24px;font-size:14px">${artistName} just hit the <strong style="color:#fff">${tierLabel}</strong> threshold in ${city}.</p>
+
+        <div style="background:#1a1a1a;border-radius:8px;padding:16px;margin-bottom:16px">
+          <p style="margin:0;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.05em">Artist · City · Votes</p>
+          <p style="margin:4px 0 0;font-size:18px;font-weight:700;color:#fff">${artistName}</p>
+          <p style="margin:4px 0 0;font-size:14px;color:#a78bfa">${city} · ${voteCount.toLocaleString()} votes (${tierLabel})</p>
+        </div>
+
+        ${hasContact ? `
+        <div style="background:#0d1a0d;border:1px solid #1a4a1a;border-radius:8px;padding:16px;margin-bottom:20px">
+          <p style="margin:0 0 10px;font-size:12px;color:#4ade80;text-transform:uppercase;letter-spacing:.05em">Contact found</p>
+          ${contact?.booking_agent_name ? `<p style="margin:0 0 4px;font-size:14px;color:#d4d4d4"><strong>Booking Agent:</strong> ${contact.booking_agent_name}${contact?.agency ? ` (${contact.agency})` : ""}</p>` : ""}
+          ${contact?.booking_agent_email ? `<p style="margin:0 0 8px;font-size:14px;color:#a78bfa"><a href="mailto:${contact.booking_agent_email}" style="color:#a78bfa">${contact.booking_agent_email}</a></p>` : ""}
+          ${contact?.manager_name ? `<p style="margin:0 0 4px;font-size:14px;color:#d4d4d4"><strong>Manager:</strong> ${contact.manager_name}</p>` : ""}
+          ${contact?.manager_email ? `<p style="margin:0;font-size:14px;color:#a78bfa"><a href="mailto:${contact.manager_email}" style="color:#a78bfa">${contact.manager_email}</a></p>` : ""}
+        </div>
+        ` : `
+        <div style="background:#1a0d0d;border:1px solid #4a1a1a;border-radius:8px;padding:14px;margin-bottom:20px">
+          <p style="margin:0;font-size:13px;color:#f87171">No contact found for ${artistName} yet. Add one in the Supabase artist_contacts table.</p>
+        </div>
+        `}
+
+        <a href="${demandUrl}" style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px">
+          View demand data →
+        </a>
+
+        <p style="color:#444;font-size:11px;margin-top:24px">Summon internal alert · <a href="https://wesummon.com" style="color:#444">wesummon.com</a></p>
+      </div>
+    `,
+  });
+}
+
 // Maps threshold tier names to promoters.venue_type values
 const TIER_TO_VENUE_TYPE: Record<string, string[]> = {
   bar:         ["bar", "club"],
