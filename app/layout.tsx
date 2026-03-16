@@ -30,6 +30,8 @@ export const metadata: Metadata = {
     "format-detection": "telephone=no",
     // Impact affiliate verification
     "impact-site-verification": "af545394-acc4-447e-9682-c5fa96320e23",
+    // Facebook domain verification
+    "facebook-domain-verification": "rh87big5y4z9kslw3j14cgpvz0ohqe",
   },
 };
 
