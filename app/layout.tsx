@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     "apple-mobile-web-app-title": "Summon",
     "format-detection": "telephone=no",
     // Impact affiliate verification
-    "impact-site-verification": "af545394-acc4-447e-9682-c5fa96320e23",
+    "impact-site-verification": "eaaf7ebc-6448-4f14-be83-ee60a75365ce",
     // Facebook domain verification
     "facebook-domain-verification": "rh87big5y4z9kslw3j14cgpvz0ohqe",
   },
