@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Music2, ChevronUp, MapPin } from "lucide-react";
+import { Music2, ChevronUp, MapPin, TrendingUp, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fadeUp } from "@/lib/animations";
 import { ARTISTS } from "@/lib/data/artists";
@@ -12,6 +12,7 @@ import { useVoteCounts } from "@/hooks/useVoteCounts";
 import { useVoteStore } from "@/lib/store/votes";
 import { createClient } from "@/lib/supabase/client";
 import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 import ArtistAvatar from "@/components/ArtistAvatar";
 import AuthModal from "@/components/AuthModal";
 import AppleMusicConnect from "@/components/AppleMusicConnect";
@@ -27,11 +28,13 @@ export default function ExplorePage() {
   const [confirmedShows, setConfirmedShows] = useState<Record<string, boolean>>({});
   const [forYouArtists, setForYouArtists] = useState<typeof ARTISTS>([]);
   const [authedUser, setAuthedUser] = useState(false);
+  const [showTrending, setShowTrending] = useState(false);
   const [visibleCount, setVisibleCount] = useState(50);
   const [recentlyVoted, setRecentlyVoted] = useState<string | null>(null);
   const [voteError, setVoteError] = useState<string | null>(null);
   const [pendingVote, setPendingVote] = useState<{ artistId: string; city: string } | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [hideBanner, setHideBanner] = useState(false);
 
   type DeezerArtist = { id: string; deezerId: number; name: string; image: string | null };
   const [deezerResults, setDeezerResults] = useState<DeezerArtist[]>([]);
@@ -43,7 +46,10 @@ export default function ExplorePage() {
   const [selectedCity, setSelectedCity] = useState(activeCity);
   const { counts, loading: countsLoading } = useVoteCounts(selectedCity);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+    if (localStorage.getItem("summon-hide-connect-banner") === "1") setHideBanner(true);
+  }, []);
   useEffect(() => { createClient().auth.getUser().then(({ data }) => setAuthedUser(!!data.user)); }, []);
 
   // Auto-cast pending vote after magic-link sign-in
@@ -70,11 +76,15 @@ export default function ExplorePage() {
     }
   }, [setActiveCity]);
 
+  // Sync activeCity from store (set async via IP detection in Nav) into selectedCity
   useEffect(() => {
-    fetch("/api/spotify-top-artists")
-      .then((r) => r.json())
-      .then((data) => { if (Array.isArray(data.artists)) setForYouArtists(data.artists); })
-      .catch(() => {});
+    if (activeCity && !selectedCity) {
+      setSelectedCity(activeCity);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCity]);
+
+  useEffect(() => {
     fetch("/api/live-artists")
       .then((r) => r.json())
       .then((data) => { if (Array.isArray(data.artists)) setLiveArtists(data.artists); })
@@ -107,9 +117,10 @@ export default function ExplorePage() {
         return matchSearch && matchGenre;
       })
       .map((a) => ({ ...a, trending: a.votes >= hotThreshold }))
+      .filter((a) => !showTrending || a.trending)
       .sort((a, b) => b.votes - a.votes);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [artistSearch, selectedGenre, selectedCity, counts, liveArtists]);
+  }, [artistSearch, selectedGenre, selectedCity, counts, liveArtists, showTrending]);
 
   // Deezer search — fires only when no static/live results match
   useEffect(() => {
@@ -185,7 +196,7 @@ export default function ExplorePage() {
             className="card-solid rounded-2xl p-4 mb-5">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/70 mb-1">{selectedCity} pulse</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/70 mb-1">{selectedCity} demand</p>
                 <p className="text-2xl sm:text-3xl font-extrabold gradient-brand-text tabular-nums leading-none">
                   {Object.values(counts).reduce((s, v) => s + v, 0).toLocaleString()}
                 </p>
@@ -233,50 +244,33 @@ export default function ExplorePage() {
           </div>
         )}
 
-        {/* Result count */}
-        <motion.p initial="hidden" animate="visible" variants={fadeUp} custom={0.1} className="text-xs text-muted-foreground mb-4">
-          {artistSearch.trim().length === 1
-            ? "Keep typing to search…"
-            : `${filteredArtists.length} artists${selectedCity ? ` · sorted by votes in ${selectedCity}` : " · select a city to see local rankings"}`}
-          {selectedGenre !== "All" && (
-            <span> · <button onClick={() => setSelectedGenre("All")} className="text-primary hover:underline">{selectedGenre} ×</button></span>
-          )}
-        </motion.p>
-
         {/* Connect music banner */}
-        {forYouArtists.length === 0 && (
+        {forYouArtists.length === 0 && !hideBanner && (
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.08}
-            className="mb-5 card-solid rounded-2xl p-4 flex items-center gap-4">
-            <div className="w-9 h-9 rounded-xl gradient-brand flex items-center justify-center shrink-0">
-              <Music2 className="w-4 h-4 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold">Connect your music</p>
-              <p className="text-xs text-muted-foreground mt-0.5">See artists from your library and get personalised picks.</p>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <AppleMusicConnect
-                label="Apple Music"
-                onArtists={(artists) =>
-                  setForYouArtists((prev) => [...prev, ...artists.filter((a) => !prev.some((p) => p.id === a.id))])
-                }
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/8 hover:bg-white/15 text-xs font-semibold text-foreground transition-colors border border-border/40 whitespace-nowrap"
-              />
+            className="mb-5 card-solid rounded-2xl p-4">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl gradient-brand flex items-center justify-center shrink-0 mt-0.5">
+                <Music2 className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold">Connect your music</p>
+                <p className="text-xs text-muted-foreground mt-0.5">See artists from your library and get personalised picks.</p>
+                <div className="flex flex-wrap items-center gap-2 mt-3">
+                  <AppleMusicConnect
+                    label="Apple Music"
+                    onArtists={(artists) =>
+                      setForYouArtists((prev) => [...prev, ...artists.filter((a) => !prev.some((p) => p.id === a.id))])
+                    }
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/8 hover:bg-white/15 text-xs font-semibold text-foreground transition-colors border border-border/40"
+                  />
+                </div>
+              </div>
               <button
-                onClick={async () => {
-                  if (authedUser) {
-                    const supabase = createClient();
-                    await supabase.auth.linkIdentity({ provider: "spotify", options: { redirectTo: `${window.location.origin}/auth/callback`, scopes: "user-read-email user-read-private user-top-read" } });
-                  } else {
-                    window.location.href = "/login";
-                  }
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1DB954]/15 hover:bg-[#1DB954]/25 text-xs font-semibold text-[#1DB954] transition-colors border border-[#1DB954]/30 whitespace-nowrap"
+                onClick={() => { setHideBanner(true); localStorage.setItem("summon-hide-connect-banner", "1"); }}
+                className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/8 transition-colors"
+                aria-label="Dismiss"
               >
-                <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-                </svg>
-                Connect Spotify
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
           </motion.div>
@@ -322,6 +316,29 @@ export default function ExplorePage() {
             </div>
           </motion.div>
         )}
+
+        {/* Result count */}
+        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.1} className="flex items-center justify-between gap-3 mb-4">
+          <p className="text-xs text-muted-foreground">
+            {artistSearch.trim().length === 1
+              ? "Keep typing to search…"
+              : `${filteredArtists.length} artists${selectedCity ? ` · sorted by votes in ${selectedCity}` : " · select a city to see local rankings"}`}
+            {selectedGenre !== "All" && (
+              <span> · <button onClick={() => setSelectedGenre("All")} className="text-primary hover:underline">{selectedGenre} ×</button></span>
+            )}
+          </p>
+          <button
+            onClick={() => setShowTrending((v) => !v)}
+            className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+              showTrending
+                ? "bg-primary/20 text-primary border-primary/30"
+                : "glass text-muted-foreground hover:text-foreground border-border/40"
+            }`}
+          >
+            <TrendingUp className="w-3 h-3" />
+            Trending
+          </button>
+        </motion.div>
 
         {/* Artist list */}
         <div className="flex flex-col gap-3">
@@ -391,10 +408,7 @@ export default function ExplorePage() {
                       <ArtistAvatar name={artist.name} image={artist.image} size={48} />
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm">{artist.name}</p>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                          <Music2 className="w-3 h-3" />
-                          Music
-                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Search result</p>
                       </div>
                       <Button
                         size="sm"
@@ -422,6 +436,7 @@ export default function ExplorePage() {
         onClose={() => { setShowAuthModal(false); setPendingVote(null); }}
         pendingVote={pendingVote}
       />
+      <Footer />
     </div>
   );
 }

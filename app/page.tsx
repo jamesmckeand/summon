@@ -8,20 +8,10 @@ import Link from "next/link";
 import { fadeUp } from "@/lib/animations";
 import Marquee from "@/components/Marquee";
 import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 import { ARTISTS } from "@/lib/data/artists";
 import { CITIES } from "@/lib/data/cities";
 import { createClient } from "@/lib/supabase/client";
-
-async function signInWithSpotify() {
-  const supabase = createClient();
-  await supabase.auth.signInWithOAuth({
-    provider: "spotify",
-    options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
-      scopes: "user-read-email user-read-private user-top-read",
-    },
-  });
-}
 
 async function signInWithApple() {
   const supabase = createClient();
@@ -35,7 +25,7 @@ const STEPS = [
   {
     n: "01",
     title: "Sign up free",
-    body: "Create your account with Spotify or email in seconds. No credit card needed.",
+    body: "Create your account with Apple or email in seconds. No credit card needed.",
   },
   {
     n: "02",
@@ -92,7 +82,7 @@ export default function Home() {
         <div className="anim-fade-up flex items-center gap-2 mb-8" style={{ animationDelay: "0.1s" }}>
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.03] text-xs font-medium text-muted-foreground tracking-wide">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse inline-block" />
-            Live music demand · {stats.cityCount} cities
+            Live music demand
           </span>
         </div>
 
@@ -139,16 +129,6 @@ export default function Home() {
             <>
               <Button
                 size="lg"
-                onClick={signInWithSpotify}
-                className="h-12 px-7 rounded-xl bg-[#1DB954] hover:bg-[#1aa34a] text-black font-semibold border-0 text-sm w-full sm:w-auto"
-              >
-                <svg className="w-4 h-4 mr-2 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-                </svg>
-                Continue with Spotify
-              </Button>
-              <Button
-                size="lg"
                 onClick={signInWithApple}
                 className="h-12 px-7 rounded-xl bg-white hover:bg-gray-100 text-black font-semibold border-0 text-sm w-full sm:w-auto"
               >
@@ -181,7 +161,7 @@ export default function Home() {
           style={{ animationDelay: "0.54s" }}
         >
           {[
-            { value: "1M+",                                                               label: "Artists",    sub: "searchable"  },
+            { value: "1M+",                                                               label: "Artists",    sub: "on demand"   },
             { value: `${stats.cityCount}+`,                                               label: "Cities",     sub: "worldwide"   },
             { value: stats.totalVotes > 0 ? stats.totalVotes.toLocaleString() : "—",     label: "Votes cast", sub: "and growing"  },
           ].map((s) => (
@@ -205,7 +185,7 @@ export default function Home() {
       {/* ── HOW IT WORKS ── */}
       <section className="px-6 py-32 max-w-5xl mx-auto">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="mb-16">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary mb-4">How it works</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/70 mb-4">How it works</p>
           <h2 className="text-4xl sm:text-5xl font-bold tracking-tight leading-tight max-w-xl">
             Three steps to a show<br />in your city.
           </h2>
@@ -239,7 +219,7 @@ export default function Home() {
       </section>
 
       {/* ── VENUE TIERS — budget card style ── */}
-      <section className="px-6 pb-32 max-w-5xl mx-auto">
+      <section className="px-6 pb-16 max-w-5xl mx-auto">
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -253,7 +233,7 @@ export default function Home() {
 
           {/* Header */}
           <div className="mb-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary mb-2">The threshold system</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/70 mb-2">The threshold system</p>
             <h3 className="text-2xl sm:text-3xl font-bold tracking-tight max-w-xs">
               Real shows, not just data.
             </h3>
@@ -295,7 +275,7 @@ export default function Home() {
           <Link href="/explore">
             <div className="card-solid rounded-2xl p-7 flex items-center gap-5 hover:border-primary/20 transition-colors group cursor-pointer">
               <div className="flex-1">
-                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary mb-2">Any artist</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/70 mb-2">Any artist</p>
                 <h3 className="font-bold text-xl tracking-tight mb-1.5">Millions of artists. Instantly.</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
                   Can&apos;t find your favourite act? Search on the explore page — we pull from millions of artists and add them to the vote immediately.
@@ -310,7 +290,7 @@ export default function Home() {
       </section>
 
       {/* ── FINAL CTA ── */}
-      <section className="px-6 py-32 text-center relative overflow-hidden">
+      <section className="px-6 py-24 text-center relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none"
           style={{ background: "radial-gradient(ellipse 80% 50% at 50% 50%, #6366F10C 0%, transparent 70%)" }} />
         <motion.div
@@ -337,26 +317,16 @@ export default function Home() {
                 Start voting now <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
             </Link>
-            <Link href="/explore">
+            <Link href={loggedIn ? "/dashboard" : "/explore"}>
               <Button size="lg" variant="outline" className="border-white/10 bg-white/[0.03] hover:bg-white/[0.06] font-medium text-base h-12 rounded-xl px-8">
-                Browse artists
+                {loggedIn ? "My dashboard" : "Browse artists"}
               </Button>
             </Link>
           </div>
         </motion.div>
       </section>
 
-      {/* ── FOOTER ── */}
-      <footer className="px-8 py-8 border-t border-white/7 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-        <span className="font-bold gradient-brand-text">Summon</span>
-        <div className="flex items-center gap-5">
-          <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
-          <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
-          <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
-          <a href="mailto:hello@wesummon.com" className="hover:text-foreground transition-colors">Contact</a>
-        </div>
-        <p>© 2026 Summon.</p>
-      </footer>
+      <Footer />
     </div>
   );
 }
