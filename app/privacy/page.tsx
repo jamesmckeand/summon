@@ -25,19 +25,46 @@ export default function PrivacyPage() {
           </section>
           <section>
             <h2 className="text-base font-semibold text-foreground mb-2">Third-party services</h2>
-            <p>We use Supabase for authentication and data storage, Vercel for hosting, and Resend for email delivery. Each operates under their own privacy policies.</p>
+            <p className="mb-2">We use the following third-party services, each operating under their own privacy policies:</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li><strong>Supabase</strong> — authentication and database (supabase.com/privacy)</li>
+              <li><strong>Vercel</strong> — hosting and edge functions (vercel.com/legal/privacy-policy)</li>
+              <li><strong>Resend</strong> — transactional email delivery (resend.com/legal/privacy-policy)</li>
+              <li><strong>Stripe</strong> — payment processing for Superfan subscriptions. Stripe may collect payment card data, billing address, and device identifiers. We do not store card details. (stripe.com/privacy)</li>
+              <li><strong>Sentry</strong> — crash reporting and error tracking. Sentry may collect device information, IP address, and stack traces when errors occur. (sentry.io/privacy)</li>
+              <li><strong>Deezer</strong> — artist image data fetched from the Deezer public API. No personal data is shared with Deezer. (deezer.com/legal/personal-datas)</li>
+              <li><strong>Apple Push Notification Service (APNs)</strong> — used to deliver push notifications to iOS devices. Device tokens are stored to enable notification delivery and deleted when you disable push notifications or delete your account.</li>
+            </ul>
           </section>
           <section>
             <h2 className="text-base font-semibold text-foreground mb-2">Spotify &amp; Apple Music</h2>
             <p>If you connect Spotify or Apple Music, we access your top artists to personalise the explore page. We do not store this data beyond your session.</p>
           </section>
           <section>
+            <h2 className="text-base font-semibold text-foreground mb-2">Push notifications</h2>
+            <p>If you enable push notifications, we store a device token provided by Apple (APNs) to send you alerts when vote thresholds are crossed. You can disable push notifications at any time in Settings. Tokens are deleted when you delete your account.</p>
+          </section>
+          <section>
+            <h2 className="text-base font-semibold text-foreground mb-2">Data collected</h2>
+            <p className="mb-2">We collect and process the following categories of data:</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Email address (for authentication and notifications)</li>
+              <li>Name (from social sign-in providers, optional)</li>
+              <li>Username (chosen by you, displayed on leaderboards)</li>
+              <li>City preference (for vote filtering)</li>
+              <li>Vote activity (artist + city combinations you vote for)</li>
+              <li>Device push token (if push notifications are enabled)</li>
+              <li>IP address (for rate limiting — not stored persistently)</li>
+              <li>Crash and error data (via Sentry, for app stability)</li>
+            </ul>
+          </section>
+          <section>
             <h2 className="text-base font-semibold text-foreground mb-2">Your rights</h2>
-            <p>You can delete your account and all associated data at any time by emailing <a href="mailto:hello@wesummon.com" className="text-primary hover:underline">hello@wesummon.com</a>.</p>
+            <p>You can delete your account and all associated data at any time from the Settings page or by emailing <a href="mailto:hello@wesummon.com" className="text-primary hover:underline">hello@wesummon.com</a>. We will action deletion requests within 30 days.</p>
           </section>
           <section>
             <h2 className="text-base font-semibold text-foreground mb-2">Cookies</h2>
-            <p>We use cookies only for authentication purposes. We do not use tracking or advertising cookies.</p>
+            <p>We use cookies only for authentication purposes (session management). We do not use tracking, advertising, or analytics cookies.</p>
           </section>
           <section>
             <h2 className="text-base font-semibold text-foreground mb-2">Contact</h2>

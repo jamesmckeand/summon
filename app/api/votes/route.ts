@@ -8,23 +8,10 @@ import { CITIES } from "@/lib/data/cities";
 import { getVenuesForCity } from "@/lib/data/venues";
 import { sendPush } from "@/lib/apns";
 import { sendAutomatedOutreach, queueArtistContactOutreach } from "@/lib/outreach";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const VALID_ARTIST_IDS = new Set(ARTISTS.map((a) => a.id));
 const VALID_CITIES = new Set(CITIES);
-
-// IP rate limit: max 30 vote actions per IP per minute
-const ipThrottle = new Map<string, { count: number; resetAt: number }>();
-function allowIp(ip: string): boolean {
-  const now = Date.now();
-  const entry = ipThrottle.get(ip);
-  if (!entry || now > entry.resetAt) {
-    ipThrottle.set(ip, { count: 1, resetAt: now + 60_000 });
-    return true;
-  }
-  if (entry.count >= 30) return false;
-  entry.count++;
-  return true;
-}
 
 const THRESHOLDS = [
   { votes: 500,   tier: "bar" as const,         label: "Bar / Club" },
@@ -253,7 +240,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const hdrs = await headers();
   const ip = hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  if (!allowIp(ip)) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  if (!await checkRateLimit(`votes:${ip}`, 30, 60)) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

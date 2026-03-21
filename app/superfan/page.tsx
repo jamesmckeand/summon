@@ -172,7 +172,7 @@ export default function SuperfanPage() {
           )}
 
           <p className="text-xs text-muted-foreground mt-3 text-center">
-            Payments processed securely by Stripe.
+            Payments processed securely by Stripe. Cancel anytime.
           </p>
 
           <div className="flex justify-center gap-6 mt-5">
@@ -182,6 +182,20 @@ export default function SuperfanPage() {
             <Link href="/explore" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Explore artists
             </Link>
+          </div>
+
+          <div className="flex justify-center gap-4 mt-4">
+            <Link href="/privacy" className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors">
+              Privacy Policy
+            </Link>
+            <span className="text-xs text-muted-foreground/30">·</span>
+            <Link href="/terms" className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors">
+              Terms of Service
+            </Link>
+            <span className="text-xs text-muted-foreground/30">·</span>
+            <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors">
+              EULA
+            </a>
           </div>
         </motion.div>
       </div>

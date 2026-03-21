@@ -2,26 +2,9 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-
-// In-memory IP throttle — 3 submissions per IP per hour.
-// Resets on cold start but good enough to stop scripted abuse.
-const ipThrottle = new Map<string, { count: number; resetAt: number }>();
-const IP_MAX = 3;
-const IP_WINDOW_MS = 60 * 60 * 1000;
-
-function allowIp(ip: string): boolean {
-  const now = Date.now();
-  const entry = ipThrottle.get(ip);
-  if (!entry || now > entry.resetAt) {
-    ipThrottle.set(ip, { count: 1, resetAt: now + IP_WINDOW_MS });
-    return true;
-  }
-  if (entry.count >= IP_MAX) return false;
-  entry.count++;
-  return true;
-}
 
 export async function POST(req: Request) {
   const { email } = await req.json();
@@ -29,10 +12,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid email" }, { status: 400 });
   }
 
-  // IP rate limit
+  // IP rate limit — 3 submissions per IP per hour
   const headersList = await headers();
   const ip = headersList.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
-  if (!allowIp(ip)) {
+  if (!await checkRateLimit(`waitlist:${ip}`, 3, 3600)) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
