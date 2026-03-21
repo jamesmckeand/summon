@@ -16,21 +16,21 @@ export default function Footer() {
           {/* Link columns */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 text-xs text-muted-foreground">
             <div className="flex flex-col gap-3">
-              <p className="font-semibold text-foreground/50 uppercase tracking-[0.1em] text-[10px]">Discover</p>
+              <p className="font-semibold text-foreground/50 uppercase tracking-[0.1em] text-xs">Discover</p>
               <Link href="/cities" className="hover:text-foreground transition-colors">Cities</Link>
               <Link href="/shows" className="hover:text-foreground transition-colors">Shows</Link>
               <Link href="/explore" className="hover:text-foreground transition-colors">Explore</Link>
               <Link href="/leaderboard" className="hover:text-foreground transition-colors">Leaderboard</Link>
             </div>
             <div className="flex flex-col gap-3">
-              <p className="font-semibold text-foreground/50 uppercase tracking-[0.1em] text-[10px]">Company</p>
+              <p className="font-semibold text-foreground/50 uppercase tracking-[0.1em] text-xs">Company</p>
               <Link href="/help" className="hover:text-foreground transition-colors">Help</Link>
               <Link href="/submit" className="hover:text-foreground transition-colors">Suggest an artist</Link>
               <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
               <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
             </div>
             <div className="flex flex-col gap-3">
-              <p className="font-semibold text-foreground/50 uppercase tracking-[0.1em] text-[10px]">Contact</p>
+              <p className="font-semibold text-foreground/50 uppercase tracking-[0.1em] text-xs">Contact</p>
               <a href="mailto:hello@wesummon.com" className="hover:text-foreground transition-colors">hello@wesummon.com</a>
             </div>
           </div>

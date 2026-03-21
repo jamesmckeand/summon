@@ -168,7 +168,7 @@ export default function Home() {
             <div key={s.label} className="card-solid rounded-2xl p-4 text-center flex flex-col gap-1">
               <p className="text-xl sm:text-2xl font-extrabold gradient-brand-text tabular-nums leading-none">{s.value}</p>
               <p className="text-xs font-semibold text-foreground">{s.label}</p>
-              <p className="text-[10px] text-muted-foreground">{s.sub}</p>
+              <p className="text-xs text-muted-foreground">{s.sub}</p>
             </div>
           ))}
         </div>

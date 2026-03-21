@@ -45,22 +45,25 @@ export default function ExploreFilters({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {/* City */}
         <div className="relative" ref={cityRef}>
-          <div
-            className={`glass rounded-xl px-4 py-3 flex items-center gap-3 cursor-pointer transition-colors h-11 ${
+          <button
+            className={`glass rounded-xl px-4 py-3 flex items-center gap-3 w-full transition-colors h-11 ${
               !selectedCity
                 ? "border-primary/30 hover:border-primary/50 bg-primary/5"
                 : "hover:border-primary/30"
             }`}
             onClick={() => { setShowCity((v) => !v); setShowGenre(false); }}
+            aria-haspopup="listbox"
+            aria-expanded={showCity}
+            aria-controls="explore-city-list"
           >
-            <MapPin className="w-4 h-4 text-primary shrink-0" />
-            <span className={`font-medium flex-1 text-sm truncate ${!selectedCity ? "text-primary" : ""}`}>
+            <MapPin className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
+            <span className={`font-medium flex-1 text-sm truncate text-left ${!selectedCity ? "text-primary" : ""}`}>
               {selectedCity || "Select city"}
             </span>
             {showCity
-              ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
-              : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />}
-          </div>
+              ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
+              : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />}
+          </button>
           <AnimatePresence>
             {showCity && (
               <motion.div
@@ -72,8 +75,10 @@ export default function ExploreFilters({
               >
                 <div className="p-3 border-b border-border/50">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+                    <label htmlFor="explore-city-search" className="sr-only">Search cities</label>
                     <Input
+                      id="explore-city-search"
                       placeholder="Search cities..."
                       value={citySearch}
                       onChange={(e) => setCitySearch(e.target.value)}
@@ -82,11 +87,13 @@ export default function ExploreFilters({
                     />
                   </div>
                 </div>
-                <div className="max-h-60 overflow-y-auto">
+                <div id="explore-city-list" role="listbox" className="max-h-60 overflow-y-auto">
                   {filteredCities.map((city) => (
                     <button
                       key={city}
                       onClick={() => { onCityChange(city); setShowCity(false); setCitySearch(""); }}
+                      role="option"
+                      aria-selected={city === selectedCity}
                       className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-primary/10 ${
                         city === selectedCity ? "text-primary font-medium bg-primary/5" : "text-foreground"
                       }`}
@@ -105,8 +112,10 @@ export default function ExploreFilters({
 
         {/* Artist search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+          <label htmlFor="explore-artist-search" className="sr-only">Search artists</label>
           <Input
+            id="explore-artist-search"
             placeholder="Search artists..."
             value={artistSearch}
             onChange={(e) => onArtistSearchChange(e.target.value)}
@@ -116,18 +125,21 @@ export default function ExploreFilters({
 
         {/* Genre */}
         <div className="relative" ref={genreRef}>
-          <div
-            className="glass rounded-xl px-4 py-3 flex items-center gap-3 cursor-pointer hover:border-primary/30 transition-colors h-11"
+          <button
+            className="glass rounded-xl px-4 py-3 flex items-center gap-3 w-full hover:border-primary/30 transition-colors h-11"
             onClick={() => { setShowGenre((v) => !v); setShowCity(false); }}
+            aria-haspopup="listbox"
+            aria-expanded={showGenre}
+            aria-controls="explore-genre-list"
           >
-            <Music2 className="w-4 h-4 text-primary shrink-0" />
-            <span className={`flex-1 text-sm truncate ${selectedGenre === "All" ? "text-muted-foreground" : "font-medium text-foreground"}`}>
+            <Music2 className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
+            <span className={`flex-1 text-sm truncate text-left ${selectedGenre === "All" ? "text-muted-foreground" : "font-medium text-foreground"}`}>
               {selectedGenre === "All" ? "All genres" : selectedGenre}
             </span>
             {showGenre
-              ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
-              : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />}
-          </div>
+              ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
+              : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />}
+          </button>
           <AnimatePresence>
             {showGenre && (
               <motion.div
@@ -139,8 +151,10 @@ export default function ExploreFilters({
               >
                 <div className="p-3 border-b border-border/50">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+                    <label htmlFor="explore-genre-search" className="sr-only">Search genres</label>
                     <Input
+                      id="explore-genre-search"
                       placeholder="Search genres..."
                       value={genreSearch}
                       onChange={(e) => setGenreSearch(e.target.value)}
@@ -149,11 +163,13 @@ export default function ExploreFilters({
                     />
                   </div>
                 </div>
-                <div className="max-h-60 overflow-y-auto">
+                <div id="explore-genre-list" role="listbox" className="max-h-60 overflow-y-auto">
                   {filteredGenres.map((genre) => (
                     <button
                       key={genre}
                       onClick={() => { onGenreChange(genre); setShowGenre(false); setGenreSearch(""); }}
+                      role="option"
+                      aria-selected={genre === selectedGenre}
                       className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-primary/10 ${
                         genre === selectedGenre ? "text-primary font-medium bg-primary/5" : "text-foreground"
                       }`}

@@ -150,7 +150,7 @@ export default function LoginPage() {
           <div className="card-solid rounded-2xl overflow-hidden">
             {/* Pass header */}
             <div className="px-8 pt-3 pb-4 text-center border-b border-white/7">
-              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground mb-1">All Access</p>
+              <p className="text-xs font-bold uppercase tracking-[0.25em] text-muted-foreground mb-1">All Access</p>
               <span className="text-xl font-bold gradient-brand-text">Summon</span>
             </div>
 
@@ -184,7 +184,9 @@ export default function LoginPage() {
                     </p>
 
                     {/* Email */}
+                    <label htmlFor="login-email" className="sr-only">Email address</label>
                     <Input
+                      id="login-email"
                       type="email"
                       placeholder="your@email.com"
                       value={email}
@@ -272,7 +274,7 @@ export default function LoginPage() {
 
             {/* Pass footer strip */}
             <div className="px-8 py-3 border-t border-white/7 text-center">
-              <p className="text-[10px] text-muted-foreground leading-relaxed">
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 By continuing, you agree to our{" "}
                 <a href="/terms" className="underline underline-offset-2 hover:text-foreground transition-colors">Terms</a>
                 {" "}and{" "}

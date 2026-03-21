@@ -45,6 +45,9 @@ function Toggle({ enabled, onChange, disabled }: { enabled: boolean; onChange: (
   return (
     <button
       onClick={() => !disabled && onChange(!enabled)}
+      role="switch"
+      aria-checked={enabled}
+      disabled={disabled}
       className={`relative w-11 h-6 rounded-full transition-colors duration-200 shrink-0 ${
         enabled ? "gradient-brand" : "bg-muted/60"
       } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
@@ -218,8 +221,9 @@ export default function ProfilePage() {
               <p className="text-xs text-muted-foreground">Username</p>
               {!editingUsername && (
                 <button onClick={() => { setEditingUsername(true); setUsernameInput(profile.username ?? ""); }}
-                  className="text-muted-foreground hover:text-foreground transition-colors">
-                  <Pencil className="w-3.5 h-3.5" />
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Edit username">
+                  <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
               )}
             </div>
@@ -232,11 +236,11 @@ export default function ProfilePage() {
                   autoFocus maxLength={50}
                   onKeyDown={(e) => { if (e.key === "Enter") saveUsername(); if (e.key === "Escape") setEditingUsername(false); }}
                 />
-                <Button size="sm" onClick={saveUsername} disabled={saving === "username"} className="gradient-brand border-0 text-white rounded-lg h-9 px-3">
-                  <Save className="w-3.5 h-3.5" />
+                <Button size="sm" onClick={saveUsername} disabled={saving === "username"} className="gradient-brand border-0 text-white rounded-lg h-9 px-3" aria-label="Save username">
+                  <Save className="w-3.5 h-3.5" aria-hidden="true" />
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => setEditingUsername(false)} className="rounded-lg h-9 px-3">
-                  <X className="w-3.5 h-3.5" />
+                <Button size="sm" variant="ghost" onClick={() => setEditingUsername(false)} className="rounded-lg h-9 px-3" aria-label="Cancel edit">
+                  <X className="w-3.5 h-3.5" aria-hidden="true" />
                 </Button>
               </div>
             ) : (

@@ -118,8 +118,10 @@ export default function LeaderboardPage() {
 
             <div className="relative flex-1" ref={cityDropRef}>
               <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none" />
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none" aria-hidden="true" />
+                <label htmlFor="leaderboard-city-search" className="sr-only">Filter by city</label>
                 <Input
+                  id="leaderboard-city-search"
                   placeholder="Search cities…"
                   value={citySearch || selectedCity}
                   onChange={(e) => { setCitySearch(e.target.value); setShowCityDrop(true); if (!e.target.value) setSelectedCity(""); }}

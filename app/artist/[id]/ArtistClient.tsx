@@ -208,7 +208,7 @@ export default function ArtistClient({ id }: { id: string }) {
                 className="absolute inset-0"
                 style={{ background: "linear-gradient(135deg, oklch(0.35 0.18 264 / 0.6) 0%, oklch(0.15 0.08 264 / 0.4) 60%, transparent 100%)" }}
               >
-                <span className="absolute bottom-6 left-6 text-[96px] font-black text-white/8 leading-none select-none">
+                <span className="absolute bottom-6 left-6 text-[6rem] font-black text-white/8 leading-none select-none" aria-hidden="true">
                   {initials}
                 </span>
               </div>

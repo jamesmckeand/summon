@@ -62,17 +62,21 @@ export default function AuthModal({ open, onClose, pendingVote }: AuthModalProps
             exit={{ opacity: 0, y: 40 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
             className="relative glass rounded-2xl p-6 w-full max-w-sm z-10"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="auth-modal-title"
           >
             <button
               onClick={handleClose}
               className="absolute top-4 right-4 p-1 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Close dialog"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
 
             {sent ? (
               <div className="flex flex-col items-center gap-3 py-2">
-                <CheckCircle className="w-12 h-12 text-primary" />
+                <CheckCircle className="w-12 h-12 text-primary" aria-hidden="true" />
                 <p className="font-bold text-lg">Check your email</p>
                 <p className="text-sm text-muted-foreground text-center">
                   Click the magic link to sign in — your vote will be cast automatically.
@@ -80,12 +84,14 @@ export default function AuthModal({ open, onClose, pendingVote }: AuthModalProps
               </div>
             ) : (
               <>
-                <h3 className="font-bold text-xl mb-1 text-center">Sign in to vote</h3>
+                <h3 id="auth-modal-title" className="font-bold text-xl mb-1 text-center">Sign in to vote</h3>
                 <p className="text-sm text-muted-foreground text-center mb-5">
                   Enter your email and we&apos;ll send a magic link. Your vote will be cast
                   automatically after you sign in.
                 </p>
+                <label htmlFor="auth-modal-email" className="sr-only">Email address</label>
                 <Input
+                  id="auth-modal-email"
                   type="email"
                   placeholder="your@email.com"
                   value={email}

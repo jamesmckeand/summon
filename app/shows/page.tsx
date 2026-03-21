@@ -54,11 +54,11 @@ function daysUntil(dateStr: string) {
 
 function UrgencyBadge({ days }: { days: number }) {
   if (days === 0)
-    return <Badge className="bg-red-500/15 text-red-400 border-red-500/20 text-[10px] px-1.5 py-0">Today</Badge>;
+    return <Badge className="bg-red-500/15 text-red-400 border-red-500/20 text-xs px-1.5 py-0">Today</Badge>;
   if (days === 1)
-    return <Badge className="bg-orange-500/15 text-orange-400 border-orange-500/20 text-[10px] px-1.5 py-0">Tomorrow</Badge>;
+    return <Badge className="bg-orange-500/15 text-orange-400 border-orange-500/20 text-xs px-1.5 py-0">Tomorrow</Badge>;
   if (days <= 7)
-    return <Badge className="bg-primary/15 text-primary border-primary/20 text-[10px] px-1.5 py-0">In {days} days</Badge>;
+    return <Badge className="bg-primary/15 text-primary border-primary/20 text-xs px-1.5 py-0">In {days} days</Badge>;
   return null;
 }
 
@@ -374,7 +374,7 @@ export default function ShowsPage() {
                         >
                           {/* Calendar date block */}
                           <div className="text-center w-10 shrink-0">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-primary leading-none mb-0.5">
+                            <p className="text-xs font-bold uppercase tracking-wider text-primary leading-none mb-0.5">
                               {month}
                             </p>
                             <p className="text-xl font-extrabold leading-none">{day}</p>

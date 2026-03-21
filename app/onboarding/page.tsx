@@ -144,7 +144,9 @@ export default function OnboardingPage() {
             >
               <h1 className="text-3xl font-bold tracking-tight mb-2">What should we call you?</h1>
               <p className="text-muted-foreground mb-8">This is your display name on Summon.</p>
+              <label htmlFor="onboarding-username" className="sr-only">Display name</label>
               <Input
+                id="onboarding-username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Your name"
@@ -199,7 +201,9 @@ export default function OnboardingPage() {
                       <div className="p-3 border-b border-border/50">
                         <div className="relative">
                           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <label htmlFor="onboarding-city-search" className="sr-only">Search cities</label>
                           <Input
+                            id="onboarding-city-search"
                             placeholder="Search cities..."
                             value={citySearch}
                             onChange={(e) => setCitySearch(e.target.value)}
@@ -273,13 +277,14 @@ export default function OnboardingPage() {
                       <button
                         key={tier}
                         onClick={() => toggleVenue(tier)}
+                        aria-pressed={selected}
                         className={`glass rounded-xl p-3 text-left transition-all ${
                           selected ? "border-primary/50 bg-primary/10" : "hover:border-primary/20"
                         }`}
                       >
                         <div className="flex items-start justify-between gap-1">
                           <p className="text-xs font-semibold text-foreground leading-tight">{TIER_LABELS[tier]}</p>
-                          {selected && <Check className="w-3 h-3 text-primary shrink-0 mt-0.5" />}
+                          {selected && <Check className="w-3 h-3 text-primary shrink-0 mt-0.5" aria-hidden="true" />}
                         </div>
                         {venueNames && venueNames.length > 0 && (
                           <ul className="mt-1.5 space-y-0.5">
@@ -320,8 +325,8 @@ export default function OnboardingPage() {
                       return (
                         <span key={id} className="flex items-center gap-1 px-2.5 py-1 rounded-full glass text-sm font-medium">
                           {a.name}
-                          <button onClick={() => removeArtist(id)} className="text-muted-foreground hover:text-foreground">
-                            <X className="w-3 h-3" />
+                          <button onClick={() => removeArtist(id)} className="text-muted-foreground hover:text-foreground" aria-label={`Remove ${a.name}`}>
+                            <X className="w-3 h-3" aria-hidden="true" />
                           </button>
                         </span>
                       );
@@ -331,7 +336,9 @@ export default function OnboardingPage() {
 
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <label htmlFor="onboarding-artist-search" className="sr-only">Search artists</label>
                   <Input
+                    id="onboarding-artist-search"
                     placeholder="Search artists..."
                     value={artistSearch}
                     onChange={(e) => setArtistSearch(e.target.value)}

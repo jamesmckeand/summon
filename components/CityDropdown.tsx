@@ -38,16 +38,19 @@ export default function CityDropdown({ value, onChange, placeholder = "Select a 
 
   return (
     <div className={`relative ${className}`}>
-      <div
-        className="glass rounded-xl px-4 py-3 flex items-center gap-3 cursor-pointer hover:border-primary/30 transition-colors"
+      <button
+        className="glass rounded-xl px-4 py-3 flex items-center gap-3 w-full hover:border-primary/30 transition-colors"
         onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls="city-dropdown-list"
       >
-        <MapPin className="w-4 h-4 text-primary shrink-0" />
-        <span className={`flex-1 font-medium text-sm ${value ? "text-foreground" : "text-muted-foreground"}`}>
+        <MapPin className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
+        <span className={`flex-1 font-medium text-sm text-left ${value ? "text-foreground" : "text-muted-foreground"}`}>
           {value || placeholder}
         </span>
-        {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-      </div>
+        {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" aria-hidden="true" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" aria-hidden="true" />}
+      </button>
 
       <AnimatePresence>
         {open && (
@@ -60,8 +63,10 @@ export default function CityDropdown({ value, onChange, placeholder = "Select a 
           >
             <div className="p-3 border-b border-border/50">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+                <label htmlFor="city-dropdown-search" className="sr-only">Search cities</label>
                 <Input
+                  id="city-dropdown-search"
                   placeholder="Search cities..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -70,27 +75,28 @@ export default function CityDropdown({ value, onChange, placeholder = "Select a 
                 />
               </div>
             </div>
-            <div className="max-h-48 overflow-y-auto">
+            <div id="city-dropdown-list" role="listbox" className="max-h-48 overflow-y-auto">
               {!search.trim() && popularCities && popularCities.length > 0 && (
-                <p className="px-4 pt-2.5 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                <p className="px-4 pt-2.5 pb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                   Top cities
                 </p>
               )}
               {listToShow.map((c, i) => (
-                <>
+                <div key={c}>
                   {!search.trim() && popularCities && i === popularCities.filter(c2 => CITIES.includes(c2)).length && (
-                    <div key="divider" className="mx-3 my-1 border-t border-border/40" />
+                    <div className="mx-3 my-1 border-t border-border/40" />
                   )}
                   <button
-                    key={c}
                     onClick={() => select(c)}
+                    role="option"
+                    aria-selected={c === value}
                     className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-primary/10 ${
                       c === value ? "text-primary font-medium bg-primary/5" : "text-foreground"
                     }`}
                   >
                     {c}
                   </button>
-                </>
+                </div>
               ))}
               {search.trim() && filtered.length === 0 && (
                 <p className="px-4 py-3 text-sm text-muted-foreground">No cities found</p>

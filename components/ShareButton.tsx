@@ -60,6 +60,7 @@ export default function ShareButton({
       onClick={share}
       className={className}
       title={iconOnly ? label : undefined}
+      aria-label={iconOnly ? label : undefined}
     >
       {icon}
       {!iconOnly && (copied ? "Link copied!" : label)}

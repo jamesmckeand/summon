@@ -39,14 +39,16 @@ export default function BottomNav() {
                   key={href}
                   href={href}
                   className="flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition-all"
+                  aria-current={isActive ? "page" : undefined}
                 >
                   <div className={`w-6 h-6 flex items-center justify-center transition-all ${isActive ? "scale-110" : ""}`}>
                     <Icon
                       className={`w-5 h-5 transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`}
                       strokeWidth={isActive ? 2.5 : 1.8}
+                      aria-hidden="true"
                     />
                   </div>
-                  <span className={`text-[10px] font-medium transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+                  <span className={`text-xs font-medium transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`}>
                     {label}
                   </span>
                 </Link>
