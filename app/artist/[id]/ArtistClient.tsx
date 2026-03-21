@@ -302,7 +302,12 @@ export default function ArtistClient({ id }: { id: string }) {
             </div>
           )}
 
-          <CityDropdown value={selectedCity} onChange={setSelectedCity} className="mb-4" />
+          <CityDropdown
+            value={selectedCity}
+            onChange={setSelectedCity}
+            className="mb-4"
+            popularCities={cityVotes.slice(0, 8).map((cv) => cv.city)}
+          />
 
           {/* Confirmed show details */}
           {loadingShows ? (

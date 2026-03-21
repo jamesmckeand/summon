@@ -168,6 +168,8 @@ export default function DashboardPage() {
   if (!mounted) return (
     <div className="min-h-screen bg-background">
       <Nav />
+      <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full opacity-20"
+        style={{ background: "radial-gradient(ellipse at top, oklch(0.58 0.22 264 / 40%) 0%, transparent 70%)" }} />
       <div className="pt-24 pb-20 px-6 max-w-4xl mx-auto animate-pulse">
         <div className="h-3 bg-muted/60 rounded w-24 mb-3" />
         <div className="h-8 bg-muted/60 rounded w-48 mb-8" />
@@ -184,6 +186,8 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen bg-background">
         <Nav />
+        <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full opacity-20"
+          style={{ background: "radial-gradient(ellipse at top, oklch(0.58 0.22 264 / 40%) 0%, transparent 70%)" }} />
         <div className="pt-24 pb-20 px-6 max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center">
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
             <Music2 className="w-12 h-12 mx-auto mb-4 text-primary opacity-60" />
@@ -206,6 +210,8 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen bg-background">
         <Nav />
+        <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full opacity-20"
+          style={{ background: "radial-gradient(ellipse at top, oklch(0.58 0.22 264 / 40%) 0%, transparent 70%)" }} />
         <div className="pt-24 pb-20 px-6 max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center">
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
             <Music2 className="w-12 h-12 mx-auto mb-4 text-primary opacity-60" />
