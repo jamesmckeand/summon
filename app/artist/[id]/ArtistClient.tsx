@@ -349,11 +349,11 @@ export default function ArtistClient({ id }: { id: string }) {
                 </div>
               ) : (
                 <>
-                  <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                  <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
                     <span>{currentThreshold?.label ?? "Building demand"}</span>
-                    <span>{nextThreshold ? `${nextThreshold.votes.toLocaleString()} for ${nextThreshold.label}` : "Max reached"}</span>
+                    <span>{nextThreshold?.label ?? "Max reached"}</span>
                   </div>
-                  <div className="h-1 bg-muted rounded-full overflow-hidden">
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
                     <motion.div
                       className="h-full rounded-full gradient-brand"
                       initial={{ width: 0 }}
@@ -361,7 +361,17 @@ export default function ArtistClient({ id }: { id: string }) {
                       transition={{ duration: 0.8, ease: "easeOut" }}
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">{selectedVoteCount.toLocaleString()} votes in {selectedCity}</p>
+                  <div className="flex items-center justify-between mt-1.5">
+                    <p className="text-xs text-muted-foreground">
+                      <span key={selectedVoteCount} className="number-pop inline-block tabular-nums">{selectedVoteCount.toLocaleString()}</span>
+                      {" "}votes in {selectedCity}
+                    </p>
+                    {nextThreshold && votesNeeded > 0 && (
+                      <p className={`text-xs font-semibold tabular-nums ${votesNeeded <= 50 ? "text-amber-400" : "text-muted-foreground"}`}>
+                        {votesNeeded.toLocaleString()} more needed
+                      </p>
+                    )}
+                  </div>
                 </>
               )}
             </div>
