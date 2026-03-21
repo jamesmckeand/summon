@@ -149,6 +149,7 @@ export default function OnboardingPage() {
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Your name"
                 className="bg-card border-border/60 rounded-xl h-12 text-base mb-6"
+                maxLength={50}
                 autoFocus
                 onKeyDown={(e) => e.key === "Enter" && setStep(2)}
               />

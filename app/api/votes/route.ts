@@ -35,6 +35,15 @@ const THRESHOLDS = [
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 async function sendOutreachAlert(
   artistName: string,
   city: string,
@@ -48,6 +57,12 @@ async function sendOutreachAlert(
   const artistObj = ARTISTS.find((a) => a.name === artistName);
   const artistUrl = `https://wesummon.com${artistObj ? `/artist/${artistObj.id}` : "/explore"}`; // live artists fall back to /explore
   const nextThreshold = THRESHOLDS.find((t) => t.votes > voteCount);
+
+  // Escaped versions for HTML templates
+  const eArtist = escapeHtml(artistName);
+  const eCity = escapeHtml(city);
+  const eVenue = escapeHtml(venueName);
+  const eTierLabel = escapeHtml(tierLabel);
 
   const draftOutreach = `Subject: ${voteCount.toLocaleString()} fans want ${artistName} at ${venueName}
 
@@ -74,12 +89,12 @@ hello@wesummon.com`;
 
         <div style="background:#1a1a1a;border-radius:8px;padding:16px;margin-bottom:16px">
           <p style="margin:0;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.05em">Artist</p>
-          <p style="margin:4px 0 0;font-size:20px;font-weight:700;color:#fff">${artistName}</p>
+          <p style="margin:4px 0 0;font-size:20px;font-weight:700;color:#fff">${eArtist}</p>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">
           <div style="background:#1a1a1a;border-radius:8px;padding:14px">
             <p style="margin:0;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.05em">City</p>
-            <p style="margin:4px 0 0;font-size:16px;font-weight:600;color:#fff">${city}</p>
+            <p style="margin:4px 0 0;font-size:16px;font-weight:600;color:#fff">${eCity}</p>
           </div>
           <div style="background:#1a1a1a;border-radius:8px;padding:14px">
             <p style="margin:0;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.05em">Votes</p>
@@ -87,24 +102,24 @@ hello@wesummon.com`;
           </div>
           <div style="background:#1a1a1a;border-radius:8px;padding:14px">
             <p style="margin:0;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.05em">Tier</p>
-            <p style="margin:4px 0 0;font-size:16px;font-weight:600;color:#fff">${tierLabel}</p>
+            <p style="margin:4px 0 0;font-size:16px;font-weight:600;color:#fff">${eTierLabel}</p>
           </div>
           <div style="background:#1a1a1a;border-radius:8px;padding:14px">
             <p style="margin:0;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.05em">Target venue</p>
-            <p style="margin:4px 0 0;font-size:16px;font-weight:600;color:#ec4899">${venueName}</p>
+            <p style="margin:4px 0 0;font-size:16px;font-weight:600;color:#ec4899">${eVenue}</p>
           </div>
         </div>
 
         ${allVenuesForTier.length > 1 ? `
         <div style="background:#111;border:1px solid #222;border-radius:8px;padding:14px;margin-bottom:20px">
-          <p style="margin:0 0 8px;font-size:12px;color:#888">Other ${tierLabel} venues to try in ${city}:</p>
-          <p style="margin:0;font-size:14px;color:#d4d4d4">${allVenuesForTier.slice(1).join(", ")}</p>
+          <p style="margin:0 0 8px;font-size:12px;color:#888">Other ${eTierLabel} venues to try in ${eCity}:</p>
+          <p style="margin:0;font-size:14px;color:#d4d4d4">${allVenuesForTier.slice(1).map(escapeHtml).join(", ")}</p>
         </div>
         ` : ""}
 
         ${nextThreshold ? `
         <div style="background:#111;border:1px solid #333;border-radius:8px;padding:14px;margin-bottom:20px">
-          <p style="margin:0;font-size:12px;color:#888">Next milestone: <strong style="color:#fff">${nextThreshold.votes.toLocaleString()} votes → ${nextThreshold.label}</strong></p>
+          <p style="margin:0;font-size:12px;color:#888">Next milestone: <strong style="color:#fff">${nextThreshold.votes.toLocaleString()} votes → ${escapeHtml(nextThreshold.label)}</strong></p>
         </div>
         ` : ""}
 
@@ -133,6 +148,9 @@ async function sendWarningEmail(
 ) {
   const artistPath = ARTISTS.find((a) => a.name === artistName)?.id;
   const artistUrl = `https://wesummon.com${artistPath ? `/artist/${artistPath}` : "/explore"}`;
+  const eArtist = escapeHtml(artistName);
+  const eCity = escapeHtml(city);
+  const eTierLabel = escapeHtml(tierLabel);
 
   await resend.emails.send({
     from: "Summon <hello@wesummon.com>",
@@ -141,16 +159,16 @@ async function sendWarningEmail(
     html: `
       <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#0a0a0a;color:#f0f0f0;border-radius:12px">
         <h2 style="margin:0 0 8px;font-size:22px;color:#fff">Almost there 🔥</h2>
-        <p style="color:#aaa;margin:0 0 24px;font-size:15px">${artistName} in ${city} is closing in on the next milestone.</p>
+        <p style="color:#aaa;margin:0 0 24px;font-size:15px">${eArtist} in ${eCity} is closing in on the next milestone.</p>
 
         <div style="background:#1a1a1a;border-radius:8px;padding:16px;margin-bottom:16px">
           <p style="margin:0;font-size:13px;color:#888;text-transform:uppercase;letter-spacing:.05em">Artist · City</p>
-          <p style="margin:6px 0 0;font-size:20px;font-weight:700;color:#fff">${artistName} in ${city}</p>
+          <p style="margin:6px 0 0;font-size:20px;font-weight:700;color:#fff">${eArtist} in ${eCity}</p>
         </div>
 
         <div style="background:#0d0d1a;border:1px solid #2a2a4a;border-radius:8px;padding:16px;margin-bottom:24px">
           <p style="margin:0;font-size:28px;font-weight:800;color:#a78bfa">${votesNeeded}</p>
-          <p style="margin:4px 0 0;font-size:14px;color:#aaa">more votes to unlock <strong style="color:#fff">${tierLabel}</strong></p>
+          <p style="margin:4px 0 0;font-size:14px;color:#aaa">more votes to unlock <strong style="color:#fff">${eTierLabel}</strong></p>
           <p style="margin:8px 0 0;font-size:13px;color:#666">${voteCount.toLocaleString()} votes so far — share to push it over the line.</p>
         </div>
 
@@ -177,6 +195,9 @@ async function sendThresholdEmail(
   const nextThreshold = THRESHOLDS.find((t) => t.votes > voteCount);
   const artistPath = ARTISTS.find((a) => a.name === artistName)?.id;
   const artistUrl = `https://wesummon.com${artistPath ? `/artist/${artistPath}` : "/explore"}`;
+  const eArtist = escapeHtml(artistName);
+  const eCity = escapeHtml(city);
+  const eVenue = escapeHtml(venueName);
 
   await resend.emails.send({
     from: "Summon <hello@wesummon.com>",
@@ -189,24 +210,24 @@ async function sendThresholdEmail(
 
         <div style="background:#1a1a1a;border-radius:8px;padding:16px;margin-bottom:24px">
           <p style="margin:0;font-size:13px;color:#888;text-transform:uppercase;letter-spacing:.05em">Artist · City</p>
-          <p style="margin:6px 0 0;font-size:20px;font-weight:700;color:#fff">${artistName} in ${city}</p>
+          <p style="margin:6px 0 0;font-size:20px;font-weight:700;color:#fff">${eArtist} in ${eCity}</p>
         </div>
 
         <p style="color:#d4d4d4;font-size:15px;line-height:1.6">
           <strong style="color:#fff">${voteCount.toLocaleString()} fans</strong> have voted — enough to trigger outreach to
-          <strong style="color:#a78bfa">${venueName}</strong>. We're reaching out to see if we can make this show happen.
+          <strong style="color:#a78bfa">${eVenue}</strong>. We're reaching out to see if we can make this show happen.
         </p>
 
         ${nextThreshold ? `
         <div style="background:#111;border:1px solid #222;border-radius:8px;padding:14px;margin-top:20px">
           <p style="margin:0;font-size:13px;color:#888">Next milestone</p>
-          <p style="margin:4px 0 0;font-size:15px;color:#fff;font-weight:600">${nextThreshold.votes.toLocaleString()} votes → ${nextThreshold.label}</p>
+          <p style="margin:4px 0 0;font-size:15px;color:#fff;font-weight:600">${nextThreshold.votes.toLocaleString()} votes → ${escapeHtml(nextThreshold.label)}</p>
           <p style="margin:4px 0 0;font-size:13px;color:#666">Share Summon with more fans to keep the momentum going.</p>
         </div>
         ` : ""}
 
         <a href="${artistUrl}" style="display:inline-block;margin-top:24px;padding:12px 24px;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px">
-          View ${artistName} on Summon →
+          View ${eArtist} on Summon →
         </a>
 
         <p style="color:#555;font-size:12px;margin-top:28px">Want to be notified first next time? <a href="https://wesummon.com/superfan" style="color:#7c7c7c">Become a Superfan</a>.</p>

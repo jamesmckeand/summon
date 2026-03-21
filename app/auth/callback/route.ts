@@ -103,8 +103,15 @@ export async function GET(request: Request) {
         const refCookie = cookieStore.get("summon_ref");
         if (refCookie?.value && refCookie.value !== user.id) {
           const admin = createAdminClient();
-          void admin.from("referrals")
-            .insert({ referrer_id: refCookie.value, referred_id: user.id });
+          // Only credit once per referred user (prevent double-credit on re-login)
+          const { count } = await admin
+            .from("referrals")
+            .select("*", { count: "exact", head: true })
+            .eq("referred_id", user.id);
+          if (count === 0) {
+            void admin.from("referrals")
+              .insert({ referrer_id: refCookie.value, referred_id: user.id });
+          }
         }
 
         const destination = profile?.city ? next : "/onboarding";

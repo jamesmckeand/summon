@@ -11,13 +11,22 @@ export async function POST(request: Request) {
   if (!deezerId || !name) {
     return NextResponse.json({ error: "Missing deezerId or name" }, { status: 400 });
   }
+  // Validate deezerId is a positive integer (Deezer IDs are always numeric)
+  if (!/^\d+$/.test(String(deezerId))) {
+    return NextResponse.json({ error: "Invalid deezerId" }, { status: 400 });
+  }
+  const cleanName = String(name).trim().slice(0, 100);
+  if (!cleanName) return NextResponse.json({ error: "Invalid name" }, { status: 400 });
+  // Only accept Deezer CDN image URLs or null
+  const cleanImage = typeof image === "string" && /^https:\/\/[^"<>]*\.deezer\.com\/[^"<>]+$/.test(image)
+    ? image : null;
 
   const id = `dz-${deezerId}`;
 
   const { error } = await supabase
     .from("live_artists")
     .upsert(
-      { id, name, genre: "Music", deezer_image: image ?? null, source_id: null },
+      { id, name: cleanName, genre: "Music", deezer_image: cleanImage, source_id: null },
       { onConflict: "id" }
     );
 
