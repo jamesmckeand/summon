@@ -59,6 +59,7 @@ async function importAppleMusicTopArtists(userId: string, supabase: Awaited<Retu
 
 const ALLOWED_NEXT_PATHS = new Set([
   "/explore", "/dashboard", "/profile", "/shows", "/cities", "/submit", "/onboarding",
+  "/leaderboard", "/superfan", "/help", "/about",
 ]);
 
 function safeNext(raw: string | null): string {

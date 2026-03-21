@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { fadeUp } from "@/lib/animations";
 import { createClient } from "@/lib/supabase/client";
 import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 import ArtistForm from "./_components/ArtistForm";
 import VenueForm from "./_components/VenueForm";
 
@@ -25,6 +26,17 @@ export default function SubmitPage() {
   useEffect(() => {
     createClient().auth.getUser().then(({ data }) => setAuthed(!!data.user));
   }, []);
+
+  if (authed === null) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Nav />
+        <div className="pt-32 flex justify-center">
+          <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        </div>
+      </div>
+    );
+  }
 
   if (authed === false) {
     return (
@@ -118,6 +130,7 @@ export default function SubmitPage() {
           </motion.div>
         )}
       </div>
+      <Footer />
     </div>
   );
 }

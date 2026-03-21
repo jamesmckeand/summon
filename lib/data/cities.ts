@@ -59,7 +59,7 @@ export const CITIES = [
   "Bozeman", "Missoula", "Billings", "Great Falls, MT",
   "Cheyenne", "Jackson, WY", "Fort Collins", "Boulder",
   "Pueblo, CO", "Flagstaff", "Yuma", "Casper",
-  "Rapid City", "Fargo", "Grand Junction", "Durango",
+  "Rapid City", "Grand Junction", "Durango",
   // US - Other
   "Honolulu", "Anchorage",
   // Canada

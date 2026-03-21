@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { useSearchParams, useRouter as useNextRouter } from "next/navigation";
 import {
   MapPin, TrendingUp, Music2, ChevronUp,
   ChevronRight, ArrowRight
@@ -19,6 +20,7 @@ import { useVote } from "@/hooks/useVote";
 import { useVoteCounts } from "@/hooks/useVoteCounts";
 import { createClient } from "@/lib/supabase/client";
 import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 
 const VENUE_THRESHOLDS = [
   { label: "Bar / Club", tier: "bar" as const, capacity: "~200", votes: 500, color: "oklch(0.65 0.28 290)" },
@@ -71,6 +73,18 @@ function VoteProgress({ artist, cityVenues }: { artist: ArtistWithVotes; cityVen
 }
 
 export default function DashboardPage() {
+  const searchParams = useSearchParams();
+  const nextRouter = useNextRouter();
+  const justUpgraded = searchParams.get("superfan") === "1";
+
+  // Clean URL after showing banner
+  useEffect(() => {
+    if (justUpgraded) {
+      const t = setTimeout(() => nextRouter.replace("/dashboard"), 4000);
+      return () => clearTimeout(t);
+    }
+  }, [justUpgraded, nextRouter]);
+
   const { votes, activeCity, setActiveCity, votedCities, cachedUser } = useVoteStore();
   const { handleVote, hasVoted } = useVote();
   const { counts, loading: countsLoading } = useVoteCounts(activeCity);
@@ -79,13 +93,24 @@ export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
   const [images, setImages] = useState<Record<string, string | null>>({});
   const [referralCount, setReferralCount] = useState<number | null>(null);
+  const [isSuperfan, setIsSuperfan] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
-    createClient().auth.getUser().then(({ data }) => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(async ({ data }) => {
       setUser(data.user);
       setAuthLoading(false);
+      if (data.user) {
+        const { data: sub } = await supabase
+          .from("subscriptions")
+          .select("status")
+          .eq("user_id", data.user.id)
+          .eq("status", "active")
+          .maybeSingle();
+        setIsSuperfan(!!sub);
+      }
     });
   }, []);
 
@@ -140,7 +165,20 @@ export default function DashboardPage() {
     ? Math.min(((topArtist.votes - prevVotes) / (nextThreshold.votes - prevVotes)) * 100, 100)
     : 100;
 
-  if (!mounted) return null;
+  if (!mounted) return (
+    <div className="min-h-screen bg-background">
+      <Nav />
+      <div className="pt-24 pb-20 px-6 max-w-4xl mx-auto animate-pulse">
+        <div className="h-3 bg-muted/60 rounded w-24 mb-3" />
+        <div className="h-8 bg-muted/60 rounded w-48 mb-8" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          {[0,1,2,3].map((i) => <div key={i} className="card-solid rounded-2xl p-5 h-20" />)}
+        </div>
+        <div className="glass rounded-2xl p-5 h-40 mb-6" />
+        <div className="glass rounded-2xl p-5 h-64" />
+      </div>
+    </div>
+  );
 
   if (!authLoading && !user) {
     return (
@@ -194,11 +232,48 @@ export default function DashboardPage() {
 
       <div className="pt-24 pb-20 px-6 max-w-4xl mx-auto">
 
+        {/* Superfan welcome */}
+        {justUpgraded && (
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0} className="mb-5">
+            <div className="glass rounded-2xl p-4 flex items-center gap-3 border-yellow-500/20">
+              <span className="text-lg">⭐</span>
+              <div>
+                <p className="text-sm font-semibold">Welcome to Superfan</p>
+                <p className="text-xs text-muted-foreground">Your badge is active. You'll be notified first when thresholds are crossed.</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Welcome */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0} className="mb-6">
           <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/70 mb-2">Your activity</p>
-          <h1 className="text-3xl font-bold tracking-tight mt-1">Your Dashboard</h1>
+          <div className="flex items-center gap-3 mb-4">
+            <h1 className="text-3xl font-bold tracking-tight">Your Dashboard</h1>
+            {isSuperfan && (
+              <Badge className="bg-yellow-500/15 text-yellow-400 border-yellow-500/20 text-xs shrink-0">
+                ⭐ Superfan
+              </Badge>
+            )}
+          </div>
+          <div className="flex items-center flex-wrap">
+            {[
+              { label: "votes cast", value: totalVotes },
+              { label: "tracking", value: userVotedArtists.length },
+              { label: "trending", value: cityArtists.filter(a => a.trending).length },
+              { label: "referred", value: referralCount ?? "—" },
+            ].map((stat, i) => (
+              <div key={stat.label} className="flex items-center">
+                {i > 0 && <div className="w-px h-5 bg-border mx-5" />}
+                <div>
+                  <span className="text-2xl font-extrabold gradient-brand-text tabular-nums">{stat.value}</span>
+                  <span className="text-xs text-muted-foreground ml-1.5">{stat.label}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </motion.div>
+
 
         {/* City switcher */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.05} className="mb-6">
@@ -220,34 +295,12 @@ export default function DashboardPage() {
                 {city}
               </button>
             ))}
-            <Link href="/explore" className="shrink-0">
-              <button className="px-4 py-2 rounded-full text-sm font-medium glass text-muted-foreground hover:text-foreground border border-dashed border-border/40 transition-all">
-                + Add city
-              </button>
+            <Link href="/explore" className="shrink-0 px-4 py-2 rounded-full text-sm font-medium glass text-muted-foreground hover:text-foreground border border-dashed border-border/40 transition-all">
+              + Add city
             </Link>
           </div>
         </motion.div>
 
-        {/* Stats row */}
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          custom={0.1}
-          className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6"
-        >
-          {[
-            { label: "Votes Cast", value: totalVotes },
-            { label: "Tracking", value: cityArtists.length },
-            { label: "Trending", value: cityArtists.filter(a => a.trending).length },
-            { label: "Referred", value: referralCount ?? "—" },
-          ].map((stat) => (
-            <div key={stat.label} className="card-solid rounded-2xl p-4 sm:p-5 text-center">
-              <p className="text-2xl sm:text-3xl font-extrabold gradient-brand-text tabular-nums leading-none">{stat.value}</p>
-              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary/70 mt-1.5">{stat.label}</p>
-            </div>
-          ))}
-        </motion.div>
 
         {/* Top artist momentum card */}
         <motion.div
@@ -465,6 +518,7 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

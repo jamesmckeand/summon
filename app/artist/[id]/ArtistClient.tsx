@@ -16,6 +16,7 @@ import { useVote } from "@/hooks/useVote";
 import { useVoteStore } from "@/lib/store/votes";
 import { createClient } from "@/lib/supabase/client";
 import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 import ShareButton from "@/components/ShareButton";
 import CityDropdown from "@/components/CityDropdown";
 import TracksSection from "./_components/TracksSection";
@@ -43,6 +44,7 @@ type ArtistData = { id: string; name: string; genre: string; subgenre?: string; 
 type CityVote = { city: string; vote_count: number };
 type Track = { title: string; preview: string | null; link: string; albumCover: string | null; duration: number | null };
 type Show = { id: string; venue: string; city: string; date: string; ticketUrl: string };
+
 
 export default function ArtistClient({ id }: { id: string }) {
   const staticArtist = ARTISTS.find((a) => a.id === id);
@@ -153,10 +155,13 @@ export default function ArtistClient({ id }: { id: string }) {
       : `I just voted for ${artist.name} in ${voteCity} on Summon. Make this show happen! 🎶`;
 
   const spotifySearchUrl = `https://open.spotify.com/search/${encodeURIComponent(artist.name)}`;
+  const appleMusicSearchUrl = `https://music.apple.com/search?term=${encodeURIComponent(artist.name)}`;
 
   return (
     <div className="min-h-screen bg-background">
       <Nav />
+      <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full opacity-20"
+        style={{ background: "radial-gradient(ellipse at top, oklch(0.58 0.22 264 / 40%) 0%, transparent 70%)" }} />
       <div className="pt-24 pb-20 px-6 max-w-2xl mx-auto">
 
         <Link href="/explore" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-5">
@@ -165,38 +170,66 @@ export default function ArtistClient({ id }: { id: string }) {
         </Link>
 
         {/* Hero card */}
-        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0} className="glass rounded-2xl overflow-hidden mb-5">
-          {image && (
-            <div className="relative w-full h-52 sm:h-64">
-              <Image
-                src={image.replace(/\/\d+x\d+-/, "/1000x1000-")}
-                alt={artist.name}
-                fill
-                className="object-cover object-top"
-                sizes="(max-width: 768px) 100vw, 672px"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-            </div>
-          )}
-          <div className={`flex items-end gap-4 p-5 ${image ? "-mt-16 relative z-10" : ""}`}>
-            {!image && (
-              <div className="w-20 h-20 rounded-2xl gradient-brand flex items-center justify-center ring-2 ring-border/60 shrink-0">
-                <span className="text-white font-bold text-xl">{initials}</span>
+        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0} className="rounded-2xl overflow-hidden mb-5 relative">
+
+          {/* ── HERO ── */}
+          <div className="relative h-64 sm:h-72 overflow-hidden">
+            {image ? (
+              <>
+                {/* Layer 1: blurred colour-field backdrop (Tidal technique) — Ken Burns loop */}
+                <motion.div
+                  className="absolute -inset-5 bg-cover bg-center"
+                  style={{
+                    backgroundImage: `url(${image.replace(/\/\d+x\d+-/, "/300x300-")})`,
+                    filter: "blur(26px) brightness(0.28) saturate(1.6)",
+                  }}
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 28, ease: "easeInOut", repeat: Infinity }}
+                />
+                {/* Layer 2: sharp artist photo — hover scale */}
+                <motion.div
+                  className="absolute inset-0"
+                  whileHover={{ scale: 1.04 }}
+                  transition={{ duration: 0.55, ease: "easeOut" }}
+                >
+                  <Image
+                    src={image.replace(/\/\d+x\d+-/, "/1000x1000-")}
+                    alt={artist.name}
+                    fill
+                    className="object-cover object-top"
+                    sizes="(max-width: 768px) 100vw, 672px"
+                    priority
+                  />
+                </motion.div>
+              </>
+            ) : (
+              /* No-image fallback — gradient wash */
+              <div
+                className="absolute inset-0"
+                style={{ background: "linear-gradient(135deg, oklch(0.35 0.18 264 / 0.6) 0%, oklch(0.15 0.08 264 / 0.4) 60%, transparent 100%)" }}
+              >
+                <span className="absolute bottom-6 left-6 text-[96px] font-black text-white/8 leading-none select-none">
+                  {initials}
+                </span>
               </div>
             )}
-            {image && (
-              <div className="w-16 h-16 rounded-xl overflow-hidden ring-2 ring-white/20 shrink-0">
-                <Image src={image} alt={artist.name} width={64} height={64} className="object-cover w-full h-full" />
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <h1 className={`text-2xl font-bold leading-tight truncate ${image ? "text-white" : ""}`}>{artist.name}</h1>
-              <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                <Badge className="bg-primary/15 text-primary border-primary/20 text-xs">{artist.genre}</Badge>
-                {artist.subgenre && <Badge className="bg-muted/80 text-muted-foreground border-border/60 text-xs">{artist.subgenre}</Badge>}
+
+            {/* Layer 3: gradient terminus — fades to page bg so card bottom "dissolves" */}
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent pointer-events-none" />
+
+            {/* Layer 4: identity — name + badges pinned to bottom */}
+            <div className="absolute bottom-0 left-0 right-0 px-5 pb-5 pointer-events-none">
+              <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight leading-none"
+                style={{ textShadow: "0 2px 20px rgba(0,0,0,0.85)" }}>
+                {artist.name}
+              </h1>
+              <div className="flex items-center gap-1.5 mt-3 flex-wrap pointer-events-auto">
+                <Badge className="bg-white/12 text-white/90 border-white/18 text-xs backdrop-blur-md">{artist.genre}</Badge>
+                {artist.subgenre && (
+                  <Badge className="bg-white/8 text-white/55 border-white/12 text-xs backdrop-blur-md">{artist.subgenre}</Badge>
+                )}
                 {artist.trending && (
-                  <Badge className="bg-primary/80 text-white border-primary/30 text-xs">
+                  <Badge className="bg-primary/70 text-white border-primary/30 text-xs backdrop-blur-md">
                     <TrendingUp className="w-3 h-3 mr-1" /> Trending
                   </Badge>
                 )}
@@ -204,22 +237,31 @@ export default function ArtistClient({ id }: { id: string }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 px-5 pb-5">
+          {/* ── ACTION STRIP ── */}
+          <div className="flex items-center gap-2 px-5 py-3 bg-card/80 border-t border-white/5">
             <a href={spotifySearchUrl} target="_blank" rel="noopener noreferrer"
-              className="h-7 px-2.5 rounded-lg glass text-xs font-medium flex items-center gap-1.5 hover:border-[#1DB954]/40 hover:text-[#1DB954] transition-colors"
+              className="h-8 px-3 rounded-lg bg-white/5 border border-white/8 text-xs font-medium flex items-center gap-1.5 text-white/70 hover:text-[#1DB954] hover:border-[#1DB954]/40 hover:bg-[#1DB954]/8 transition-colors"
             >
-              <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+              <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
               Spotify
             </a>
-            <ShareButton
-              url={shareUrl}
-              text={`Vote for ${artist.name} on Summon and help make the show happen! 🎶`}
-              label="Share"
-              iconOnly
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 rounded-lg glass text-muted-foreground hover:text-foreground p-0 border-0"
-            />
+            <a href={appleMusicSearchUrl} target="_blank" rel="noopener noreferrer"
+              className="h-8 px-3 rounded-lg bg-white/5 border border-white/8 text-xs font-medium flex items-center gap-1.5 text-white/70 hover:text-[#fc3c44] hover:border-[#fc3c44]/40 hover:bg-[#fc3c44]/8 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>
+              Apple Music
+            </a>
+            <div className="ml-auto">
+              <ShareButton
+                url={shareUrl}
+                text={`Vote for ${artist.name} on Summon and help make the show happen! 🎶`}
+                label="Share"
+                iconOnly
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 rounded-lg bg-white/5 border border-white/8 text-white/50 hover:text-white hover:bg-white/10 p-0"
+              />
+            </div>
           </div>
         </motion.div>
 
@@ -412,6 +454,7 @@ export default function ArtistClient({ id }: { id: string }) {
           />
         </motion.div>
       </div>
+      <Footer />
     </div>
   );
 }

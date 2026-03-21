@@ -35,11 +35,23 @@ export async function GET(request: Request) {
 
   if (inactiveIds.length === 0) return NextResponse.json({ sent: 0 });
 
-  // Get push tokens for inactive users
+  // Respect push notification preferences
+  const { data: optedIn } = await admin
+    .from("profiles")
+    .select("id")
+    .in("id", inactiveIds)
+    .neq("notifications_push", false);
+
+  const optedInIds = new Set((optedIn ?? []).map((p: { id: string }) => p.id));
+  const filteredIds = inactiveIds.filter((id) => optedInIds.has(id));
+
+  if (filteredIds.length === 0) return NextResponse.json({ sent: 0 });
+
+  // Get push tokens for inactive opted-in users
   const { data: tokenRows } = await admin
     .from("push_tokens")
     .select("token")
-    .in("user_id", inactiveIds)
+    .in("user_id", filteredIds)
     .eq("platform", "ios");
 
   const tokens = (tokenRows ?? []).map((r: { token: string }) => r.token);

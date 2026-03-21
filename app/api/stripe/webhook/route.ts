@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     const userId = sub.metadata?.supabase_user_id;
     if (!userId) return NextResponse.json({ ok: true });
 
-    await admin.from("subscriptions").upsert({
+    const { error: upsertError } = await admin.from("subscriptions").upsert({
       id: sub.id,
       user_id: userId,
       stripe_customer_id: sub.customer as string,
@@ -40,14 +40,16 @@ export async function POST(request: Request) {
         : null,
       updated_at: new Date().toISOString(),
     }, { onConflict: "id" });
+    if (upsertError) return NextResponse.json({ error: upsertError.message }, { status: 500 });
   }
 
   if (event.type === "customer.subscription.deleted") {
     const sub = event.data.object as Stripe.Subscription;
-    await admin
+    const { error: updateError } = await admin
       .from("subscriptions")
       .update({ status: "canceled", updated_at: new Date().toISOString() })
       .eq("id", sub.id);
+    if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

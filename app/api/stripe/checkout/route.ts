@@ -19,7 +19,7 @@ export async function POST() {
     .from("subscriptions")
     .select("stripe_customer_id")
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
 
   let customerId = existing?.stripe_customer_id;
   if (!customerId) {

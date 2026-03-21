@@ -21,6 +21,25 @@ async function initCapacitor() {
   if (!Capacitor.isNativePlatform()) return;
 
   await Promise.all([initStatusBar(), initSplashScreen(), initPushNotifications()]);
+  initExternalLinks();
+}
+
+/**
+ * In WKWebView, target="_blank" links open inside the app webview.
+ * Intercept external link clicks and open them in the iOS system browser,
+ * which also triggers "Open in App" prompts for Spotify, Apple Music, etc.
+ */
+function initExternalLinks() {
+  document.addEventListener("click", (e) => {
+    const a = (e.target as Element).closest("a[href]") as HTMLAnchorElement | null;
+    if (!a) return;
+    const href = a.href;
+    if (!href || href.startsWith("mailto:") || href.startsWith("tel:")) return;
+    if ((href.startsWith("https://") || href.startsWith("http://")) && !href.includes("wesummon.com")) {
+      e.preventDefault();
+      window.open(href, "_system");
+    }
+  }, true); // capture phase — fires before any component onClick
 }
 
 async function initStatusBar() {
@@ -59,9 +78,16 @@ async function initPushNotifications() {
     });
 
     // Handle notification tapped while app is open
+    // Extract path from full URL so Next.js router handles the navigation
     await PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
       const url = action.notification.data?.url as string | undefined;
-      if (url) window.location.href = url;
+      if (!url) return;
+      try {
+        const parsed = new URL(url);
+        window.location.href = parsed.pathname + parsed.search;
+      } catch {
+        window.location.href = url;
+      }
     });
   } catch { /* not available */ }
 }

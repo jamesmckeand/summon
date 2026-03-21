@@ -1,6 +1,32 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { ARTISTS } from "@/lib/data/artists";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+type ArtistLike = { id: string; name: string; genre: string; subgenre?: string };
+
+async function resolveViaDeezer(names: string[], supabase: SupabaseClient): Promise<ArtistLike[]> {
+  const results = await Promise.all(
+    names.slice(0, 25).map(async (name) => {
+      try {
+        const res = await fetch(`https://api.deezer.com/search/artist?q=${encodeURIComponent(name)}&limit=3`);
+        if (!res.ok) return null;
+        const data = await res.json();
+        const match = (data.data ?? []).find(
+          (a: { name: string }) => a.name.toLowerCase() === name.toLowerCase()
+        );
+        if (!match) return null;
+        const id = `dz-${match.id}`;
+        await supabase.from("live_artists").upsert(
+          { id, name: match.name, genre: "Music", deezer_image: match.picture_medium ?? null, source_id: null },
+          { onConflict: "id" }
+        );
+        return { id, name: match.name, genre: "Music" } as ArtistLike;
+      } catch { return null; }
+    })
+  );
+  return results.filter((r): r is ArtistLike => r !== null);
+}
 
 export async function GET() {
   const supabase = await createClient();
@@ -48,21 +74,27 @@ export async function GET() {
     }
 
     const data = await res.json();
-    const spotifyNames = new Set(
-      (data.items ?? []).map((a: { name: string }) => a.name.toLowerCase())
-    );
+    const spotifyItems: { name: string }[] = data.items ?? [];
+    const spotifyNames = new Set(spotifyItems.map((a) => a.name.toLowerCase()));
 
     const matched = ARTISTS.filter((a) => spotifyNames.has(a.name.toLowerCase()));
+    const matchedNames = new Set(matched.map((a) => a.name.toLowerCase()));
+    const unmatchedNames = spotifyItems
+      .map((a) => a.name)
+      .filter((n) => !matchedNames.has(n.toLowerCase()));
 
-    // Cache matched artist IDs to profile
-    if (matched.length > 0) {
+    const resolved = await resolveViaDeezer(unmatchedNames, supabase);
+    const all = [...matched, ...resolved];
+
+    // Cache all artist IDs to profile
+    if (all.length > 0) {
       await supabase
         .from("profiles")
-        .update({ favourite_artists: matched.map((a) => a.id) })
+        .update({ favourite_artists: all.map((a) => a.id) })
         .eq("id", userId);
     }
 
-    return NextResponse.json({ artists: matched });
+    return NextResponse.json({ artists: all });
   } catch {
     return NextResponse.json({ artists: [], reason: "error" });
   }

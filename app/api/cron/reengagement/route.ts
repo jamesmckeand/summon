@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { listAllUsers } from "@/lib/supabase/list-all-users";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -41,11 +42,22 @@ export async function GET(request: Request) {
     return NextResponse.json({ sent: 0 });
   }
 
-  // Get emails from auth.users via admin API
-  // Supabase admin.listUsers paginates at 1000 — fine for launch scale
-  const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  // Respect email notification preferences
+  const { data: optedIn } = await admin
+    .from("profiles")
+    .select("id")
+    .in("id", inactiveIds)
+    .neq("notifications_email", false);
 
-  const targets = users.filter((u) => inactiveIds.includes(u.id) && u.email);
+  const optedInIds = new Set((optedIn ?? []).map((p: { id: string }) => p.id));
+  const filteredIds = inactiveIds.filter((id) => optedInIds.has(id));
+
+  if (filteredIds.length === 0) {
+    return NextResponse.json({ sent: 0 });
+  }
+
+  const users = await listAllUsers(admin);
+  const targets = users.filter((u) => filteredIds.includes(u.id) && u.email);
 
   let sent = 0;
   for (const user of targets) {
@@ -74,6 +86,7 @@ export async function GET(request: Request) {
 
           <p style="color:#555;font-size:12px;margin-top:32px">
             Summon · Fan-driven shows · <a href="https://wesummon.com" style="color:#555">wesummon.com</a>
+            · <a href="https://wesummon.com/settings" style="color:#555">Manage email preferences</a>
           </p>
         </div>
       `,

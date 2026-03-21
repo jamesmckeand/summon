@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import UserAvatar from "@/components/UserAvatar";
 import { createClient } from "@/lib/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { useVoteStore } from "@/lib/store/votes";
@@ -53,9 +53,13 @@ async function hydrateCity(setActiveCity: (city: string) => void, currentCity: s
 
 export default function Nav() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
-  // Start loading=false if we have a cached user — prevents flicker on navigation
-  const [loading, setLoading] = useState(() => typeof window === "undefined" || !useVoteStore.getState().cachedUser);
+  const [loading, setLoading] = useState(true);
   const [scrolled, setScrolled] = useState(false);
+
+  // Fast-path: if cachedUser exists, skip the loading skeleton immediately after mount
+  useEffect(() => {
+    if (useVoteStore.getState().cachedUser) setLoading(false);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -78,7 +82,7 @@ export default function Nav() {
       if (u) {
         setCachedUser({
           id: u.id,
-          displayName: u.user_metadata?.full_name ?? u.user_metadata?.name ?? u.email?.split("@")[0] ?? "Account",
+          displayName: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "Account",
           avatarUrl: u.user_metadata?.avatar_url ?? null,
         });
         hydrateVotes(initFromDb);
@@ -95,7 +99,7 @@ export default function Nav() {
       if (event === "SIGNED_IN" && u) {
         setCachedUser({
           id: u.id,
-          displayName: u.user_metadata?.full_name ?? u.user_metadata?.name ?? u.email?.split("@")[0] ?? "Account",
+          displayName: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "Account",
           avatarUrl: u.user_metadata?.avatar_url ?? null,
         });
         hydrateVotes(initFromDb);
@@ -117,7 +121,7 @@ export default function Nav() {
   }
 
   // cachedUser gives instant render on navigation; live `user` verifies in background
-  const displayName = cachedUser?.displayName ?? user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? user?.email?.split("@")[0] ?? "Account";
+  const displayName = cachedUser?.displayName || user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "Account";
   const avatar = cachedUser?.avatarUrl ?? user?.user_metadata?.avatar_url ?? null;
   const isLoggedIn = !!cachedUser || !!user;
 
@@ -135,23 +139,8 @@ export default function Nav() {
         {/* Desktop nav */}
         <div className="hidden sm:flex items-center gap-2">
           <Link href="/explore">
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-sm">
+            <Button variant="ghost" size="sm" className={`text-sm ${pathname === "/explore" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
               Explore
-            </Button>
-          </Link>
-          <Link href="/cities">
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-sm">
-              Cities
-            </Button>
-          </Link>
-          <Link href="/shows">
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-sm">
-              Shows
-            </Button>
-          </Link>
-          <Link href="/submit">
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-sm">
-              Suggest
             </Button>
           </Link>
 
@@ -160,33 +149,20 @@ export default function Nav() {
           ) : isLoggedIn ? (
             <div className="flex items-center gap-2">
               <Link href="/dashboard">
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-sm">
+                <Button variant="ghost" size="sm" className={`text-sm ${pathname === "/dashboard" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                   Dashboard
                 </Button>
               </Link>
               <Link href="/profile">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg glass hover:border-primary/30 transition-colors cursor-pointer">
-                  {avatar ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={avatar} alt={displayName} className="w-6 h-6 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-6 h-6 rounded-full gradient-brand flex items-center justify-center">
-                      <User className="w-3 h-3 text-white" />
-                    </div>
-                  )}
-                  <span className="text-sm font-medium text-foreground max-w-[120px] truncate">
-                    {displayName}
-                  </span>
-                </div>
+                <UserAvatar
+                  name={displayName}
+                  src={avatar}
+                  size={32}
+                  rounded="rounded-full"
+                  textSize="text-xs"
+                  className="ring-1 ring-white/10 hover:ring-primary/40 transition-all cursor-pointer"
+                />
               </Link>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSignOut}
-                className="text-muted-foreground hover:text-foreground px-2"
-              >
-                <LogOut className="w-4 h-4" />
-              </Button>
             </div>
           ) : (
             <Link href="/login">
@@ -202,15 +178,14 @@ export default function Nav() {
           {loading && !cachedUser ? (
             <div className="w-8 h-8 rounded-full bg-muted/30 animate-pulse" />
           ) : isLoggedIn ? (
-            <Link href="/profile">
-              {avatar ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={avatar} alt={displayName} className="w-8 h-8 rounded-full object-cover" />
-              ) : (
-                <div className="w-8 h-8 rounded-full gradient-brand flex items-center justify-center">
-                  <User className="w-3.5 h-3.5 text-white" />
-                </div>
-              )}
+            <Link href="/dashboard">
+              <UserAvatar
+                name={displayName}
+                src={avatar}
+                size={32}
+                rounded="rounded-full"
+                textSize="text-xs"
+              />
             </Link>
           ) : (
             <Link href="/login">

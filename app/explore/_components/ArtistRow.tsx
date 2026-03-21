@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronUp, Music2, Ticket, TrendingUp } from "lucide-react";
+import { ChevronUp, Ticket, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -72,7 +72,10 @@ export default function ArtistRow({
               {name}
             </Link>
             {confirmed && (
-              <Badge className="bg-green-500/15 text-green-400 border-green-500/20 text-xs px-1.5 py-0.5">
+              <Badge
+                className="bg-green-500/15 text-green-400 border-green-500/20 text-xs px-1.5 py-0.5 cursor-help"
+                title="This artist has a confirmed show — tickets are on sale now"
+              >
                 <Ticket className="w-3 h-3 mr-1" />
                 Confirmed
               </Badge>
@@ -84,10 +87,9 @@ export default function ArtistRow({
               </Badge>
             )}
           </div>
-          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-            <Music2 className="w-3 h-3" />
-            {subgenre ? `${genre} · ${subgenre}` : genre}
-          </p>
+          {(subgenre || genre) && (
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">{subgenre || genre}</p>
+          )}
         </div>
 
         {selectedCity && (

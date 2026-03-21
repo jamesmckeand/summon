@@ -1,5 +1,7 @@
 import { Resend } from "resend";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { artistToSlug } from "@/lib/utils/artist-slug";
+import { cityToSlug } from "@/lib/utils/city-slug";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wesummon.com";
@@ -58,7 +60,7 @@ export async function queueArtistContactOutreach(
   if (error?.code === "23505") return;
 
   // Send internal alert so you know a contact is queued
-  const demandUrl = `${BASE}/live/${artistId}/${city.toLowerCase().replace(/\s+/g, "-")}`;
+  const demandUrl = `${BASE}/live/${artistToSlug(artistName)}/${cityToSlug(city)}`;
   const hasContact = contact?.booking_agent_email || contact?.manager_email;
 
   await resend.emails.send({
@@ -143,7 +145,7 @@ export async function sendAutomatedOutreach(
 
   if (!targets.length) return;
 
-  const demandUrl = `${BASE}/live/${artistId}/${city.toLowerCase().replace(/\s+/g, "-")}`;
+  const demandUrl = `${BASE}/live/${artistToSlug(artistName)}/${cityToSlug(city)}`;
 
   await Promise.allSettled(
     targets.map(async (promoter) => {
@@ -184,7 +186,7 @@ export async function sendAutomatedOutreach(
             </p>
 
             <p style="margin:0 0 8px">Best,</p>
-            <p style="margin:0"><strong>James McKeand</strong><br>
+            <p style="margin:0"><strong>Summon</strong><br>
             Founder, Summon<br>
             <a href="mailto:hello@wesummon.com" style="color:#7c3aed">hello@wesummon.com</a> · <a href="${BASE}" style="color:#7c3aed">wesummon.com</a>
             </p>

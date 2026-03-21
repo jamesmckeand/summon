@@ -26,7 +26,7 @@ export async function PATCH(request: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
-  const allowed = ["username", "city", "favourite_venues", "favourite_artists"];
+  const allowed = ["username", "city", "favourite_venues", "favourite_artists", "notifications_email", "notifications_push"];
   const updates: Record<string, unknown> = { id: user.id };
   for (const key of allowed) {
     if (!(key in body)) continue;
@@ -44,6 +44,8 @@ export async function PATCH(request: Request) {
     } else if (key === "favourite_venues") {
       const venues = Array.isArray(body[key]) ? body[key] : [];
       updates[key] = venues.filter((v: unknown) => typeof v === "string").slice(0, 50);
+    } else if (key === "notifications_email" || key === "notifications_push") {
+      updates[key] = body[key] === false ? false : true;
     }
   }
 

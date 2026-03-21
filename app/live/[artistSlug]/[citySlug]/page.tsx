@@ -7,6 +7,7 @@ import { artistToSlug, slugToArtist } from "@/lib/utils/artist-slug";
 import { cityToSlug, slugToCity } from "@/lib/utils/city-slug";
 import { createClient } from "@/lib/supabase/server";
 import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -154,7 +155,7 @@ export default async function LivePage(
         </div>
 
         {/* Overline */}
-        <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-2">
+        <p className="text-xs font-semibold tracking-[0.15em] text-primary/70 uppercase mb-2">
           Live Demand · {city}
         </p>
 
@@ -194,14 +195,14 @@ export default async function LivePage(
           {votes === 0 ? (
             <div className="text-center py-4">
               <p className="text-muted-foreground text-sm mb-1">No votes yet in {city}</p>
-              <p className="text-2xl font-bold gradient-display bg-clip-text text-transparent">
+              <p className="text-2xl font-bold gradient-brand-text">
                 Be the first!
               </p>
             </div>
           ) : (
             <div>
               <div className="text-center mb-4">
-                <p className="text-5xl font-bold gradient-display bg-clip-text text-transparent">
+                <p className="text-5xl font-bold gradient-brand-text tabular-nums">
                   {votes.toLocaleString()}
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">votes in {city}</p>
@@ -253,6 +254,7 @@ export default async function LivePage(
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

@@ -2,6 +2,32 @@ import { NextResponse } from "next/server";
 import { SignJWT, importPKCS8 } from "jose";
 import { createClient } from "@/lib/supabase/server";
 import { ARTISTS } from "@/lib/data/artists";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+type ArtistLike = { id: string; name: string; genre: string; subgenre?: string };
+
+async function resolveViaDeezer(names: string[], supabase: SupabaseClient): Promise<ArtistLike[]> {
+  const results = await Promise.all(
+    names.slice(0, 25).map(async (name) => {
+      try {
+        const res = await fetch(`https://api.deezer.com/search/artist?q=${encodeURIComponent(name)}&limit=3`);
+        if (!res.ok) return null;
+        const data = await res.json();
+        const match = (data.data ?? []).find(
+          (a: { name: string }) => a.name.toLowerCase() === name.toLowerCase()
+        );
+        if (!match) return null;
+        const id = `dz-${match.id}`;
+        await supabase.from("live_artists").upsert(
+          { id, name: match.name, genre: "Music", deezer_image: match.picture_medium ?? null, source_id: null },
+          { onConflict: "id" }
+        );
+        return { id, name: match.name, genre: "Music" } as ArtistLike;
+      } catch { return null; }
+    })
+  );
+  return results.filter((r): r is ArtistLike => r !== null);
+}
 
 async function getDeveloperToken() {
   const pem = process.env.APPLE_MUSIC_PRIVATE_KEY!.replace(/\\n/g, "\n");
@@ -45,16 +71,20 @@ export async function POST(req: Request) {
     }
 
     const data = await res.json();
-    const appleNames = new Set(
-      (data.data ?? []).map((a: { attributes: { name: string } }) =>
-        a.attributes.name.toLowerCase()
-      )
-    );
+    const appleItems: { attributes: { name: string } }[] = data.data ?? [];
+    const appleNames = new Set(appleItems.map((a) => a.attributes.name.toLowerCase()));
 
     const matched = ARTISTS.filter((a) => appleNames.has(a.name.toLowerCase()));
+    const matchedNames = new Set(matched.map((a) => a.name.toLowerCase()));
+    const unmatchedNames = appleItems
+      .map((a) => a.attributes.name)
+      .filter((n) => !matchedNames.has(n.toLowerCase()));
+
+    const resolved = await resolveViaDeezer(unmatchedNames, supabase);
+    const all = [...matched, ...resolved];
 
     // Merge into profile's favourite_artists without overwriting Spotify ones
-    if (matched.length > 0) {
+    if (all.length > 0) {
       const { data: profile } = await supabase
         .from("profiles")
         .select("favourite_artists")
@@ -62,7 +92,7 @@ export async function POST(req: Request) {
         .single();
 
       const existing: string[] = profile?.favourite_artists ?? [];
-      const newIds = matched.map((a) => a.id).filter((id) => !existing.includes(id));
+      const newIds = all.map((a) => a.id).filter((id) => !existing.includes(id));
 
       if (newIds.length > 0) {
         await supabase
@@ -72,7 +102,7 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ artists: matched });
+    return NextResponse.json({ artists: all });
   } catch {
     return NextResponse.json({ artists: [], reason: "error" });
   }

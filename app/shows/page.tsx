@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { fadeUp } from "@/lib/animations";
 import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 import { ARTISTS } from "@/lib/data/artists";
 
 type Show = {
@@ -137,18 +138,37 @@ export default function ShowsPage() {
     });
   }, [shows, favouriteArtistIds]);
 
-  // Filter by artist name or city/country — show all when no query
+  // Filter by artist name, city, or both simultaneously ("Cardi B Toronto")
   const filteredGroups = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return artistGroups;
+
+    const cityMatch = (show: Show, term: string) =>
+      show.city.toLowerCase().includes(term) || show.country.toLowerCase().includes(term);
+
     return artistGroups
       .map((g) => {
-        // Artist name match → show all their shows
-        if (g.artistName.toLowerCase().includes(q)) return g;
-        // Otherwise filter individual shows by city / country
-        return { ...g, shows: g.shows.filter((s) =>
-          s.city.toLowerCase().includes(q) || s.country.toLowerCase().includes(q)
-        )};
+        const name = g.artistName.toLowerCase();
+
+        // Exact artist match → all shows
+        if (name.includes(q)) return g;
+
+        // Exact city match → filtered shows
+        const byCityOnly = g.shows.filter((s) => cityMatch(s, q));
+        if (byCityOnly.length > 0) return { ...g, shows: byCityOnly };
+
+        // Combined: try every split point — "cardi b toronto" → artist="cardi b" city="toronto"
+        const words = q.split(" ");
+        for (let i = words.length - 1; i >= 1; i--) {
+          const artistPart = words.slice(0, i).join(" ");
+          const cityPart = words.slice(i).join(" ");
+          if (name.includes(artistPart)) {
+            const combined = g.shows.filter((s) => cityMatch(s, cityPart));
+            if (combined.length > 0) return { ...g, shows: combined };
+          }
+        }
+
+        return { ...g, shows: [] };
       })
       .filter((g) => g.shows.length > 0);
   }, [artistGroups, searchQuery]);
@@ -200,7 +220,7 @@ export default function ShowsPage() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             <input
               type="text"
-              placeholder="Search by artist or city…"
+              placeholder="Search artist, city, or both…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full h-11 pl-10 pr-10 rounded-xl bg-muted/40 border border-border/50 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-colors"
@@ -223,7 +243,7 @@ export default function ShowsPage() {
               <div key={i} className="glass rounded-2xl overflow-hidden animate-pulse">
                 {/* Artist header skeleton */}
                 <div className="flex items-center gap-4 p-5 pb-4">
-                  <div className="w-14 h-14 rounded-xl bg-muted/60 shrink-0" />
+                  <div className="w-16 h-16 rounded-xl bg-muted/60 shrink-0" />
                   <div className="flex-1 space-y-2">
                     <div className="h-4 bg-muted/60 rounded w-40" />
                     <div className="h-3 bg-muted/60 rounded w-24" />
@@ -302,7 +322,7 @@ export default function ShowsPage() {
                   {/* Artist header */}
                   <Link href={`/artist/${group.artistId}`}>
                     <div className="flex items-center gap-4 p-5 pb-4 hover:bg-white/[0.025] transition-colors group">
-                      <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 relative">
+                      <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 relative">
                         {img ? (
                           <Image
                             src={img}
@@ -327,11 +347,9 @@ export default function ShowsPage() {
                             <Star className="w-3.5 h-3.5 text-primary fill-primary shrink-0" />
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {group.subgenre
-                            ? `${group.genre} · ${group.subgenre}`
-                            : group.genre}
-                        </p>
+                        {(group.subgenre || group.genre) && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{group.subgenre || group.genre}</p>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-1.5 shrink-0">
@@ -405,9 +423,8 @@ export default function ShowsPage() {
                 className="flex flex-col items-center gap-2 pt-2"
               >
                 <Button
-                  variant="outline"
                   onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-                  className="border-border/50 hover:border-primary/40 hover:text-primary px-8 h-10 rounded-xl font-semibold"
+                  className="glass border-border/50 hover:border-primary/40 hover:text-primary px-8 h-10 rounded-xl font-semibold text-muted-foreground bg-transparent"
                 >
                   Load more · {remaining} more artist{remaining !== 1 ? "s" : ""}
                 </Button>
@@ -427,6 +444,7 @@ export default function ShowsPage() {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 }

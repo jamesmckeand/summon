@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "About | Summon",
@@ -14,7 +15,7 @@ export default function AboutPage() {
       <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[350px] rounded-full opacity-20"
         style={{ background: "radial-gradient(ellipse at top, oklch(0.58 0.22 264 / 40%) 0%, transparent 70%)" }} />
 
-      <div className="pt-32 pb-20 px-6 max-w-2xl mx-auto anim-fade-up">
+      <div className="pt-24 pb-20 px-6 max-w-2xl mx-auto anim-fade-up">
         <p className="text-xs font-semibold uppercase tracking-widest text-primary/70 mb-2">The company</p>
         <h1 className="text-4xl font-extrabold tracking-tight mb-6">About Summon</h1>
 
@@ -48,6 +49,7 @@ export default function AboutPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

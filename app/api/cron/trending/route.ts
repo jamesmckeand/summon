@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { listAllUsers } from "@/lib/supabase/list-all-users";
 import { ARTISTS } from "@/lib/data/artists";
 import { artistToSlug } from "@/lib/utils/artist-slug";
 import { cityToSlug } from "@/lib/utils/city-slug";
@@ -70,14 +71,23 @@ export async function GET(request: Request) {
     return NextResponse.json({ sent: 0, reason: "no near-threshold combos" });
   }
 
-  // Get all users who have ever voted
-  const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  // Get all users who have ever voted and have email notifications enabled
+  const users = await listAllUsers(admin);
   const { data: voterRows } = await admin
     .from("votes")
     .select("user_id");
 
   const voterIds = new Set((voterRows ?? []).map((r: { user_id: string }) => r.user_id));
-  const targets = users.filter((u) => voterIds.has(u.id) && u.email);
+  const voterIdList = [...voterIds];
+
+  const { data: optedIn } = await admin
+    .from("profiles")
+    .select("id")
+    .in("id", voterIdList)
+    .neq("notifications_email", false);
+
+  const optedInIds = new Set((optedIn ?? []).map((p: { id: string }) => p.id));
+  const targets = users.filter((u) => optedInIds.has(u.id) && u.email);
 
   const comboRows = top.map((c) => `
     <tr>
@@ -119,7 +129,7 @@ export async function GET(request: Request) {
             Vote &amp; share →
           </a>
 
-          <p style="color:#555;font-size:12px;margin-top:32px">Summon · Fan-driven shows · <a href="https://wesummon.com" style="color:#555">wesummon.com</a></p>
+          <p style="color:#555;font-size:12px;margin-top:32px">Summon · Fan-driven shows · <a href="https://wesummon.com" style="color:#555">wesummon.com</a> · <a href="https://wesummon.com/settings" style="color:#555">Manage email preferences</a></p>
         </div>
       `,
     }).catch(() => {});

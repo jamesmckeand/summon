@@ -158,7 +158,7 @@ async function sendWarningEmail(
           Share &amp; vote →
         </a>
 
-        <p style="color:#555;font-size:12px;margin-top:32px">Summon · Fan-driven shows · <a href="https://wesummon.com" style="color:#555">wesummon.com</a></p>
+        <p style="color:#555;font-size:12px;margin-top:32px">Summon · Fan-driven shows · <a href="https://wesummon.com" style="color:#555">wesummon.com</a> · <a href="https://wesummon.com/settings" style="color:#555">Manage email preferences</a></p>
       </div>
     `,
   });
@@ -209,7 +209,8 @@ async function sendThresholdEmail(
           View ${artistName} on Summon →
         </a>
 
-        <p style="color:#555;font-size:12px;margin-top:32px">Summon · Fan-driven shows · <a href="https://wesummon.com" style="color:#555">wesummon.com</a></p>
+        <p style="color:#555;font-size:12px;margin-top:28px">Want to be notified first next time? <a href="https://wesummon.com/superfan" style="color:#7c7c7c">Become a Superfan</a>.</p>
+        <p style="color:#555;font-size:12px;margin-top:12px">Summon · Fan-driven shows · <a href="https://wesummon.com" style="color:#555">wesummon.com</a> · <a href="https://wesummon.com/settings" style="color:#555">Manage email preferences</a></p>
       </div>
     `,
   });
@@ -277,8 +278,12 @@ export async function POST(request: Request) {
       })());
       if (artistName) {
         if (user.email) {
-          sendThresholdEmail(user.email, artistName, city, after, crossed.tier, crossed.label)
-            .catch(() => {});
+          // Respect email notification preferences
+          const { data: prof } = await supabase.from("profiles").select("notifications_email").eq("id", user.id).single();
+          if (prof?.notifications_email !== false) {
+            sendThresholdEmail(user.email, artistName, city, after, crossed.tier, crossed.label)
+              .catch(() => {});
+          }
         }
         sendOutreachAlert(artistName, city, after, crossed.tier, crossed.label)
           .catch(() => {});
@@ -315,8 +320,12 @@ export async function POST(request: Request) {
       })());
       if (artistName) {
         if (user.email) {
-          sendWarningEmail(user.email, artistName, city, after, warning.votes - after, warning.label)
-            .catch(() => {});
+          // Respect email notification preferences
+          const { data: prof } = await supabase.from("profiles").select("notifications_email").eq("id", user.id).single();
+          if (prof?.notifications_email !== false) {
+            sendWarningEmail(user.email, artistName, city, after, warning.votes - after, warning.label)
+              .catch(() => {});
+          }
         }
         // Pre-fetch booking contact so it's ready when threshold is crossed
         const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wesummon.com";

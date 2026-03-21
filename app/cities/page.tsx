@@ -5,7 +5,9 @@ import { motion } from "framer-motion";
 import { MapPin, TrendingUp, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { fadeUp } from "@/lib/animations";
+import { cityToSlug } from "@/lib/utils/city-slug";
 import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 
 type CityStats = {
   city: string;
@@ -76,11 +78,16 @@ export default function CitiesPage() {
                   variants={fadeUp}
                   custom={0.05 + Math.min(i, 15) * 0.03}
                 >
-                  <Link href={`/explore?city=${encodeURIComponent(c.city)}`}>
-                    <div className={`glass rounded-xl p-4 hover:border-primary/20 transition-all group ${i < 3 ? "border-primary/15" : ""}`}>
+                  <Link href={`/cities/${cityToSlug(c.city)}`}>
+                    <div className={`glass rounded-xl p-4 hover:border-primary/20 transition-all group ${
+                      i === 0 ? "border-yellow-500/25 bg-yellow-500/[0.03]" :
+                      i === 1 ? "border-slate-400/20 bg-white/[0.02]" :
+                      i === 2 ? "border-amber-600/20 bg-amber-500/[0.02]" : ""
+                    }`}>
                       <div className="flex items-center gap-4">
-                        <span className={`text-sm font-mono w-7 text-center shrink-0 ${i < 3 ? "font-bold text-primary" : "text-muted-foreground"}`}>
-                          {i + 1}
+                        <span className={`text-sm font-mono w-7 text-center shrink-0 ${i < 3 ? "font-bold" : "text-muted-foreground"}`}
+                          style={{ color: i === 0 ? "#facc15" : i === 1 ? "#cbd5e1" : i === 2 ? "#d97706" : undefined }}>
+                          {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}
                         </span>
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform ${i < 3 ? "gradient-brand" : "bg-muted/60"}`}>
                           <MapPin className={`w-4 h-4 ${i < 3 ? "text-white" : "text-muted-foreground"}`} />
@@ -124,6 +131,7 @@ export default function CitiesPage() {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 }

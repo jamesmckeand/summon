@@ -210,7 +210,7 @@ async function buildShows(
         const seen = new Set<string>();
         const merged: ShowItem[] = [];
         for (const show of [...bitShows, ...tmShows, ...skShows]) {
-          const key = `${show.artistId}|${show.date}|${normalise(show.venue).slice(0, 10)}`;
+          const key = `${show.artistId}|${show.date}|${normalise(show.venue).slice(0, 20)}`;
           if (!seen.has(key)) {
             seen.add(key);
             merged.push(show);
