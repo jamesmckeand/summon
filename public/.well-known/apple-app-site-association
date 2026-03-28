@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["CXVAP2Z9H8.com.wesummon.summon"],
+        "components": [
+          { "/": "/*", "comment": "All paths" }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["CXVAP2Z9H8.com.wesummon.summon"]
+  }
+}
