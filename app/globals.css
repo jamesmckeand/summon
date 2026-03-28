@@ -88,6 +88,18 @@
   }
 }
 
+/* Hero orb float animation */
+@keyframes orb-float {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  33%       { transform: translate(-51%, -52%) scale(1.04); }
+  66%       { transform: translate(-49%, -51%) scale(0.97); }
+}
+@keyframes orb-float-r {
+  0%, 100% { transform: translate(50%, -50%) scale(1); }
+  33%       { transform: translate(51%, -52%) scale(1.06); }
+  66%       { transform: translate(49%, -48%) scale(0.96); }
+}
+
 /* Marquee animations */
 @keyframes marquee-left {
   from { transform: translateX(0); }

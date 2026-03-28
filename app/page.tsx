@@ -6,6 +6,7 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { fadeUp } from "@/lib/animations";
+import HeroOrbs from "@/components/HeroOrbs";
 import Marquee from "@/components/Marquee";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
@@ -72,11 +73,8 @@ export default function Home() {
       {/* ── HERO ── */}
       <section className="relative flex flex-col items-center justify-center min-h-screen px-6 text-center overflow-hidden pt-20">
 
-        {/* Atmospheric glow */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-20"
-            style={{ background: "radial-gradient(ellipse at center, #6366F1 0%, transparent 70%)" }} />
-        </div>
+        {/* Hero background — bouncing orbs */}
+        <HeroOrbs />
 
         {/* Overline badge */}
         <div className="anim-fade-up flex items-center gap-2 mb-8" style={{ animationDelay: "0.1s" }}>
