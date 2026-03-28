@@ -59,39 +59,42 @@ export async function GET(request: Request) {
   const users = await listAllUsers(admin);
   const targets = users.filter((u) => filteredIds.includes(u.id) && u.email);
 
-  let sent = 0;
-  for (const user of targets) {
-    if (!user.email) continue;
-    await resend.emails.send({
+  const html = `
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#0a0a0a;color:#f0f0f0;border-radius:12px">
+      <h2 style="margin:0 0 8px;font-size:22px;color:#fff">Miss anything?</h2>
+      <p style="color:#aaa;margin:0 0 24px;font-size:15px">
+        Votes have been rolling in across cities you follow. Come see where your artists stand.
+      </p>
+      <div style="background:#111;border:1px solid #222;border-radius:8px;padding:16px;margin-bottom:24px">
+        <p style="margin:0;font-size:14px;color:#d4d4d4;line-height:1.6">
+          Some cities are just a few votes from unlocking the next venue tier.
+          Every vote counts — invite a friend and tip it over the line.
+        </p>
+      </div>
+      <a href="https://wesummon.com/explore" style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px">
+        See what's happening →
+      </a>
+      <p style="color:#555;font-size:12px;margin-top:32px">
+        Summon · Fan-driven shows · <a href="https://wesummon.com" style="color:#555">wesummon.com</a>
+        · <a href="https://wesummon.com/settings" style="color:#555">Manage email preferences</a>
+      </p>
+    </div>
+  `;
+
+  const emails = targets
+    .filter((u) => u.email)
+    .map((u) => ({
       from: "Summon <hello@wesummon.com>",
-      to: user.email,
+      to: u.email!,
       subject: "A lot has changed in your city this week 🎶",
-      html: `
-        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#0a0a0a;color:#f0f0f0;border-radius:12px">
-          <h2 style="margin:0 0 8px;font-size:22px;color:#fff">Miss anything?</h2>
-          <p style="color:#aaa;margin:0 0 24px;font-size:15px">
-            Votes have been rolling in across cities you follow. Come see where your artists stand.
-          </p>
+      html,
+    }));
 
-          <div style="background:#111;border:1px solid #222;border-radius:8px;padding:16px;margin-bottom:24px">
-            <p style="margin:0;font-size:14px;color:#d4d4d4;line-height:1.6">
-              Some cities are just a few votes from unlocking the next venue tier.
-              Every vote counts — invite a friend and tip it over the line.
-            </p>
-          </div>
-
-          <a href="https://wesummon.com/explore" style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px">
-            See what's happening →
-          </a>
-
-          <p style="color:#555;font-size:12px;margin-top:32px">
-            Summon · Fan-driven shows · <a href="https://wesummon.com" style="color:#555">wesummon.com</a>
-            · <a href="https://wesummon.com/settings" style="color:#555">Manage email preferences</a>
-          </p>
-        </div>
-      `,
-    }).catch(() => {});
-    sent++;
+  const BATCH_SIZE = 100;
+  let sent = 0;
+  for (let i = 0; i < emails.length; i += BATCH_SIZE) {
+    await resend.batch.send(emails.slice(i, i + BATCH_SIZE)).catch(() => {});
+    sent += emails.slice(i, i + BATCH_SIZE).length;
   }
 
   return NextResponse.json({ sent });

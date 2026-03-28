@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
 import CapacitorProvider from "@/components/CapacitorProvider";
@@ -17,6 +17,13 @@ const neueMontreal = localFont({
   variable: "--font-neue-montreal",
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#080B14",
+};
 
 export const metadata: Metadata = {
   title: "Summon — Vote for Artists to Play Your City",

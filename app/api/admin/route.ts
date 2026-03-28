@@ -19,6 +19,10 @@ function allowAdmin(ip: string): boolean {
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 async function requireAdmin() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -57,7 +61,7 @@ function buildEmail(
           <p style="color:#d4d4d4;font-size:15px;line-height:1.6">
             Your ${typeLabel} submission has been <strong style="color:#4ade80">approved</strong> and is now live on Summon.
           </p>
-          ${submission.review_note ? `<p style="color:#aaa;font-size:14px;font-style:italic;border-left:3px solid #333;padding-left:12px;margin-top:16px">${submission.review_note}</p>` : ""}
+          ${submission.review_note ? `<p style="color:#aaa;font-size:14px;font-style:italic;border-left:3px solid #333;padding-left:12px;margin-top:16px">${escapeHtml(submission.review_note)}</p>` : ""}
           <a href="https://wesummon.com/explore" style="display:inline-block;margin-top:24px;padding:12px 24px;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px">
             View on Summon →
           </a>
@@ -80,7 +84,7 @@ function buildEmail(
         <p style="color:#d4d4d4;font-size:15px;line-height:1.6">
           Unfortunately your ${typeLabel} submission wasn't approved at this time.
         </p>
-        ${submission.review_note ? `<p style="color:#aaa;font-size:14px;font-style:italic;border-left:3px solid #333;padding-left:12px;margin-top:16px">${submission.review_note}</p>` : ""}
+        ${submission.review_note ? `<p style="color:#aaa;font-size:14px;font-style:italic;border-left:3px solid #333;padding-left:12px;margin-top:16px">${escapeHtml(submission.review_note)}</p>` : ""}
         <p style="color:#888;font-size:14px;margin-top:16px">
           You're welcome to submit again if you think this was a mistake or have updated information.
         </p>

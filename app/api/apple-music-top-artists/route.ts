@@ -42,9 +42,9 @@ async function getDeveloperToken() {
 
 export async function POST(req: Request) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -88,7 +88,7 @@ export async function POST(req: Request) {
       const { data: profile } = await supabase
         .from("profiles")
         .select("favourite_artists")
-        .eq("id", session.user.id)
+        .eq("id", user.id)
         .single();
 
       const existing: string[] = profile?.favourite_artists ?? [];
@@ -98,7 +98,7 @@ export async function POST(req: Request) {
         await supabase
           .from("profiles")
           .update({ favourite_artists: [...existing, ...newIds] })
-          .eq("id", session.user.id);
+          .eq("id", user.id);
       }
     }
 

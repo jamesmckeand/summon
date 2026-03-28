@@ -30,14 +30,15 @@ async function resolveViaDeezer(names: string[], supabase: SupabaseClient): Prom
 
 export async function GET() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userId = session.user.id;
-  const providerToken = session.provider_token;
+  const userId = user.id;
+  const { data: { session } } = await supabase.auth.getSession();
+  const providerToken = session?.provider_token;
 
   // No token — return cached artists from profile
   if (!providerToken) {

@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.wesummon.app",
+  appId: "com.wesummon.summon",
   appName: "Summon",
   // webDir is required by Capacitor even in server mode
   webDir: "out",

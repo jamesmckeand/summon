@@ -15,14 +15,18 @@ const BASE = "https://wesummon.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes: MetadataRoute.Sitemap = [
-    { url: BASE, priority: 1.0, changeFrequency: "daily" },
-    { url: `${BASE}/explore`, priority: 0.9, changeFrequency: "daily" },
-    { url: `${BASE}/cities`, priority: 0.8, changeFrequency: "daily" },
-    { url: `${BASE}/shows`, priority: 0.8, changeFrequency: "daily" },
-    { url: `${BASE}/login`, priority: 0.4, changeFrequency: "monthly" },
+    { url: BASE,                    priority: 1.0, changeFrequency: "daily"   },
+    { url: `${BASE}/explore`,       priority: 0.9, changeFrequency: "daily"   },
+    { url: `${BASE}/cities`,        priority: 0.8, changeFrequency: "daily"   },
+    { url: `${BASE}/shows`,         priority: 0.8, changeFrequency: "daily"   },
+    { url: `${BASE}/leaderboard`,   priority: 0.7, changeFrequency: "daily"   },
+    { url: `${BASE}/login`,         priority: 0.4, changeFrequency: "monthly" },
+    { url: `${BASE}/about`,         priority: 0.4, changeFrequency: "monthly" },
+    { url: `${BASE}/privacy`,       priority: 0.3, changeFrequency: "monthly" },
+    { url: `${BASE}/terms`,         priority: 0.3, changeFrequency: "monthly" },
   ];
 
-  const artistRoutes: MetadataRoute.Sitemap = Array.from({ length: 1001 }, (_, i) => ({
+  const artistRoutes: MetadataRoute.Sitemap = Array.from({ length: 1045 }, (_, i) => ({
     url: `${BASE}/artist/${i + 1}`,
     priority: 0.7,
     changeFrequency: "weekly" as const,

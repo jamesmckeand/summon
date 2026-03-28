@@ -28,6 +28,16 @@
 ### Content
 - **Launch copy written** — saved to `LAUNCH_COPY_NEW.md`: waitlist email, Betalist listing, Peerlist listing, r/SideProject post, Indie Hackers post, r/concerts post, r/indieheads post, r/hiphopheads post.
 
+### Post-Launch Audit Fixes
+- **SEC-1: getSession() → getUser()** — fixed in 3 API routes (`musickit-token`, `apple-music-top-artists`, `spotify-top-artists`). `getUser()` validates JWT server-side; `getSession()` only trusts local cookie.
+- **SEC-2: HTML escaping** — added `escapeHtml()` to `app/api/admin/route.ts`. `review_note` now escaped before injection into email HTML templates.
+- **SEO/Mobile: viewport export** — added `export const viewport` to `app/layout.tsx` with `width`, `initialScale`, `maximumScale`, `themeColor: "#080B14"`. Fixes missing viewport + theme-color meta.
+- **UX: 404 page** — created `app/not-found.tsx` with branded 404 and home button.
+- **UX: Dashboard in BottomNav** — added Dashboard tab (`LayoutDashboard` icon) as centre tab. Nav is now 5 tabs.
+- **SEO: Sitemap updated** — artist count corrected 1001 → 1045; added `/leaderboard`, `/about`, `/privacy`, `/terms` routes.
+- **iOS: Capacitor appId fixed** — `com.wesummon.app` → `com.wesummon.summon` to match Apple Developer bundle ID.
+- **Performance: Batch email sending** — reengagement + trending crons converted from sequential `for` loop to `resend.batch.send()` (100 emails/call). Eliminates Resend rate limit risk at scale.
+
 ---
 
 ## 2026-03-27

@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Compass, Ticket, MapPin, User } from "lucide-react";
+import { Compass, Ticket, MapPin, User, LayoutDashboard } from "lucide-react";
 
 const TABS = [
-  { href: "/explore", label: "Explore", icon: Compass },
-  { href: "/shows",   label: "Shows",   icon: Ticket  },
-  { href: "/cities",  label: "Cities",  icon: MapPin  },
-  { href: "/profile", label: "Profile", icon: User    },
+  { href: "/explore",   label: "Explore",    icon: Compass         },
+  { href: "/shows",     label: "Shows",      icon: Ticket          },
+  { href: "/dashboard", label: "Dashboard",  icon: LayoutDashboard },
+  { href: "/cities",    label: "Cities",     icon: MapPin          },
+  { href: "/profile",   label: "Profile",    icon: User            },
 ];
 
 export default function BottomNav() {
@@ -38,7 +39,7 @@ export default function BottomNav() {
                 <Link
                   key={href}
                   href={href}
-                  className="flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition-all"
+                  className="flex flex-col items-center gap-1 px-2 py-1 rounded-xl transition-all"
                   aria-current={isActive ? "page" : undefined}
                 >
                   <div className={`w-6 h-6 flex items-center justify-center transition-all ${isActive ? "scale-110" : ""}`}>

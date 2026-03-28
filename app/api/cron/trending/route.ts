@@ -101,39 +101,43 @@ export async function GET(request: Request) {
     </tr>
   `).join("");
 
-  let sent = 0;
-  for (const user of targets) {
-    if (!user.email) continue;
-    await resend.emails.send({
+  const emailHtml = `
+    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0a0a0a;color:#f0f0f0;border-radius:12px">
+      <h2 style="margin:0 0 4px;font-size:22px;color:#fff">This week's closest calls 🔥</h2>
+      <p style="color:#aaa;margin:0 0 24px;font-size:14px">These shows are within touching distance. A share could tip them over.</p>
+      <table style="width:100%;border-collapse:collapse;background:#111;border-radius:8px;overflow:hidden;margin-bottom:24px">
+        <thead>
+          <tr style="background:#1a1a1a">
+            <th style="padding:10px 16px;text-align:left;font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.05em">Artist · City</th>
+            <th style="padding:10px 16px;text-align:right;font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.05em">Votes</th>
+            <th style="padding:10px 16px;text-align:right;font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.05em">Needed</th>
+            <th style="padding:10px 16px;font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.05em">Tier</th>
+          </tr>
+        </thead>
+        <tbody>${comboRows}</tbody>
+      </table>
+      <a href="https://wesummon.com/explore" style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px">
+        Vote &amp; share →
+      </a>
+      <p style="color:#555;font-size:12px;margin-top:32px">Summon · Fan-driven shows · <a href="https://wesummon.com" style="color:#555">wesummon.com</a> · <a href="https://wesummon.com/settings" style="color:#555">Manage email preferences</a></p>
+    </div>
+  `;
+
+  const subject = `${top[0].needed} votes away — ${top[0].artistName} in ${top[0].city} is almost there`;
+  const emails = targets
+    .filter((u) => u.email)
+    .map((u) => ({
       from: "Summon <hello@wesummon.com>",
-      to: user.email,
-      subject: `${top[0].needed} votes away — ${top[0].artistName} in ${top[0].city} is almost there`,
-      html: `
-        <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0a0a0a;color:#f0f0f0;border-radius:12px">
-          <h2 style="margin:0 0 4px;font-size:22px;color:#fff">This week's closest calls 🔥</h2>
-          <p style="color:#aaa;margin:0 0 24px;font-size:14px">These shows are within touching distance. A share could tip them over.</p>
+      to: u.email!,
+      subject,
+      html: emailHtml,
+    }));
 
-          <table style="width:100%;border-collapse:collapse;background:#111;border-radius:8px;overflow:hidden;margin-bottom:24px">
-            <thead>
-              <tr style="background:#1a1a1a">
-                <th style="padding:10px 16px;text-align:left;font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.05em">Artist · City</th>
-                <th style="padding:10px 16px;text-align:right;font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.05em">Votes</th>
-                <th style="padding:10px 16px;text-align:right;font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.05em">Needed</th>
-                <th style="padding:10px 16px;font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.05em">Tier</th>
-              </tr>
-            </thead>
-            <tbody>${comboRows}</tbody>
-          </table>
-
-          <a href="https://wesummon.com/explore" style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px">
-            Vote &amp; share →
-          </a>
-
-          <p style="color:#555;font-size:12px;margin-top:32px">Summon · Fan-driven shows · <a href="https://wesummon.com" style="color:#555">wesummon.com</a> · <a href="https://wesummon.com/settings" style="color:#555">Manage email preferences</a></p>
-        </div>
-      `,
-    }).catch(() => {});
-    sent++;
+  const BATCH_SIZE = 100;
+  let sent = 0;
+  for (let i = 0; i < emails.length; i += BATCH_SIZE) {
+    await resend.batch.send(emails.slice(i, i + BATCH_SIZE)).catch(() => {});
+    sent += emails.slice(i, i + BATCH_SIZE).length;
   }
 
   return NextResponse.json({ sent, combos: top.length });
