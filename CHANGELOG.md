@@ -87,24 +87,188 @@
 
 ---
 
-## Earlier (pre-session)
+## 2026-03-21
 
-### Summon — Completed
-- Full voting system (city × artist)
-- Auth: Apple Sign In, Google, Facebook (now published), Email OTP
-- Dashboard, explore, leaderboard, artist pages, profile, settings
-- Superfan premium ($4/mo) — Stripe live
-- Referral system (?ref= cookie, credits)
-- Programmatic SEO — 1,000 `/live/[artistSlug]/[citySlug]` pages + sitemap
-- Automated venue/promoter outreach on threshold crossing
-- Artist booking contact lookup (50-away trigger)
-- Email notifications: threshold crossing, 50-away warning, 7-day re-engagement cron, weekly trending digest
-- Push notifications (APNS, daily 6pm UTC)
-- Rate limiting (Upstash Redis)
-- Full accessibility audit — 23 issues fixed
-- Privacy policy, Terms of Service, EULA
-- App Store listing copy, keywords, description — in `LAUNCH_COPY.md`
-- Sentry error tracking
-- Google Workspace (hello@wesummon.com)
-- Stripe live (keys in Vercel + .env.local)
-- Seed votes (35 combos, 10 artists)
+### Accessibility (23 issues fixed)
+- All dropdowns converted from `div` → `button` with `aria-haspopup`, `aria-expanded`, `role=listbox/option` — CityDropdown, ExploreFilters, leaderboard
+- `AuthModal` — added `role=dialog`, `aria-modal`, `aria-labelledby`
+- Toggle — added `role=switch`, `aria-checked`
+- All icon-only buttons — added `aria-label` (edit, save, cancel, share, close, remove)
+- All search/form inputs — added `sr-only` labels
+- Venue selection buttons — added `aria-pressed`
+- BottomNav — added `aria-current=page`, icons `aria-hidden`
+- All `text-[10px]` → `text-xs` across all files (dynamic text size support)
+
+### UX Polish
+- Popular cities added to CityDropdown
+- Consistent ambient glow across all inner-app pages
+- Vote progress bar added to artist pages
+- Vote button animation on cast
+- Leaderboard rank numbers styled with brand gradient
+- Error boundary added to catch runtime errors gracefully
+
+### Security
+- Input validation hardened across all API routes
+- XSS escaping verified on all user-submitted content
+- Referral system security — UUID format enforced on `?ref=` param
+- Rate limiting expanded: votes, search, artist-image, waitlist endpoints
+- Stripe webhook signature verification added
+- Email preferences API secured with session check
+
+### Auth
+- Removed Spotify login — dev mode 25-user cap (re-add at 250k MAU)
+- Removed Spotify from all UI: login modal, homepage, explore, onboarding
+
+### Meta / Verification
+- Facebook domain verification meta tag added
+- Impact.com site verification meta tag added + updated
+
+---
+
+## 2026-03-11
+
+### Growth
+- **Artist booking contact lookup** — `artist_contacts` table, fires async on 50-away or threshold crossing. Looks up booking email via web search and stores for outreach.
+- **Automated venue/promoter outreach** — `outreach_log` table + `lib/outreach.ts`. Emails sent to venues when vote thresholds crossed (500/2500/7500/25000).
+
+### Revenue
+- **Stripe Superfan** — $4/mo subscription live. `subscriptions` table, `/superfan` paywall page, Stripe webhook handling, EULA linked.
+- **APNS push notifications** — `lib/apns.ts`, `push_tokens` table, `/api/cron/push` (daily 6pm UTC). Notifies users when artists near threshold.
+
+### SEO
+- Programmatic SEO pages — `/live/[artistSlug]/[citySlug]` — 1,000 static pages generated, sitemap wired.
+
+---
+
+## 2026-03-09
+
+### Growth
+- **Referral system** — `?ref=` cookie (first touch wins), auth callback credits referrer, `shareUrls` wired throughout app.
+- **Email triggers** — threshold crossing email + internal alert (500/2500/7500/25000), "50 votes away" warning email.
+- **7-day re-engagement cron** — `/api/cron/reengagement`, runs daily 10am UTC via Vercel cron.
+- **Weekly trending digest** — `/api/cron/trending`, runs Mondays 9am UTC.
+- **Sentry** — error tracking integrated. `SENTRY_DSN` in Vercel.
+- **Affiliate stubs** — Impact.com account created as "Summon Music". Ticketmaster affiliate URL wired.
+
+---
+
+## 2026-03-08
+
+### Security (full audit)
+- Sessions and auth via Supabase — all routes protected
+- Parameterized queries throughout — no raw SQL
+- RLS policies on all tables
+- Redirect URL validation in auth callback
+- Rate limiting on votes, search, artist-image, waitlist
+- `npm audit` — 0 vulnerabilities
+- `middleware.ts` → `proxy.ts` (Next.js 16 compatibility fix)
+
+### Design
+- Dashboard card aesthetic — Dark Slate Gray `#191919` surfaces
+- Mobile bottom tab bar (BottomNav) — Home, Explore, Leaderboard, Profile
+- `CLAUDE.md` added to repo — conventions, stack, security rules for AI sessions
+
+---
+
+## 2026-03-07
+
+### Features
+- **Apple Music import** — `AppleMusicConnect` component in profile. Imports top artists into `favourite_artists` on connect. Library limit bumped to 100.
+- **Spotify top artists import** — fires on first login, imports into `favourite_artists`.
+- **Social logins** — Apple Sign In, Google OAuth, Facebook OAuth (dev mode), Email OTP all wired via Supabase.
+- **Animated crowd silhouette hero** — spotlight effect, CSS animation. (Later removed — redesigned.)
+- **Marquee** — scrolling artist name ticker on homepage.
+
+### Refactors
+- Extracted shared `ArtistAvatar` component
+- Extracted shared `AuthModal` component
+- Extracted shared `CityDropdown` component
+- Modularised explore page, artist client, submit flow, profile
+
+### Affiliate
+- Switched Ticketmaster affiliate from CJ → Impact
+- Impact site verification meta tag added
+
+### Full site redesign
+- Brand gradient (purple → indigo → blue) across all surfaces
+- Neue Montreal via `next/font/local` (replaced system font)
+- Programmatic SEO structure established
+- OG images for artist pages
+- Profile vote history page
+
+---
+
+## 2026-03-05 – 2026-03-06
+
+### Artist Images
+- Pre-baked artist images into `/public/artist-images.json` — eliminates runtime Deezer timeout. 890/1001 artists covered.
+- Artist page rewrite — image, top tracks audio previews, vote history.
+
+### Homepage
+- Auth-aware CTAs (logged in vs logged out state)
+- Simplified threshold labels
+- "Millions of" artist count copy
+
+---
+
+## 2026-03-04
+
+### Features
+- **Live Deezer artist search** — users can search any artist not in static catalogue and vote instantly. Results fed via Deezer API, stored as community artists (`dz-{deezerId}` prefix).
+- **Ticket mascot** — animated ticket man character (later reverted for redesign).
+- City expansion — additional cities added to catalogue.
+- Renamed duplicate `Birmingham` key → `Birmingham, UK`.
+
+---
+
+## 2026-03-03
+
+### Security
+- Waitlist deduplication — prevent duplicate email signups
+- Rate limiting on waitlist endpoint
+- RLS gap patched
+- Cache hardening on API routes
+
+---
+
+## 2026-03-02
+
+### Shows Page
+- **Shows page built** — aggregates real concert data from Bandsintown + Songkick. Artist-grouped cards, city filter, urgency badges, client-side load more.
+- City filter → search bar (replaced pill scroller)
+- Sort shows by user's favourites first, then popularity
+- Artist-show matching fixed (was matching wrong artists)
+- Shows hidden until search query entered
+
+### Cities
+- **Cities leaderboard** — `/cities` page showing vote totals by city.
+- Referral URLs wired to city and artist pages.
+
+### Bug Fixes
+- White flash on page load fixed (removed body `background-image`, fixed Framer Motion + light gradient conflict)
+- Expired shows filtered out
+- TypeScript sort error in shows route fixed
+- Marquee hidden by hero `overflow-hidden` fixed
+
+### Infrastructure
+- Coming soon page merged into `proxy.ts` — single middleware handles both the gate and auth cookie refresh.
+
+---
+
+## 2026-03-01
+
+### Foundation
+- **Initial commit** — Summon app created with `create-next-app`.
+- Stack: Next.js 16, TypeScript, Tailwind CSS, Supabase, Resend, Vercel.
+- **Spotify personalization** — For You section on explore, top artists import.
+- Page transitions, loading skeletons across all pages.
+- Legal pages: Privacy Policy (`/privacy`), Terms of Service (`/terms`).
+- Footer with links.
+- Vercel Analytics wired.
+- Email sender set to `hello@wesummon.com` via Resend.
+
+---
+
+## 2026-02-28
+
+- **Project initialised** — `create-next-app` scaffold. Repository: `jamesmckeand/summon`.
