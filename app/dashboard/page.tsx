@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter as useNextRouter } from "next/navigation";
@@ -72,7 +73,7 @@ function VoteProgress({ artist, cityVenues }: { artist: ArtistWithVotes; cityVen
   );
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const searchParams = useSearchParams();
   const nextRouter = useNextRouter();
   const justUpgraded = searchParams.get("superfan") === "1";
@@ -526,5 +527,26 @@ export default function DashboardPage() {
       </div>
       <Footer />
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background">
+        <Nav />
+        <div className="pt-24 pb-20 px-6 max-w-4xl mx-auto animate-pulse">
+          <div className="h-3 bg-muted/60 rounded w-24 mb-3" />
+          <div className="h-8 bg-muted/60 rounded w-48 mb-8" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            {[0,1,2,3].map((i) => <div key={i} className="card-solid rounded-2xl p-5 h-20" />)}
+          </div>
+          <div className="glass rounded-2xl p-5 h-40 mb-6" />
+          <div className="glass rounded-2xl p-5 h-64" />
+        </div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 }
