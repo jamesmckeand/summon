@@ -301,6 +301,23 @@ export async function POST(request: Request) {
         // Queue artist booking/manager contact for outreach
         queueArtistContactOutreach(artistId, artistName, city, after, crossed.tier, crossed.label)
           .catch(() => {});
+        // Fire Make.com webhook for automated social posting
+        if (process.env.MAKE_WEBHOOK_URL) {
+          const artistSlug = artistName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+          const citySlug = city.toLowerCase().replace(/\s+/g, "-");
+          fetch(process.env.MAKE_WEBHOOK_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              artistName,
+              city,
+              voteCount: after,
+              tier: crossed.tier,
+              tierLabel: crossed.label,
+              url: `https://wesummon.com/live/${artistSlug}/${citySlug}`,
+            }),
+          }).catch(() => {});
+        }
         // Push notification to voter
         void createAdminClient()
           .from("push_tokens").select("token").eq("user_id", user.id).eq("platform", "ios").single()
