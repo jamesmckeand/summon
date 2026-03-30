@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); COMMAND=$(echo \"$INPUT\" | jq -r '.tool_input.command // empty'); if echo \"$COMMAND\" | grep -qi 'co-authored-by'; then echo 'BLOCKED: Co-Authored-By in commit message — breaks Vercel Hobby deployments' >&2; exit 2; fi; exit 0"
+          }
+        ]
+      }
+    ]
+  }
+}
