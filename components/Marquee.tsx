@@ -94,7 +94,7 @@ export default function Marquee() {
   }, []);
 
   return (
-    <div className="w-full overflow-hidden mt-16 space-y-3 select-none">
+    <div className="w-full overflow-hidden space-y-3 select-none pb-6">
       <div className="flex" style={{ animation: "marquee-left 40s linear infinite" }}>
         {[...row1, ...row1].map((a, i) => (
           <ArtistCard key={`r1-${i}`} {...a} image={images[a.name] ?? null} />
