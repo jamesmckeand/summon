@@ -26,6 +26,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://wesummon.com"),
   title: "Summon — Vote for Artists to Play Your City",
   description:
     "Vote for the artists you want to see live in your city. When demand is loud enough, we make it happen.",
