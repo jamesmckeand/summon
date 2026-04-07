@@ -17,7 +17,11 @@ function allowAdmin(ip: string): boolean {
 }
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
-const resend = new Resend(process.env.RESEND_API_KEY);
+let _resend: Resend | null = null;
+function getResend() {
+  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY!);
+  return _resend;
+}
 
 function escapeHtml(str: string): string {
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -153,7 +157,7 @@ export async function PATCH(request: Request) {
   // Send email if we have a submitter address
   if (submission?.submitter_email) {
     const { subject, html } = buildEmail(status, { ...submission, review_note });
-    await resend.emails.send({
+    await getResend().emails.send({
       from: "Summon <hello@wesummon.com>",
       to: submission.submitter_email,
       subject,
