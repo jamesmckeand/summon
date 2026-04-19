@@ -4,7 +4,10 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { checkRateLimit } from "@/lib/rate-limit";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResend() {
+  if (!process.env.RESEND_API_KEY) throw new Error("RESEND_API_KEY not set");
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 export async function POST(req: Request) {
   const { email } = await req.json();
@@ -29,7 +32,7 @@ export async function POST(req: Request) {
   }
 
   // Notify admin
-  await resend.emails.send({
+  await getResend().emails.send({
     from: "Summon <hello@wesummon.com>",
     to: process.env.ADMIN_EMAILS ?? "hello@wesummon.com",
     subject: `New waitlist signup: ${email}`,
@@ -37,7 +40,7 @@ export async function POST(req: Request) {
   }).catch(() => {});
 
   // Confirm to user
-  await resend.emails.send({
+  await getResend().emails.send({
     from: "Summon <hello@wesummon.com>",
     to: email,
     subject: "You're on the Summon waitlist 🎶",

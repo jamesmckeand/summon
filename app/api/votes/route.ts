@@ -20,7 +20,10 @@ const THRESHOLDS = [
   { votes: 25000, tier: "arena" as const,       label: "Arena" },
 ];
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResend() {
+  if (!process.env.RESEND_API_KEY) throw new Error("RESEND_API_KEY not set");
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 function escapeHtml(str: string): string {
   return str
@@ -65,7 +68,7 @@ Best,
 Summon Team
 hello@wesummon.com`;
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: "Summon <hello@wesummon.com>",
     to: "hello@wesummon.com",
     subject: `🚨 Outreach needed: ${artistName} hit ${voteCount.toLocaleString()} votes in ${city}`,
@@ -139,7 +142,7 @@ async function sendWarningEmail(
   const eCity = escapeHtml(city);
   const eTierLabel = escapeHtml(tierLabel);
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: "Summon <hello@wesummon.com>",
     to: email,
     subject: `${votesNeeded} more votes to unlock ${tierLabel} for ${artistName} in ${city}`,
@@ -186,7 +189,7 @@ async function sendThresholdEmail(
   const eCity = escapeHtml(city);
   const eVenue = escapeHtml(venueName);
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: "Summon <hello@wesummon.com>",
     to: email,
     subject: `${artistName} just hit ${voteCount.toLocaleString()} votes in ${city} 🎉`,
