@@ -3,7 +3,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { artistToSlug } from "@/lib/utils/artist-slug";
 import { cityToSlug } from "@/lib/utils/city-slug";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResend() {
+  if (!process.env.RESEND_API_KEY) throw new Error("RESEND_API_KEY not set");
+  return new Resend(process.env.RESEND_API_KEY);
+}
 const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wesummon.com";
 
 // When an artist hits a threshold, look up their booking contact and queue outreach
@@ -63,7 +66,7 @@ export async function queueArtistContactOutreach(
   const demandUrl = `${BASE}/live/${artistToSlug(artistName)}/${cityToSlug(city)}`;
   const hasContact = contact?.booking_agent_email || contact?.manager_email;
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: "Summon <hello@wesummon.com>",
     to: "hello@wesummon.com",
     subject: `🎤 Artist contact queued: ${artistName} hit ${voteCount.toLocaleString()} votes in ${city}`,
@@ -153,7 +156,7 @@ export async function sendAutomatedOutreach(
         ? `Hi ${promoter.talent_buyer.split(" ")[0]},`
         : "Hi there,";
 
-      await resend.emails.send({
+      await getResend().emails.send({
         from: "James at Summon <hello@wesummon.com>",
         to: promoter.booking_email!,
         subject: `${voteCount.toLocaleString()} fans want ${artistName} at ${promoter.venue_name}`,
