@@ -6,7 +6,10 @@ import { ARTISTS } from "@/lib/data/artists";
 import { artistToSlug } from "@/lib/utils/artist-slug";
 import { cityToSlug } from "@/lib/utils/city-slug";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResend() {
+  if (!process.env.RESEND_API_KEY) throw new Error("RESEND_API_KEY not set");
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 const THRESHOLDS = [500, 2500, 7500, 25000];
 const THRESHOLD_LABELS = ["Bar / Club", "Theatre", "Concert Hall", "Arena"];
@@ -136,7 +139,7 @@ export async function GET(request: Request) {
   const BATCH_SIZE = 100;
   let sent = 0;
   for (let i = 0; i < emails.length; i += BATCH_SIZE) {
-    await resend.batch.send(emails.slice(i, i + BATCH_SIZE)).catch(() => {});
+    await getResend().batch.send(emails.slice(i, i + BATCH_SIZE)).catch(() => {});
     sent += emails.slice(i, i + BATCH_SIZE).length;
   }
 

@@ -3,7 +3,10 @@ import { Resend } from "resend";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { listAllUsers } from "@/lib/supabase/list-all-users";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResend() {
+  if (!process.env.RESEND_API_KEY) throw new Error("RESEND_API_KEY not set");
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 export async function GET(request: Request) {
   // Verify this is a legitimate Vercel cron call
@@ -93,7 +96,7 @@ export async function GET(request: Request) {
   const BATCH_SIZE = 100;
   let sent = 0;
   for (let i = 0; i < emails.length; i += BATCH_SIZE) {
-    await resend.batch.send(emails.slice(i, i + BATCH_SIZE)).catch(() => {});
+    await getResend().batch.send(emails.slice(i, i + BATCH_SIZE)).catch(() => {});
     sent += emails.slice(i, i + BATCH_SIZE).length;
   }
 
