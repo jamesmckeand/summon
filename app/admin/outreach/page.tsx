@@ -99,11 +99,6 @@ export default function AdminOutreachPage() {
     );
   }
 
-  const contactsByStatus = STATUSES.reduce((acc, s) => {
-    acc[s] = contacts.filter((c) => c.status === s).length;
-    return acc;
-  }, {} as Record<string, number>);
-
   return (
     <div className="min-h-screen bg-background">
       <Nav />

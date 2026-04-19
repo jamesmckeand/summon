@@ -1,9 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
-import { ARTISTS } from "@/lib/data/artists";
 import { CITIES } from "@/lib/data/cities";
 
-const ARTIST_MAP = new Map(ARTISTS.map((a) => [a.id, a.name]));
 const VALID_CITIES = new Set(CITIES);
 
 export async function GET(request: Request) {
