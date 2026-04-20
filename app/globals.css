@@ -82,6 +82,12 @@
   body {
     @apply bg-background text-foreground antialiased;
   }
+  h1, h2, h3, h4 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
 
   ::selection {
     background: oklch(0.68 0.26 308 / 30%);
@@ -176,7 +182,7 @@
     transition: transform 0.1s ease, box-shadow 0.1s ease;
   }
   .btn-press:active {
-    transform: scale(0.97);
+    transform: scale(0.96);
   }
 
   /* Number shimmer — for stats/vote counts popping in */
