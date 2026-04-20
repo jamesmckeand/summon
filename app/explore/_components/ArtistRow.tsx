@@ -16,8 +16,7 @@ function getProgressToNext(votes: number): number {
   return Math.min(((votes - prev) / (next - prev)) * 100, 100);
 }
 
-function getVenueLabel(votes: number, city: string): string {
-  // Dynamic import avoided — just return tier label for now
+function getVenueLabel(votes: number): string {
   const TIERS = [
     { votes: 25000, label: "Arena" },
     { votes: 7500,  label: "Concert Hall" },
@@ -99,7 +98,7 @@ export default function ArtistRow({
             </p>
             <p className="text-xs text-muted-foreground">votes</p>
             <p className="text-xs text-muted-foreground/60 truncate max-w-[120px] hidden sm:block">
-              {!countsLoading && getVenueLabel(votes, selectedCity)}
+              {!countsLoading && getVenueLabel(votes)}
             </p>
           </div>
         )}

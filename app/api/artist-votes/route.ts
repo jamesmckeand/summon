@@ -8,7 +8,9 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const artistId = searchParams.get("artistId");
   if (!artistId) return NextResponse.json({ error: "artistId required" }, { status: 400 });
-  if (!VALID_ARTIST_IDS.has(artistId)) return NextResponse.json({ cityVotes: [] });
+  if (!VALID_ARTIST_IDS.has(artistId) && !artistId.startsWith("da_") && !artistId.startsWith("dz-")) {
+    return NextResponse.json({ cityVotes: [] });
+  }
 
   const supabase = await createClient();
   const { data } = await supabase

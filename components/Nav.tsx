@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import UserAvatar from "@/components/UserAvatar";
 import { createClient } from "@/lib/supabase/client";
@@ -67,7 +66,6 @@ export default function Nav() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-  const router = useRouter();
   const pathname = usePathname();
   const { initFromDb, clearVotes, setActiveCity, activeCity, cachedUser, setCachedUser } = useVoteStore();
 
@@ -113,12 +111,6 @@ export default function Nav() {
 
     return () => listener.subscription.unsubscribe();
   }, [initFromDb, clearVotes]);
-
-  async function handleSignOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/");
-  }
 
   // cachedUser gives instant render on navigation; live `user` verifies in background
   const displayName = cachedUser?.displayName || user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "Account";

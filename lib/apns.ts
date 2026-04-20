@@ -6,7 +6,7 @@
  *   APNS_KEY_ID      — 10-char key ID from Apple Developer → Certificates → Keys
  *   APNS_TEAM_ID     — 10-char Team ID from Apple Developer → Membership
  *   APNS_PRIVATE_KEY — contents of the .p8 file (with \n escaped as \\n in Vercel)
- *   APNS_BUNDLE_ID   — com.wesummon.app
+ *   APNS_BUNDLE_ID   — com.wesummon.summon
  */
 
 import http2 from "node:http2";

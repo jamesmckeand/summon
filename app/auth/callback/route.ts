@@ -50,13 +50,6 @@ async function importSpotifyTopArtists(providerToken: string, userId: string, su
   }
 }
 
-async function importAppleMusicTopArtists(userId: string, supabase: Awaited<ReturnType<typeof createClient>>) {
-  // Apple Music API requires a separate Music User Token (not the OAuth token).
-  // This needs to be done client-side via MusicKit JS after login.
-  // Placeholder — see /api/import-apple-music route for the client-side flow.
-  void userId; void supabase;
-}
-
 const ALLOWED_NEXT_PATHS = new Set([
   "/explore", "/dashboard", "/profile", "/shows", "/cities", "/submit", "/onboarding",
   "/leaderboard", "/superfan", "/help", "/about",
