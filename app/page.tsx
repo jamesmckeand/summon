@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { fadeUp } from "@/lib/animations";
 import HeroOrbs from "@/components/HeroOrbs";
+import ArtistMarquee from "@/components/ArtistMarquee";
 import Marquee from "@/components/Marquee";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
@@ -76,12 +77,9 @@ export default function Home() {
         {/* Hero background — bouncing orbs */}
         <HeroOrbs />
 
-        {/* Overline badge */}
-        <div className="anim-fade-up flex items-center gap-2 mb-8" style={{ animationDelay: "0.1s" }}>
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.03] text-xs font-medium text-muted-foreground tracking-wide">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse inline-block" />
-            Live music demand
-          </span>
+        {/* Artist name marquee strip */}
+        <div className="anim-fade-up w-full" style={{ animationDelay: "0.1s" }}>
+          <ArtistMarquee />
         </div>
 
         {/* Headline */}
