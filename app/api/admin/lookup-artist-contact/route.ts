@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 // Internal endpoint — requires CRON_SECRET header
 // Called async (fire-and-forget) when an artist crosses 50-votes-away or a threshold.
@@ -76,12 +78,23 @@ async function lookupDuckDuckGo(artistName: string) {
 }
 
 export async function POST(request: Request) {
+  const hdrs = await headers();
+  const ip = hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  if (!await checkRateLimit(`lookup-artist-contact:${ip}`, 20, 60)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const secret = request.headers.get("x-cron-secret");
   if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { artistId, artistName } = await request.json();
+  let artistId: string, artistName: string;
+  try {
+    ({ artistId, artistName } = await request.json());
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
   if (!artistId || !artistName) {
     return NextResponse.json({ error: "Missing artistId or artistName" }, { status: 400 });
   }

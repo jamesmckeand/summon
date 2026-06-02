@@ -45,9 +45,11 @@ function buildEmail(
     review_note?: string | null;
   }
 ): { subject: string; html: string } {
-  const name = submission.type === "artist"
-    ? submission.artist_name
-    : `${submission.venue_name} (${submission.venue_city})`;
+  const name = escapeHtml(
+    submission.type === "artist"
+      ? (submission.artist_name ?? "(unknown)")
+      : `${submission.venue_name ?? ""} (${submission.venue_city ?? ""})`
+  );
 
   const typeLabel = submission.type === "artist" ? "artist" : "venue";
 
@@ -63,7 +65,7 @@ function buildEmail(
             <p style="margin:6px 0 0;font-size:18px;font-weight:700;color:#fff">${name}</p>
           </div>
           <p style="color:#d4d4d4;font-size:15px;line-height:1.6">
-            Your ${typeLabel} submission has been <strong style="color:#4ade80">approved</strong> and is now live on Summon.
+            Your ${escapeHtml(typeLabel)} submission has been <strong style="color:#4ade80">approved</strong> and is now live on Summon.
           </p>
           ${submission.review_note ? `<p style="color:#aaa;font-size:14px;font-style:italic;border-left:3px solid #333;padding-left:12px;margin-top:16px">${escapeHtml(submission.review_note)}</p>` : ""}
           <a href="https://wesummon.com/explore" style="display:inline-block;margin-top:24px;padding:12px 24px;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px">
@@ -86,7 +88,7 @@ function buildEmail(
           <p style="margin:6px 0 0;font-size:18px;font-weight:700;color:#fff">${name}</p>
         </div>
         <p style="color:#d4d4d4;font-size:15px;line-height:1.6">
-          Unfortunately your ${typeLabel} submission wasn't approved at this time.
+          Unfortunately your ${escapeHtml(typeLabel)} submission wasn't approved at this time.
         </p>
         ${submission.review_note ? `<p style="color:#aaa;font-size:14px;font-style:italic;border-left:3px solid #333;padding-left:12px;margin-top:16px">${escapeHtml(submission.review_note)}</p>` : ""}
         <p style="color:#888;font-size:14px;margin-top:16px">

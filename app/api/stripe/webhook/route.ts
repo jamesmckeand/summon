@@ -29,12 +29,13 @@ export async function POST(request: Request) {
     const userId = sub.metadata?.supabase_user_id;
     if (!userId) return NextResponse.json({ ok: true });
 
+    const priceId = sub.items.data[0]?.price.id;
     const { error: upsertError } = await admin.from("subscriptions").upsert({
       id: sub.id,
       user_id: userId,
       stripe_customer_id: sub.customer as string,
       status: sub.status,
-      price_id: sub.items.data[0]?.price.id ?? "",
+      ...(priceId ? { price_id: priceId } : {}),
       current_period_end: sub.items.data[0]?.current_period_end
         ? new Date(sub.items.data[0].current_period_end * 1000).toISOString()
         : null,

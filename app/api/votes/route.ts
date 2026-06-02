@@ -249,7 +249,12 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { artistId, city } = await request.json();
+  let artistId: string, city: string;
+  try {
+    ({ artistId, city } = await request.json());
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
 
   if (!VALID_CITIES.has(city)) {
     return NextResponse.json({ error: "Invalid artist or city" }, { status: 400 });
@@ -377,7 +382,12 @@ export async function DELETE(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { artistId, city } = await request.json();
+  let artistId: string, city: string;
+  try {
+    ({ artistId, city } = await request.json());
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
 
   if (!VALID_CITIES.has(city)) {
     return NextResponse.json({ error: "Invalid artist or city" }, { status: 400 });

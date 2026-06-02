@@ -46,8 +46,18 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Invalid table" }, { status: 400 });
   }
 
+  const ALLOWED_COLUMNS: Record<string, Set<string>> = {
+    artist_contact_log: new Set(["status", "notes", "manager_name", "manager_email", "booking_agent_name", "booking_agent_email", "agency"]),
+    outreach_log:       new Set(["status", "notes"]),
+  };
+
+  const safeUpdates: Record<string, unknown> = {};
+  for (const [col, val] of Object.entries(updates ?? {})) {
+    if (ALLOWED_COLUMNS[table].has(col)) safeUpdates[col] = val;
+  }
+
   const admin = createAdminClient();
-  const { error } = await admin.from(table).update({ ...updates, updated_at: new Date().toISOString() }).eq("id", id);
+  const { error } = await admin.from(table).update({ ...safeUpdates, updated_at: new Date().toISOString() }).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ ok: true });

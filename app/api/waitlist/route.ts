@@ -27,8 +27,9 @@ export async function POST(req: Request) {
   // so we don't burn Resend quota or spam the user again.
   const supabase = await createClient();
   const { error: dbError } = await supabase.from("waitlist").insert({ email });
-  if (dbError?.code === "23505") {
-    return NextResponse.json({ ok: true });
+  if (dbError) {
+    if (dbError.code === "23505") return NextResponse.json({ ok: true });
+    return NextResponse.json({ error: "Failed to save" }, { status: 500 });
   }
 
   // Notify admin

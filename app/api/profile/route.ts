@@ -39,13 +39,13 @@ export async function PATCH(request: Request) {
     } else if (key === "favourite_artists") {
       const ids = Array.isArray(body[key]) ? body[key] : [];
       updates[key] = ids
-        .filter((id: unknown) => typeof id === "string" && (VALID_ARTIST_IDS.has(id) || /^(da_|dz-)/.test(id)))
+        .filter((id: unknown) => typeof id === "string" && (id as string).length <= 100 && (VALID_ARTIST_IDS.has(id) || /^(da_|dz-)/.test(id as string)))
         .slice(0, 200);
     } else if (key === "favourite_venues") {
       const venues = Array.isArray(body[key]) ? body[key] : [];
-      updates[key] = venues.filter((v: unknown) => typeof v === "string").slice(0, 50);
+      updates[key] = venues.filter((v: unknown) => typeof v === "string" && (v as string).length <= 100).slice(0, 50);
     } else if (key === "notifications_email" || key === "notifications_push") {
-      updates[key] = body[key] === false ? false : true;
+      updates[key] = body[key] !== false && body[key] !== "false";
     }
   }
 

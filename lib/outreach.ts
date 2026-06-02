@@ -7,6 +7,16 @@ function getResend() {
   if (!process.env.RESEND_API_KEY) throw new Error("RESEND_API_KEY not set");
   return new Resend(process.env.RESEND_API_KEY);
 }
+
+function esc(s: string | null | undefined): string {
+  if (!s) return "";
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wesummon.com";
 
 // When an artist hits a threshold, look up their booking contact and queue outreach
@@ -84,14 +94,14 @@ export async function queueArtistContactOutreach(
         ${hasContact ? `
         <div style="background:#0d1a0d;border:1px solid #1a4a1a;border-radius:8px;padding:16px;margin-bottom:20px">
           <p style="margin:0 0 10px;font-size:12px;color:#4ade80;text-transform:uppercase;letter-spacing:.05em">Contact found</p>
-          ${contact?.booking_agent_name ? `<p style="margin:0 0 4px;font-size:14px;color:#d4d4d4"><strong>Booking Agent:</strong> ${contact.booking_agent_name}${contact?.agency ? ` (${contact.agency})` : ""}</p>` : ""}
-          ${contact?.booking_agent_email ? `<p style="margin:0 0 8px;font-size:14px;color:#a78bfa"><a href="mailto:${contact.booking_agent_email}" style="color:#a78bfa">${contact.booking_agent_email}</a></p>` : ""}
-          ${contact?.manager_name ? `<p style="margin:0 0 4px;font-size:14px;color:#d4d4d4"><strong>Manager:</strong> ${contact.manager_name}</p>` : ""}
-          ${contact?.manager_email ? `<p style="margin:0;font-size:14px;color:#a78bfa"><a href="mailto:${contact.manager_email}" style="color:#a78bfa">${contact.manager_email}</a></p>` : ""}
+          ${contact?.booking_agent_name ? `<p style="margin:0 0 4px;font-size:14px;color:#d4d4d4"><strong>Booking Agent:</strong> ${esc(contact.booking_agent_name)}${contact?.agency ? ` (${esc(contact.agency)})` : ""}</p>` : ""}
+          ${contact?.booking_agent_email ? `<p style="margin:0 0 8px;font-size:14px;color:#a78bfa"><a href="mailto:${esc(contact.booking_agent_email)}" style="color:#a78bfa">${esc(contact.booking_agent_email)}</a></p>` : ""}
+          ${contact?.manager_name ? `<p style="margin:0 0 4px;font-size:14px;color:#d4d4d4"><strong>Manager:</strong> ${esc(contact.manager_name)}</p>` : ""}
+          ${contact?.manager_email ? `<p style="margin:0;font-size:14px;color:#a78bfa"><a href="mailto:${esc(contact.manager_email)}" style="color:#a78bfa">${esc(contact.manager_email)}</a></p>` : ""}
         </div>
         ` : `
         <div style="background:#1a0d0d;border:1px solid #4a1a1a;border-radius:8px;padding:14px;margin-bottom:20px">
-          <p style="margin:0;font-size:13px;color:#f87171">No contact found for ${artistName} yet. Add one in the Supabase artist_contacts table.</p>
+          <p style="margin:0;font-size:13px;color:#f87171">No contact found for ${esc(artistName)} yet. Add one in the Supabase artist_contacts table.</p>
         </div>
         `}
 
@@ -152,9 +162,12 @@ export async function sendAutomatedOutreach(
 
   await Promise.allSettled(
     targets.map(async (promoter) => {
-      const greeting = promoter.talent_buyer
-        ? `Hi ${promoter.talent_buyer.split(" ")[0]},`
-        : "Hi there,";
+      const firstName = esc(promoter.talent_buyer?.split(" ")[0] ?? "");
+      const greeting = firstName ? `Hi ${firstName},` : "Hi there,";
+      const eVenue = esc(promoter.venue_name);
+      const eArtist = esc(artistName);
+      const eCity = esc(city);
+      const eTierLabel = esc(tierLabel);
 
       await getResend().emails.send({
         from: "James at Summon <hello@wesummon.com>",
@@ -170,13 +183,13 @@ export async function sendAutomatedOutreach(
             </p>
 
             <p style="margin:0 0 16px">
-              <strong>${voteCount.toLocaleString()} fans in ${city}</strong> have voted for <strong>${artistName}</strong>
-              to perform — and based on that demand, <strong>${promoter.venue_name}</strong> is a strong fit.
+              <strong>${voteCount.toLocaleString()} fans in ${eCity}</strong> have voted for <strong>${eArtist}</strong>
+              to perform — and based on that demand, <strong>${eVenue}</strong> is a strong fit.
             </p>
 
             <div style="background:#f5f3ff;border-left:3px solid #7c3aed;padding:14px 16px;margin:20px 0;border-radius:0 6px 6px 0">
               <p style="margin:0;font-size:14px;color:#444">
-                <strong>${voteCount.toLocaleString()} votes</strong> in ${city} for ${artistName} (${tierLabel} tier)
+                <strong>${voteCount.toLocaleString()} votes</strong> in ${eCity} for ${eArtist} (${eTierLabel} tier)
               </p>
               <p style="margin:6px 0 0;font-size:13px;color:#666">
                 <a href="${demandUrl}" style="color:#7c3aed">View live demand data →</a>
@@ -184,7 +197,7 @@ export async function sendAutomatedOutreach(
             </div>
 
             <p style="margin:0 0 16px">
-              Would you be open to a quick conversation about booking ${artistName} at ${promoter.venue_name}?
+              Would you be open to a quick conversation about booking ${eArtist} at ${eVenue}?
               Happy to share more demand data or connect you directly with the artist's team.
             </p>
 
@@ -195,7 +208,7 @@ export async function sendAutomatedOutreach(
             </p>
 
             <p style="margin:28px 0 0;font-size:11px;color:#999">
-              You're receiving this because ${voteCount.toLocaleString()} fans voted for ${artistName} in ${city} on Summon.
+              You're receiving this because ${voteCount.toLocaleString()} fans voted for ${eArtist} in ${eCity} on Summon.
               To opt out of future outreach, reply with "unsubscribe".
             </p>
           </div>

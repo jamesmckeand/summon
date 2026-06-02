@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
-  const { token, platform } = await request.json();
+  let token: string, platform: string;
+  try {
+    ({ token, platform } = await request.json());
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
   if (!token || !platform) return NextResponse.json({ error: "token and platform required" }, { status: 400 });
   if (!["ios", "android"].includes(platform)) return NextResponse.json({ error: "Invalid platform" }, { status: 400 });
   if (typeof token !== "string" || token.length > 512) return NextResponse.json({ error: "Invalid token" }, { status: 400 });
