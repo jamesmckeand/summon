@@ -266,25 +266,23 @@ export async function POST(request: Request) {
     if (!data) return NextResponse.json({ error: "Invalid artist or city" }, { status: 400 });
   }
 
-  // Count before inserting to detect threshold crossings
-  const { count: countBefore } = await supabase
-    .from("votes")
-    .select("*", { count: "exact", head: true })
-    .eq("artist_id", artistId)
-    .eq("city", city);
+  // Atomic insert + count via RPC — eliminates the non-atomic
+  // SELECT COUNT → INSERT race that caused duplicate threshold emails.
+  const { data: voteResult, error: rpcError } = await supabase.rpc("cast_vote", {
+    p_user_id:   user.id,
+    p_artist_id: artistId,
+    p_city:      city,
+  });
 
-  const { error } = await supabase
-    .from("votes")
-    .insert({ user_id: user.id, artist_id: artistId, city });
+  if (rpcError) return NextResponse.json({ error: rpcError.message }, { status: 500 });
 
-  if (error && error.code !== "23505") {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+  const inserted: boolean = voteResult?.inserted ?? false;
+  const voteCount: number = voteResult?.vote_count ?? 0;
 
-  // Check if this vote crossed a threshold
-  if (error?.code !== "23505") {
-    const before = countBefore ?? 0;
-    const after = before + 1;
+  // Only run threshold/warning logic when this was a fresh vote
+  if (inserted) {
+    const before = voteCount - 1;
+    const after = voteCount;
     const crossed = THRESHOLDS.find((t) => before < t.votes && after >= t.votes);
     if (crossed) {
       const staticArtist = ARTISTS.find((a) => a.id === artistId);
