@@ -72,7 +72,7 @@ export default function Home() {
       <Nav />
 
       {/* ── HERO ── */}
-      <section className="relative flex flex-col items-center justify-center min-h-screen px-6 text-center pt-20 pb-10">
+      <section className="relative flex flex-col items-center justify-center min-h-screen px-6 text-center pt-20 pb-16">
 
         {/* Hero background — bouncing orbs */}
         <HeroOrbs />
@@ -169,14 +169,14 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Marquee — flows below stats, not overlapping next section */}
-        <div className="relative mt-10 w-full anim-fade-up" style={{ animationDelay: "0.6s" }}>
-          <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
-          <Marquee />
-        </div>
-
       </section>
+
+      {/* ── ARTIST MARQUEE — between hero and how-it-works ── */}
+      <div className="relative w-full overflow-hidden anim-fade-up" style={{ animationDelay: "0.6s" }}>
+        <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+        <Marquee />
+      </div>
 
       {/* ── HOW IT WORKS ── */}
       <section className="px-6 py-32 max-w-5xl mx-auto">
