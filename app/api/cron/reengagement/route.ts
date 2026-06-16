@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { listAllUsers } from "@/lib/supabase/list-all-users";
+import { getUserEmailsByIds } from "@/lib/supabase/list-all-users";
 
 function getResend() {
   if (!process.env.RESEND_API_KEY) throw new Error("RESEND_API_KEY not set");
@@ -22,18 +22,12 @@ export async function GET(request: Request) {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
   // Users who voted at some point in the last 30 days but not the last 7
-  const { data: recentVoters } = await admin
-    .from("votes")
-    .select("user_id")
-    .gt("created_at", sevenDaysAgo);
+  const [{ data: recentVoters }, { data: olderVoters }] = await Promise.all([
+    admin.from("votes").select("user_id").gt("created_at", sevenDaysAgo),
+    admin.from("votes").select("user_id").gt("created_at", thirtyDaysAgo).lte("created_at", sevenDaysAgo),
+  ]);
 
   const recentIds = new Set((recentVoters ?? []).map((r: { user_id: string }) => r.user_id));
-
-  const { data: olderVoters } = await admin
-    .from("votes")
-    .select("user_id")
-    .gt("created_at", thirtyDaysAgo)
-    .lte("created_at", sevenDaysAgo);
 
   const inactiveIds = [...new Set(
     (olderVoters ?? [])
@@ -59,8 +53,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ sent: 0 });
   }
 
-  const users = await listAllUsers(admin);
-  const targets = users.filter((u) => filteredIds.includes(u.id) && u.email);
+  const targets = await getUserEmailsByIds(admin, filteredIds);
 
   const html = `
     <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#0a0a0a;color:#f0f0f0;border-radius:12px">
@@ -84,14 +77,12 @@ export async function GET(request: Request) {
     </div>
   `;
 
-  const emails = targets
-    .filter((u) => u.email)
-    .map((u) => ({
-      from: "Summon <hello@wesummon.com>",
-      to: u.email!,
-      subject: "A lot has changed in your city this week 🎶",
-      html,
-    }));
+  const emails = targets.map((u) => ({
+    from: "Summon <hello@wesummon.com>",
+    to: u.email,
+    subject: "A lot has changed in your city this week 🎶",
+    html,
+  }));
 
   const BATCH_SIZE = 100;
   let sent = 0;

@@ -39,7 +39,7 @@ async function fetchTicketmaster(
   try {
     const res = await fetch(
       `https://app.ticketmaster.com/discovery/v2/events.json?${params}`,
-      { next: { revalidate: 3600 } }
+      { next: { revalidate: 3600 }, signal: AbortSignal.timeout(5000) }
     );
     if (!res.ok) return [];
     const json = await res.json();
@@ -94,7 +94,7 @@ async function fetchBandsintown(
     // Verify the artist exists and name matches before fetching events
     const artistRes = await fetch(
       `https://rest.bandsintown.com/artists/${encodeURIComponent(artist.name)}?app_id=${appId}`,
-      { next: { revalidate: 86400 } }
+      { next: { revalidate: 86400 }, signal: AbortSignal.timeout(5000) }
     );
     if (!artistRes.ok) return [];
     const artistData = await artistRes.json();
@@ -103,7 +103,7 @@ async function fetchBandsintown(
 
     const res = await fetch(
       `https://rest.bandsintown.com/artists/${encodeURIComponent(artist.name)}/events?app_id=${appId}&date=upcoming`,
-      { next: { revalidate: 3600 } }
+      { next: { revalidate: 3600 }, signal: AbortSignal.timeout(5000) }
     );
     if (!res.ok) return [];
     const events = await res.json();
@@ -141,7 +141,7 @@ async function fetchSongkick(
   try {
     const searchRes = await fetch(
       `https://api.songkick.com/api/3.0/search/artists.json?query=${encodeURIComponent(artist.name)}&apikey=${apiKey}`,
-      { next: { revalidate: 86400 } }
+      { next: { revalidate: 86400 }, signal: AbortSignal.timeout(5000) }
     );
     if (!searchRes.ok) return [];
     const searchData = await searchRes.json();
@@ -153,7 +153,7 @@ async function fetchSongkick(
 
     const eventsRes = await fetch(
       `https://api.songkick.com/api/3.0/artists/${match.id}/calendar.json?apikey=${apiKey}`,
-      { next: { revalidate: 3600 } }
+      { next: { revalidate: 3600 }, signal: AbortSignal.timeout(5000) }
     );
     if (!eventsRes.ok) return [];
     const eventsData = await eventsRes.json();
@@ -247,7 +247,7 @@ export async function GET() {
   const skKey = process.env.SONGKICK_API_KEY || undefined;
   // Register at https://bandsintown.com/api_key_requests to get a production key
   // "test" works for development only
-  const bitId = process.env.BANDSINTOWN_APP_ID || "test";
+  const bitId = process.env.BANDSINTOWN_APP_ID;
 
   if (!tmKey && !skKey && !bitId) {
     return NextResponse.json({ shows: [] });
@@ -270,7 +270,7 @@ export async function GET() {
     (a, b) => (artistVotes[b.id] ?? 0) - (artistVotes[a.id] ?? 0)
   );
 
-  const shows = await buildShows(sortedArtists, tmKey, skKey, bitId);
+  const shows = await buildShows(sortedArtists, tmKey, skKey, bitId ?? "test");
   showsCache = { shows, builtAt: Date.now() };
 
   return NextResponse.json({ shows }, {

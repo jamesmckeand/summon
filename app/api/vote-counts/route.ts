@@ -14,7 +14,8 @@ export async function GET(request: Request) {
   const { data } = await supabase
     .from("vote_counts")
     .select("artist_id, vote_count")
-    .eq("city", city);
+    .eq("city", city)
+    .limit(200);
 
   const counts: Record<string, number> = {};
   for (const row of data ?? []) counts[row.artist_id] = Number(row.vote_count);

@@ -13,11 +13,12 @@ export async function GET(request: Request) {
   }
 
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("vote_counts")
     .select("city, vote_count")
     .eq("artist_id", artistId)
     .order("vote_count", { ascending: false });
+  if (error) return NextResponse.json({ cityVotes: [] });
 
   const cityVotes = (data ?? []).map((row) => ({
     city: row.city,

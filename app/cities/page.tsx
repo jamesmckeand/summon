@@ -32,12 +32,13 @@ function progressPct(votes: number) {
 export default function CitiesPage() {
   const [cities, setCities] = useState<CityStats[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/city-stats")
       .then((r) => r.json())
-      .then((data) => setCities(data.cities ?? []))
-      .catch(() => {})
+      .then((data) => { setCities(data.cities ?? []); setError(null); })
+      .catch(() => setError("Failed to load cities"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -60,6 +61,8 @@ export default function CitiesPage() {
               <div key={i} className="glass rounded-xl p-4 h-20 animate-pulse bg-muted/20" />
             ))}
           </div>
+        ) : error ? (
+          <p className="text-center text-muted-foreground text-sm py-12">{error}</p>
         ) : cities.length === 0 ? (
           <div className="text-center py-20 text-muted-foreground">
             <MapPin className="w-10 h-10 mx-auto mb-3 opacity-30" />

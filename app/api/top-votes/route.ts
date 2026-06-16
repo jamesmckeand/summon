@@ -19,17 +19,24 @@ export async function GET() {
     });
   }
 
+  // Resolve community artist IDs not in the static map
+  const unknownIds = data.filter(r => !ARTIST_MAP.has(r.artist_id)).map(r => r.artist_id);
+  let liveArtistMap = new Map<string, { name: string; genre: string }>();
+  if (unknownIds.length > 0) {
+    const { data: liveRows } = await supabase
+      .from("live_artists")
+      .select("id, name, genre")
+      .in("id", unknownIds);
+    for (const a of liveRows ?? []) liveArtistMap.set(a.id, { name: a.name, genre: a.genre });
+  }
+
   const items = data
     .map((row) => {
       const artist = ARTIST_MAP.get(row.artist_id);
-      if (!artist) return null;
-      return {
-        id: artist.id,
-        name: artist.name,
-        genre: artist.genre,
-        city: row.city,
-        votes: row.vote_count,
-      };
+      if (artist) return { id: artist.id, name: artist.name, genre: artist.genre, city: row.city, votes: row.vote_count };
+      const live = liveArtistMap.get(row.artist_id);
+      if (live) return { id: row.artist_id, name: live.name, genre: live.genre, city: row.city, votes: row.vote_count };
+      return null;
     })
     .filter(Boolean);
 

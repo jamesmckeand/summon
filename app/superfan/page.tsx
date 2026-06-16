@@ -80,12 +80,20 @@ export default function SuperfanPage() {
 
   async function handleManage() {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/stripe/portal", { method: "POST" });
-      const { url } = await res.json();
-      if (url) window.location.href = url;
-    } catch { /* ignore */ }
-    setLoading(false);
+      const json = await res.json();
+      if (json.url) {
+        window.location.href = json.url;
+      } else {
+        setError(json.error ?? "Could not open billing portal. Try again.");
+        setLoading(false);
+      }
+    } catch {
+      setError("Something went wrong. Try again.");
+      setLoading(false);
+    }
   }
 
   return (

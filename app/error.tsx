@@ -11,7 +11,9 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error(error);
+    if (typeof window !== "undefined") {
+      import("@sentry/nextjs").then(({ captureException }) => captureException(error)).catch(() => {});
+    }
   }, [error]);
 
   return (

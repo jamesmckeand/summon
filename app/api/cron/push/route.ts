@@ -14,18 +14,12 @@ export async function GET(request: Request) {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  const { data: recentVoters } = await admin
-    .from("votes")
-    .select("user_id")
-    .gt("created_at", sevenDaysAgo);
+  const [{ data: recentVoters }, { data: olderVoters }] = await Promise.all([
+    admin.from("votes").select("user_id").gt("created_at", sevenDaysAgo),
+    admin.from("votes").select("user_id").gt("created_at", thirtyDaysAgo).lte("created_at", sevenDaysAgo),
+  ]);
 
   const recentIds = new Set((recentVoters ?? []).map((r: { user_id: string }) => r.user_id));
-
-  const { data: olderVoters } = await admin
-    .from("votes")
-    .select("user_id")
-    .gt("created_at", thirtyDaysAgo)
-    .lte("created_at", sevenDaysAgo);
 
   const inactiveIds = [...new Set(
     (olderVoters ?? [])

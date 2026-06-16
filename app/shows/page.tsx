@@ -363,7 +363,7 @@ export default function ShowsPage() {
 
                   {/* Show rows */}
                   <div className="border-t border-border/40 divide-y divide-border/40">
-                    {group.shows.map((show) => {
+                    {group.shows.filter((show) => daysUntil(show.date) >= 0).map((show) => {
                       const { month, day, full } = parsedDate(show.date);
                       const days = daysUntil(show.date);
 

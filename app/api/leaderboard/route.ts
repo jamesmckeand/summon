@@ -8,19 +8,21 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const city = searchParams.get("city") ?? "";
   const requestingUserId = searchParams.get("userId") ?? "";
+  const safeUserId = /^[0-9a-f-]{36}$/.test(requestingUserId) ? requestingUserId : "";
 
   const admin = createAdminClient();
 
   // Fetch votes — filter by city if provided
   let query = admin
     .from("votes")
-    .select("user_id, artist_id, city");
+    .select("user_id");
 
   if (city && VALID_CITIES.has(city)) {
     query = query.eq("city", city) as typeof query;
   }
 
-  const { data: votes } = await query.limit(50000);
+  const { data: votes, error: votesError } = await query.limit(50000);
+  if (votesError) return NextResponse.json({ error: "DB error" }, { status: 500 });
   if (!votes?.length) {
     return NextResponse.json({ users: [], currentUser: null }, {
       headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=120" },
@@ -43,23 +45,17 @@ export async function GET(request: Request) {
   const userIds = topUsers.map((u) => u.userId);
 
   // If requesting user is outside top 50, include them too for profile lookup
-  const requestingUserInTop = requestingUserId ? topUsers.some((u) => u.userId === requestingUserId) : true;
-  const lookupIds = requestingUserId && !requestingUserInTop
-    ? [...userIds, requestingUserId]
+  const requestingUserInTop = safeUserId ? topUsers.some((u) => u.userId === safeUserId) : true;
+  const lookupIds = safeUserId && !requestingUserInTop
+    ? [...userIds, safeUserId]
     : userIds;
 
-  // Look up profiles
-  const { data: profiles } = await admin
-    .from("profiles")
-    .select("id, username, city")
-    .in("id", lookupIds);
-
-  // Look up Superfan subscriptions
-  const { data: subs } = await admin
-    .from("subscriptions")
-    .select("user_id")
-    .in("user_id", lookupIds)
-    .eq("status", "active");
+  // Look up profiles and Superfan subscriptions in parallel
+  const [{ data: profiles, error: profilesError }, { data: subs, error: subsError }] = await Promise.all([
+    admin.from("profiles").select("id, username, city").in("id", lookupIds),
+    admin.from("subscriptions").select("user_id").in("user_id", lookupIds).eq("status", "active"),
+  ]);
+  if (profilesError || subsError) return NextResponse.json({ error: "DB error" }, { status: 500 });
 
   const profileMap = new Map((profiles ?? []).map((p) => [p.id, { username: p.username, homeCity: p.city }]));
   const superfanSet = new Set((subs ?? []).map((s) => s.user_id));
@@ -75,8 +71,8 @@ export async function GET(request: Request) {
 
   // Build current user's entry if they're outside top 50
   let currentUser = null;
-  if (requestingUserId && !requestingUserInTop) {
-    const entry = allRanked.find((u) => u.userId === requestingUserId);
+  if (safeUserId && !requestingUserInTop) {
+    const entry = allRanked.find((u) => u.userId === safeUserId);
     if (entry) {
       currentUser = {
         rank: entry.rank,

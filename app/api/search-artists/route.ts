@@ -16,16 +16,17 @@ export async function GET(request: Request) {
     return NextResponse.json({ artists: [] });
   }
 
-  const res = await fetch(
-    `https://api.deezer.com/search/artist?q=${encodeURIComponent(q)}&limit=8`,
-    { next: { revalidate: 300 } }
-  );
-
-  if (!res.ok) {
+  let data: { data?: Array<{ id: number; name: string; picture_medium?: string }> };
+  try {
+    const res = await fetch(
+      `https://api.deezer.com/search/artist?q=${encodeURIComponent(q)}&limit=8`,
+      { next: { revalidate: 300 }, signal: AbortSignal.timeout(5000) }
+    );
+    if (!res.ok) return NextResponse.json({ artists: [] });
+    data = await res.json();
+  } catch {
     return NextResponse.json({ artists: [] });
   }
-
-  const data = await res.json();
   const results = (data.data ?? [])
     .filter((a: { name: string }) => !staticNames.has(a.name.toLowerCase()))
     .map((a: { id: number; name: string; picture_medium?: string }) => ({

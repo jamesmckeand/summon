@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { listAllUsers } from "@/lib/supabase/list-all-users";
+import { getUserEmailsByIds } from "@/lib/supabase/list-all-users";
 import { ARTISTS } from "@/lib/data/artists";
 import { artistToSlug } from "@/lib/utils/artist-slug";
 import { cityToSlug } from "@/lib/utils/city-slug";
@@ -74,11 +74,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ sent: 0, reason: "no near-threshold combos" });
   }
 
-  // Get all users who have ever voted and have email notifications enabled
-  const users = await listAllUsers(admin);
+  // Get users who voted in the last 90 days and have email notifications enabled
+  const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
   const { data: voterRows } = await admin
     .from("votes")
-    .select("user_id");
+    .select("user_id")
+    .gt("created_at", ninetyDaysAgo);
 
   const voterIds = new Set((voterRows ?? []).map((r: { user_id: string }) => r.user_id));
   const voterIdList = [...voterIds];
@@ -90,7 +91,7 @@ export async function GET(request: Request) {
     .neq("notifications_email", false);
 
   const optedInIds = new Set((optedIn ?? []).map((p: { id: string }) => p.id));
-  const targets = users.filter((u) => optedInIds.has(u.id) && u.email);
+  const targets = await getUserEmailsByIds(admin, [...optedInIds]);
 
   const comboRows = top.map((c) => `
     <tr>
@@ -127,14 +128,12 @@ export async function GET(request: Request) {
   `;
 
   const subject = `${top[0].needed} votes away — ${top[0].artistName} in ${top[0].city} is almost there`;
-  const emails = targets
-    .filter((u) => u.email)
-    .map((u) => ({
-      from: "Summon <hello@wesummon.com>",
-      to: u.email!,
-      subject,
-      html: emailHtml,
-    }));
+  const emails = targets.map((u) => ({
+    from: "Summon <hello@wesummon.com>",
+    to: u.email,
+    subject,
+    html: emailHtml,
+  }));
 
   const BATCH_SIZE = 100;
   let sent = 0;

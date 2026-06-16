@@ -32,6 +32,7 @@ export default function LeaderboardPage() {
   const [users, setUsers] = useState<LeaderboardUser[]>([]);
   const [currentUser, setCurrentUser] = useState<LeaderboardUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [homeCity, setHomeCity] = useState<string | null>(null);
   const [authUser, setAuthUser] = useState<SupabaseUser | null>(null);
   const [showCityDrop, setShowCityDrop] = useState(false);
@@ -76,10 +77,12 @@ export default function LeaderboardPage() {
     fetch(`/api/leaderboard?${params}`)
       .then((r) => r.json())
       .then((data) => {
+        if (data.error) throw new Error(data.error);
         setUsers(data.users ?? []);
         setCurrentUser(data.currentUser ?? null);
+        setError(null);
       })
-      .catch(() => {})
+      .catch(() => setError("Failed to load leaderboard"))
       .finally(() => setLoading(false));
   }, [selectedCity, authUser?.id]);
 
@@ -166,7 +169,9 @@ export default function LeaderboardPage() {
         </motion.div>
 
         {/* Leaderboard */}
-        {loading ? (
+        {error ? (
+          <div className="text-center py-20 text-muted-foreground text-sm">{error}</div>
+        ) : loading ? (
           <div className="flex flex-col gap-2">
             {Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="glass rounded-xl p-4 animate-pulse">

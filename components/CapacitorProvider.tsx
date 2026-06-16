@@ -9,19 +9,22 @@ import { useEffect } from "react";
  */
 export default function CapacitorProvider() {
   useEffect(() => {
-    initCapacitor();
+    let cleanupFn: (() => void) | null = null;
+    initCapacitor().then((cleanup) => { cleanupFn = cleanup ?? null; });
+    return () => { cleanupFn?.(); };
   }, []);
 
   return null;
 }
 
-async function initCapacitor() {
+async function initCapacitor(): Promise<(() => void) | undefined> {
   // Guard: only run inside the Capacitor native app
   const { Capacitor } = await import("@capacitor/core");
   if (!Capacitor.isNativePlatform()) return;
 
-  await Promise.all([initStatusBar(), initSplashScreen(), initPushNotifications()]);
+  const [, , cleanup] = await Promise.all([initStatusBar(), initSplashScreen(), initPushNotifications()]);
   initExternalLinks();
+  return cleanup ?? undefined;
 }
 
 /**
@@ -57,7 +60,7 @@ async function initSplashScreen() {
   } catch { /* not available */ }
 }
 
-async function initPushNotifications() {
+async function initPushNotifications(): Promise<(() => void) | void> {
   try {
     const { PushNotifications } = await import("@capacitor/push-notifications");
 
@@ -66,28 +69,34 @@ async function initPushNotifications() {
 
     await PushNotifications.register();
 
-    // Receive the APNs token and send it to our server
-    await PushNotifications.addListener("registration", async ({ value: token }) => {
-      try {
-        await fetch("/api/push/register", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token, platform: "ios" }),
-        });
-      } catch { /* fire-and-forget */ }
-    });
+    const [regHandle, actionHandle] = await Promise.all([
+      // Receive the APNs token and send it to our server
+      PushNotifications.addListener("registration", async ({ value: token }) => {
+        try {
+          await fetch("/api/push/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token, platform: "ios" }),
+          });
+        } catch { /* fire-and-forget */ }
+      }),
+      // Handle notification tapped while app is open
+      // Extract path from full URL so Next.js router handles the navigation
+      PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
+        const url = action.notification.data?.url as string | undefined;
+        if (!url) return;
+        try {
+          const parsed = new URL(url);
+          window.location.href = parsed.pathname + parsed.search;
+        } catch {
+          window.location.href = url;
+        }
+      }),
+    ]);
 
-    // Handle notification tapped while app is open
-    // Extract path from full URL so Next.js router handles the navigation
-    await PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
-      const url = action.notification.data?.url as string | undefined;
-      if (!url) return;
-      try {
-        const parsed = new URL(url);
-        window.location.href = parsed.pathname + parsed.search;
-      } catch {
-        window.location.href = url;
-      }
-    });
+    return () => {
+      regHandle.remove();
+      actionHandle.remove();
+    };
   } catch { /* not available */ }
 }

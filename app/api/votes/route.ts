@@ -9,6 +9,8 @@ import { getVenuesForCity } from "@/lib/data/venues";
 import { sendPush } from "@/lib/apns";
 import { sendAutomatedOutreach, queueArtistContactOutreach } from "@/lib/outreach";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { artistToSlug } from "@/lib/utils/artist-slug";
+import { cityToSlug } from "@/lib/utils/city-slug";
 
 const VALID_ARTIST_IDS = new Set(ARTISTS.map((a) => a.id));
 const VALID_CITIES = new Set(CITIES);
@@ -309,8 +311,8 @@ export async function POST(request: Request) {
           .catch(() => {});
         // Fire Make.com webhook for automated social posting
         if (process.env.MAKE_WEBHOOK_URL) {
-          const artistSlug = artistName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-          const citySlug = city.toLowerCase().replace(/\s+/g, "-");
+          const artistSlug = artistToSlug(artistName);
+          const citySlug = cityToSlug(city);
           fetch(process.env.MAKE_WEBHOOK_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

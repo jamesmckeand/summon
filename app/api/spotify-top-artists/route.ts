@@ -87,11 +87,19 @@ export async function GET() {
     const resolved = await resolveViaDeezer(unmatchedNames, supabase);
     const all = [...matched, ...resolved];
 
-    // Cache all artist IDs to profile
+    // Merge incoming Spotify artists with any existing manually-added picks
     if (all.length > 0) {
+      const { data: existing } = await supabase
+        .from("profiles")
+        .select("favourite_artists")
+        .eq("id", userId)
+        .single();
+      const current: string[] = existing?.favourite_artists ?? [];
+      const incoming = all.map((a) => a.id);
+      const merged = [...new Set([...current, ...incoming])].slice(0, 200);
       await supabase
         .from("profiles")
-        .update({ favourite_artists: all.map((a) => a.id) })
+        .update({ favourite_artists: merged })
         .eq("id", userId);
     }
 

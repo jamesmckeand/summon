@@ -108,7 +108,9 @@ export default function Home() {
           className="anim-fade-up mt-10 flex flex-col sm:flex-row items-center gap-3"
           style={{ animationDelay: "0.4s" }}
         >
-          {loggedIn ? (
+          {loggedIn === null ? (
+            <div className="h-12 w-64 rounded-xl bg-white/5 animate-pulse" />
+          ) : loggedIn ? (
             <>
               <Link href="/explore">
                 <Button size="lg" className="btn-press h-12 px-7 rounded-xl gradient-brand glow-primary border-0 text-white font-semibold text-sm w-full sm:w-auto">
@@ -142,7 +144,7 @@ export default function Home() {
           )}
         </div>
 
-        {!loggedIn && (
+        {loggedIn === false && (
           <p className="anim-fade-up mt-4 text-xs text-muted-foreground" style={{ animationDelay: "0.48s" }}>
             Or{" "}
             <Link href="/login" className="text-foreground/70 hover:text-foreground underline underline-offset-2 transition-colors">
@@ -308,16 +310,22 @@ export default function Home() {
             Join fans already voting to bring their favourite artists home.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link href={loggedIn ? "/explore" : "/login"}>
-              <Button size="lg" className="btn-press gradient-brand glow-primary border-0 text-white font-semibold text-base px-8 h-12 rounded-xl">
-                Start voting now <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
-            </Link>
-            <Link href={loggedIn ? "/dashboard" : "/explore"}>
-              <Button size="lg" variant="outline" className="border-white/10 bg-white/[0.03] hover:bg-white/[0.06] font-medium text-base h-12 rounded-xl px-8">
-                {loggedIn ? "My dashboard" : "Browse artists"}
-              </Button>
-            </Link>
+            {loggedIn === null ? (
+              <div className="h-12 w-64 rounded-xl bg-white/5 animate-pulse" />
+            ) : (
+              <>
+                <Link href={loggedIn ? "/explore" : "/login"}>
+                  <Button size="lg" className="btn-press gradient-brand glow-primary border-0 text-white font-semibold text-base px-8 h-12 rounded-xl">
+                    Start voting now <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+                </Link>
+                <Link href={loggedIn ? "/dashboard" : "/explore"}>
+                  <Button size="lg" variant="outline" className="border-white/10 bg-white/[0.03] hover:bg-white/[0.06] font-medium text-base h-12 rounded-xl px-8">
+                    {loggedIn ? "My dashboard" : "Browse artists"}
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </motion.div>
       </section>
