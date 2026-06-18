@@ -155,8 +155,15 @@ export default function Home() {
 
       </section>
 
-      {/* ── STATS — above the marquee so cards can never reach them ── */}
-      <div className="bg-background px-6 pt-10 pb-8 flex justify-center">
+      {/* ── MARQUEE ── */}
+      <div className="relative w-full overflow-hidden bg-background pb-2">
+        <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+        <Marquee />
+      </div>
+
+      {/* ── STATS — below the marquee ── */}
+      <div className="bg-background px-6 pt-8 pb-10 flex justify-center">
         <div className="grid grid-cols-3 gap-3 w-full max-w-sm">
           {[
             { value: "1M+",                                                           label: "Artists",    sub: "on demand"  },
@@ -170,13 +177,6 @@ export default function Home() {
             </div>
           ))}
         </div>
-      </div>
-
-      {/* ── MARQUEE — after stats, nothing above it to overlap ── */}
-      <div className="relative w-full overflow-hidden bg-background pb-6">
-        <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
-        <Marquee />
       </div>
 
       {/* ── HOW IT WORKS ── */}
