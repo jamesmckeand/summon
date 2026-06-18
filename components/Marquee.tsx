@@ -39,7 +39,7 @@ function ArtistInitials({ name }: { name: string }) {
 
 function ArtistCard({ id, name, genre, city, votes, image }: MarqueeItem & { image: string | null }) {
   return (
-    <Link href={`/artist/${id}`} className="shrink-0 glass rounded-2xl px-4 py-3.5 flex items-center gap-3.5 w-64 mx-2 hover:border-primary/30 transition-colors">
+    <Link href={`/artist/${id}`} className="shrink-0 rounded-2xl px-4 py-3.5 flex items-center gap-3.5 w-64 mx-2 border border-white/10 bg-[#191919] hover:border-primary/30 transition-colors">
       {image ? (
         <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 relative">
           <Image src={image} alt={name} fill className="object-cover" sizes="40px" />
