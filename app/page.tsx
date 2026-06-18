@@ -71,8 +71,8 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Nav />
 
-      {/* ── HERO ── overflow-hidden clips the pinned marquee at the section edge */}
-      <section className="relative flex flex-col items-center justify-center min-h-screen px-6 text-center pt-20 pb-48 overflow-hidden">
+      {/* ── HERO — sized to leave room for marquee below in normal flow ── */}
+      <section className="relative flex flex-col items-center justify-center px-6 text-center pt-20 pb-10" style={{ minHeight: "calc(100vh - 196px)" }}>
 
         {/* Hero background — bouncing orbs */}
         <HeroOrbs />
@@ -153,16 +153,16 @@ export default function Home() {
           </p>
         )}
 
-        {/* Marquee pinned to hero bottom — clipped by overflow-hidden, never bleeds below */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
-          <Marquee />
-        </div>
-
       </section>
 
-      {/* ── STATS — clearly below the hero fold ── */}
+      {/* ── MARQUEE — normal flow, solid bg, sits in the gap to fill 100vh ── */}
+      <div className="relative w-full overflow-hidden bg-background">
+        <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+        <Marquee />
+      </div>
+
+      {/* ── STATS — solid bg, clearly below the marquee ── */}
       <div className="bg-background px-6 py-12 flex justify-center">
         <div className="grid grid-cols-3 gap-3 w-full max-w-sm">
           {[
