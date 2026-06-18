@@ -72,7 +72,7 @@ export default function Home() {
       <Nav />
 
       {/* ── HERO ── */}
-      <section className="relative flex flex-col items-center justify-center min-h-screen px-6 text-center pt-20 pb-16">
+      <section className="relative flex flex-col items-center justify-center min-h-screen px-6 text-center pt-20 pb-24">
 
         {/* Hero background — bouncing orbs */}
         <HeroOrbs />
@@ -153,15 +153,22 @@ export default function Home() {
           </p>
         )}
 
-        {/* Stats cards — dashboard style */}
-        <div
-          className="anim-fade-up mt-14 grid grid-cols-3 gap-3 w-full max-w-sm"
-          style={{ animationDelay: "0.54s" }}
-        >
+      </section>
+
+      {/* ── ARTIST MARQUEE ── solid background so nothing bleeds through */}
+      <div className="relative w-full overflow-hidden bg-background" style={{ animationDelay: "0.6s" }}>
+        <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+        <Marquee />
+      </div>
+
+      {/* ── STATS ── */}
+      <div className="px-6 pt-10 pb-2 flex justify-center">
+        <div className="grid grid-cols-3 gap-3 w-full max-w-sm">
           {[
-            { value: "1M+",                                                               label: "Artists",    sub: "on demand"   },
-            { value: `${stats.cityCount}+`,                                               label: "Cities",     sub: "worldwide"   },
-            { value: stats.totalVotes > 0 ? stats.totalVotes.toLocaleString() : "—",     label: "Votes cast", sub: "and growing"  },
+            { value: "1M+",                                                           label: "Artists",    sub: "on demand"  },
+            { value: `${stats.cityCount}+`,                                           label: "Cities",     sub: "worldwide"  },
+            { value: stats.totalVotes > 0 ? stats.totalVotes.toLocaleString() : "—", label: "Votes cast", sub: "and growing" },
           ].map((s) => (
             <div key={s.label} className="card-solid rounded-2xl p-4 text-center flex flex-col gap-1">
               <p className="text-xl sm:text-2xl font-extrabold gradient-brand-text tabular-nums leading-none">{s.value}</p>
@@ -170,14 +177,6 @@ export default function Home() {
             </div>
           ))}
         </div>
-
-      </section>
-
-      {/* ── ARTIST MARQUEE — between hero and how-it-works ── */}
-      <div className="relative w-full overflow-hidden anim-fade-up" style={{ animationDelay: "0.6s" }}>
-        <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
-        <Marquee />
       </div>
 
       {/* ── HOW IT WORKS ── */}
