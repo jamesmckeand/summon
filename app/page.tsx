@@ -71,17 +71,13 @@ export default function Home() {
       <Nav />
 
       {/* ── HERO — sized to leave room for marquee below in normal flow ── */}
-      <section className="relative flex flex-col items-center justify-center min-h-screen px-6 text-center pt-20 pb-10">
+      <section className="relative flex flex-col items-center min-h-screen px-6 text-center pt-20 pb-6">
 
         {/* Hero background — bouncing orbs */}
         <HeroOrbs />
 
-        {/* Top artist card row — visible immediately on load */}
-        <div className="anim-fade-up relative w-full overflow-hidden mb-10" style={{ animationDelay: "0.1s" }}>
-          <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
-          <Marquee row="top" />
-        </div>
+        {/* Centered headline + CTAs — grows to fill the space above the bottom card band */}
+        <div className="flex-1 flex flex-col items-center justify-center w-full">
 
         {/* Headline */}
         <h1
@@ -154,14 +150,16 @@ export default function Home() {
           </p>
         )}
 
-      </section>
+        </div>
 
-      {/* ── BOTTOM ARTIST CARD ROW ── */}
-      <div className="relative w-full overflow-hidden bg-background pb-2">
-        <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
-        <Marquee row="bottom" />
-      </div>
+        {/* Both artist card rows — bottom band, visible on load */}
+        <div className="anim-fade-up relative w-full overflow-hidden mt-10" style={{ animationDelay: "0.55s" }}>
+          <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+          <Marquee row="both" />
+        </div>
+
+      </section>
 
       {/* ── STATS — below the marquee ── */}
       <div className="bg-background px-6 pt-8 pb-10 flex justify-center">
