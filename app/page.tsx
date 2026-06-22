@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { fadeUp } from "@/lib/animations";
 import HeroOrbs from "@/components/HeroOrbs";
-import ArtistMarquee from "@/components/ArtistMarquee";
 import Marquee from "@/components/Marquee";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
@@ -77,9 +76,11 @@ export default function Home() {
         {/* Hero background — bouncing orbs */}
         <HeroOrbs />
 
-        {/* Artist name marquee strip */}
-        <div className="anim-fade-up w-full" style={{ animationDelay: "0.1s" }}>
-          <ArtistMarquee />
+        {/* Top artist card row — visible immediately on load */}
+        <div className="anim-fade-up relative w-full overflow-hidden mb-10" style={{ animationDelay: "0.1s" }}>
+          <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+          <Marquee row="top" />
         </div>
 
         {/* Headline */}
@@ -155,11 +156,11 @@ export default function Home() {
 
       </section>
 
-      {/* ── MARQUEE ── */}
+      {/* ── BOTTOM ARTIST CARD ROW ── */}
       <div className="relative w-full overflow-hidden bg-background pb-2">
         <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
         <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
-        <Marquee />
+        <Marquee row="bottom" />
       </div>
 
       {/* ── STATS — below the marquee ── */}

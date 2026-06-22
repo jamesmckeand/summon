@@ -68,7 +68,7 @@ function ArtistCard({ id, name, genre, city, votes, image }: MarqueeItem & { ima
   );
 }
 
-export default function Marquee() {
+export default function Marquee({ row = "both" }: { row?: "top" | "bottom" | "both" }) {
   const [row1, setRow1] = useState<MarqueeItem[]>(() => buildFallback(ROW_ONE_CITIES, 0));
   const [row2, setRow2] = useState<MarqueeItem[]>(() => buildFallback(ROW_TWO_CITIES, 14));
   const [images, setImages] = useState<Record<string, string | null>>({});
@@ -93,18 +93,26 @@ export default function Marquee() {
       .catch(() => {});
   }, []);
 
+  const topRow = (
+    <div className="flex" style={{ animation: "marquee-left 40s linear infinite" }}>
+      {[...row1, ...row1].map((a, i) => (
+        <ArtistCard key={`r1-${i}`} {...a} image={images[a.name] ?? null} />
+      ))}
+    </div>
+  );
+
+  const bottomRow = (
+    <div className="flex" style={{ animation: "marquee-right 45s linear infinite" }}>
+      {[...row2, ...row2].map((a, i) => (
+        <ArtistCard key={`r2-${i}`} {...a} image={images[a.name] ?? null} />
+      ))}
+    </div>
+  );
+
   return (
-    <div className="w-full overflow-hidden space-y-3 select-none pb-6">
-      <div className="flex" style={{ animation: "marquee-left 40s linear infinite" }}>
-        {[...row1, ...row1].map((a, i) => (
-          <ArtistCard key={`r1-${i}`} {...a} image={images[a.name] ?? null} />
-        ))}
-      </div>
-      <div className="flex" style={{ animation: "marquee-right 45s linear infinite" }}>
-        {[...row2, ...row2].map((a, i) => (
-          <ArtistCard key={`r2-${i}`} {...a} image={images[a.name] ?? null} />
-        ))}
-      </div>
+    <div className="w-full overflow-hidden space-y-3 select-none">
+      {row !== "bottom" && topRow}
+      {row !== "top" && bottomRow}
     </div>
   );
 }
